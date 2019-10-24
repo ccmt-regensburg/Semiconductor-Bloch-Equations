@@ -103,6 +103,7 @@ def f(t, y, kgrid, Nk, gamma1, gamma2, E0, w, pulse_width):
                                [0.0,0.0,-drift_coef,0.0],\
                                [0.0,0.0,0.0,-drift_coef]])
         zero_block = np.zeros((4,4),dtype='float') 
+
         # Put each block in their proper columns
         if (k1 == 0): # Construction of the first row
             M = np.concatenate((diag_block,for_deriv),axis=1) # Create first two columns
