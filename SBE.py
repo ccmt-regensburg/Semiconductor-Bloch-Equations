@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as pl
 import time, os
 from scipy.integrate import ode
+import sys
 
 def eband(n, k):
     '''
@@ -21,18 +22,18 @@ def dipole(k):
     '''
     return 1.0 #Eventually inputting some data from other calculations
    
-def driving_field(E0, w, t, pulse_width):
+def driving_field(E0, w, t, alpha):
     '''
     Returns the instantaneous driving electric field
     '''
-    return E0*np.sin(2.0*np.pi*w*t)
-    #return E0*np.exp(-t**2.0/(2.0*pulse_width)**2)*np.sin(2*np.pi*w*t)
+    #return E0*np.sin(2.0*np.pi*w*t)
+    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2*np.pi*w*t)
 
-def rabi(n,m,k,E0,w,t,pulse_width):
+def rabi(n,m,k,E0,w,t,alpha):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole(k)*driving_field(E0, w, t, pulse_width)
+    return dipole(k)*driving_field(E0, w, t, alpha)
 
 def diff(x,y):
     '''
@@ -61,7 +62,7 @@ def polarization(pvc,pcv):
 #    Nk = np.size(fc, axis=0)
 #    return np.real(np.dot(diff(k, econd(k, hop, Delta)), fc) + np.dot(diff(k, -econd(k, hop, Delta)), fv))/Nk
 
-def current(k,fc,fv):
+def current(k,fv,fc):
     '''
     Calculates current according to 
     J(t) = sum_k[sum_n j_n(k)*f_n(k)]
@@ -71,29 +72,52 @@ def current(k,fc,fv):
     Nk = np.size(fc, axis=0)
     return np.real(np.dot(diff(k, eband(2,k)), fc) + np.dot(diff(k, eband(1,k)), fv))/Nk
 
-def f(t, y, kgrid, Nk, gamma1, gamma2, E0, w, pulse_width):
+def f(t, y, kgrid, Nk, gamma2, E0, w, alpha):
     '''
     Function driving the dynamics of the system.
     This is required as input parameter to the ode solver
     '''
-    # Constant added vector
+    # Constant vector container
     b = []
 
     # Create propogation matrix for this time step
     for k1 in range(Nk): # Iterate down all the rows
-        # Construct each block
-        ecv = eband(2, k1) - eband(1, k1)
-        wr = rabi(1, 2, k1, E0, w, t, pulse_width)
+
+        # Construct each block of the matrix
+        '''
+        Energy term eband(i,k) the energy of band i at point k
+        '''
+        ecv = eband(2, k1) + eband(1, k1)
+
+        '''
+        Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
+        Rabi frequency conjugate
+        '''
+        wr = rabi(1, 2, k1, E0, w, t, alpha)
         wr_c = np.conjugate(wr)
-        drift_coef = 0.0#driving_field(E0, w, t, pulse_width)/(2*(1/Nk))
+
+        '''
+        Brillouin zone drift term coefficient: E(t)*grad_k
+        Coefficient for finite difference derivative. 
+        '''
+        drift_coef = driving_field(E0, w, t, alpha)/(2*(1/Nk))
+
+        '''
+        Diagonal block of the propagation matrix M. Contains all terms not related to drift term. 
+        '''
         diag_block = 1j*np.array([[0.0,wr,-wr_c,0.0],
                                   [wr,-(ecv-1j*gamma2),0.0,wr],\
                                   [-wr_c,0.0,(ecv+1j*gamma2),-wr_c],\
                                   [0.0,-wr_c,wr,0.0]])
+                      # Evers version
                       # 1j*np.array([[0.0,-wr_c,wr,0.0],
                       #            [-wr,(ecv+1j*gamma2),0.0,wr],\
                       #            [wr_c,0.0,-(ecv-1j*gamma2),-wr_c],\
                       #            [0.0,wr_c,-wr,0.0]])
+
+        '''
+        Blocks for the forward and backwards portion of the finite difference derivative
+        '''
         for_deriv = np.array([[drift_coef,0.0,0.0,0.0],\
                               [0.0,drift_coef,0.0,0.0],\
                               [0.0,0.0,drift_coef,0.0],\
@@ -102,8 +126,15 @@ def f(t, y, kgrid, Nk, gamma1, gamma2, E0, w, pulse_width):
                                [0.0,-drift_coef,0.0,0.0],\
                                [0.0,0.0,-drift_coef,0.0],\
                                [0.0,0.0,0.0,-drift_coef]])
+
+        '''
+        4x4 block of zeros. M is a very sparse matrix
+        '''
         zero_block = np.zeros((4,4),dtype='float') 
 
+        '''
+        Constructs the matrix M one block at a time. See notes for details
+        '''   
         # Put each block in their proper columns
         if (k1 == 0): # Construction of the first row
             M = np.concatenate((diag_block,for_deriv),axis=1) # Create first two columns
@@ -132,9 +163,12 @@ def f(t, y, kgrid, Nk, gamma1, gamma2, E0, w, pulse_width):
                 else: # If anywhere else
                     row = np.concatenate((row,zero_block),axis=1) # Concatenate zero_block
             M = np.concatenate((M,row),axis=0)
-        #b.extend([gamma1, 0.0, 0.0 , gamma1])
+        '''
+        'Constant' vector with leftover terms
+        '''
         b.extend([0.0,-wr,wr_c,0.0])
 
+    # Convert to numpy array
     b = 1j*np.array(b)
 
     # Calculate the timestep
@@ -146,15 +180,14 @@ def main():
     # PARAMETERS
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
-    gamma2 = 0.242131 #(1/T2, T2=1fs)          # Gamma2 parameter
-    gamma1 = 0.0                                # Gamma1 parameter
+    gamma2 = 0.242131                           # Gamma2 parameter
     Nk = 10                                     # Number of k-points
-    w = 0.1                                     # Driving frequency
-    E0 = 1.0                                    # Driving field amplitude
-    pulse_width = 2017.5                        # Gaussian pulse width
-    t0 = 0                                      # Initial time condition
-    tf = 100                                    # Final time
-    dt = 0.01                                    # Integration time step
+    w = 0.00073                                 # Driving frequency
+    E0 = 0.0097                                 # Driving field amplitude
+    alpha = 2017.5                              # Gaussian pulse width
+    t0 = -25000                                  # Initial time condition
+    tf = 50000                                  # Final time
+    dt = 0.1                                     # Integration time step
     ###############################################################################################
 
     # FILENAME/DIRECTORY DETAILS
@@ -165,17 +198,15 @@ def main():
     save_dir = working_dir + '/' + right_now
     os.mkdir(save_dir)
 
-    print("Solving for: " + "gamma1 = " + str(gamma1) + ", gamma2 = " + str(gamma2))
+    print("Solving...")
 
     # INITIALIZATIONS
     ###############################################################################################
-    # Form the kgrid
+    # Form the Brillouin zone in consideration
     kgrid = np.linspace(-0.5, 0.5, Nk, endpoint=False)
-    #kgrid = np.linspace(-np.pi, np.pi, Nk, endpoint=False)
-    #dk = 1.0/Nk
     
     # Initial condition for density matrix and time
-    # Initially all particles in valence band: fv = 1.0, transition matrix element pvc = 1.0
+    # Initially no excited electrons (and thus no holes) all values set to zero. 
     y0= []
     for k in kgrid:
         y0.extend([0.0,0.0,0.0,0.0])
@@ -194,7 +225,7 @@ def main():
     # SOLVING THE MATRIX SBE
     ###############################################################################################
     # Set solver
-    solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, gamma1, gamma2, E0, w, pulse_width)
+    solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, gamma2, E0, w, alpha)
 
     # Integrate each time step
     tn = 0
@@ -208,37 +239,37 @@ def main():
     solution = np.array_split(solution,Nk,axis=1)
     solution = np.array(solution)
     ###############################################################################################
-
     # COMPUTE POLARIZATION,CURRENT,EMISSION,AVG.ABSORPTION
     ##############################################################################################
     # First index of solution is kpoint, second is timestep, third is fv, pvc, pcv, fc
     
     #N = np.sum(solution[:,:,0]+solution[:,:,3],axis=0) particle number
     pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3]) # Current
-
+    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-np.heaviside(t-0.5*tf,1)*(t-0.5*tf)**2.0/(2.0*5000)**2.0) # Current
+    
     # Average energy per time
     #print("Avg. energy absorption (per time): " + str(simps(curr * rabi(omega0, Omega, t), t)))
 
     # Fourier transform (shift frequencies for better plots)
-    freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                          # Frequencies
-    fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, pulse_width), norm='ortho'))  # Driving field
+    freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
+    #curr_freq = np.fft.fftshift(np.fft.fftfreq(int(Nt+Nt_decay), d=dt))                                  # Current frequencies
+    fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
     polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
-    currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                                       # Current
+    currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                               # Current
     emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
     ###############################################################################################
 
     # FILE OUTPUT
     ###############################################################################################
-    emis_filename = 'emis_k' + str(Nk) + '_g1-' + str('%.3f'%(gamma1)) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
+    emis_filename = 'emis_k' + str(Nk) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
     emis_header = 'omega        emission spectrum'
     np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq,emis]), header=emis_header, fmt='%.12f')
 
-    pol_filename = 'pol_k' + str(Nk) + '_g1-' + str('%.3f'%(gamma1)) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
+    pol_filename = 'pol_k' + str(Nk) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
     pol_header = 't            polarization   omega          pol_fourier'
     np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t,pol,freq,polfourier])), header=pol_header, fmt='%.12f')
 
-    curr_filename = 'curr_k' + str(Nk) + '_g1-' + str('%.3f'%(gamma1)) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
+    curr_filename = 'curr_k' + str(Nk) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
     curr_header = 't            polarization   omega          curr_fourier'
     np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.12f')
     ###############################################################################################
@@ -247,7 +278,7 @@ def main():
     ###############################################################################################
     # Real-time driving field, polarization, current
     pl.figure(1)
-    pl.plot(t/41.3, driving_field(E0, w, t, pulse_width), label = 'Driving field')
+    pl.plot(t/41.3, driving_field(E0, w, t, alpha), label = 'Driving field')
     pl.plot(t/41.3, pol, label = 'Polarization')
     pl.plot(t/41.3, curr, label = 'Current')
     ax = pl.gca()
