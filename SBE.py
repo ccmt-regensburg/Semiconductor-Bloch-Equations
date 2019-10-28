@@ -182,13 +182,25 @@ def main():
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.242131                           # Gamma2 parameter
     Nk = 10                                     # Number of k-points
-    w = 0.00073                                 # Driving frequency
-    E0 = 0.0097                                 # Driving field amplitude
-    alpha = 2017.5                              # Gaussian pulse width
-    t0 = -25000                                  # Initial time condition
+    w = 0.000725665                             # Driving frequency
+    E0 = 0.015557                               # Driving field amplitude
+    alpha = 1000                                # Gaussian pulse width
+    t0 = -15000                                 # Initial time condition
     tf = 50000                                  # Final time
-    dt = 0.1                                     # Integration time step
+    dt = 0.1                                    # Integration time step
     ###############################################################################################
+
+    # UNIT CONVERSION FACTORS
+    ###############################################################################################
+    fs_conv = 41.34137335
+    E_conv = 0.000194469
+    THz_conv = 0.000024188843266
+
+    print("Solving for...(atomic units in parenthesis)")
+    print("Pulse Frequency - THz = " + str(w/THz_conv) + " (" + str(w) + ")")
+    print("Pulse Width - fs = " + str(alpha/fs_conv) + " (" + str(alpha) + ")")
+    print("Driving amplitude - MV/cm = " + str(E0/E_conv) + " (" + str(E0) + ")")
+    print("Total time - fs = " + str((tf-t0)/fs_conv) + " (" + str(tf-t0) + ")")
 
     # FILENAME/DIRECTORY DETAILS
     ###############################################################################################
@@ -198,10 +210,9 @@ def main():
     save_dir = working_dir + '/' + right_now
     os.mkdir(save_dir)
 
-    print("Solving...")
-
     # INITIALIZATIONS
     ###############################################################################################
+
     # Form the Brillouin zone in consideration
     kgrid = np.linspace(-0.5, 0.5, Nk, endpoint=False)
     
@@ -239,20 +250,22 @@ def main():
     solution = np.array_split(solution,Nk,axis=1)
     solution = np.array(solution)
     ###############################################################################################
+    
     # COMPUTE POLARIZATION,CURRENT,EMISSION,AVG.ABSORPTION
     ##############################################################################################
     # First index of solution is kpoint, second is timestep, third is fv, pvc, pcv, fc
     
     #N = np.sum(solution[:,:,0]+solution[:,:,3],axis=0) particle number
+    # Current decay start time (fraction of final time)
+    decay_start = 0.4
     pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-np.heaviside(t-0.5*tf,1)*(t-0.5*tf)**2.0/(2.0*5000)**2.0) # Current
+    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-np.heaviside(t-decay_start*tf,1)*(t-decay_start*tf)**2.0/(2.0*6000)**2.0) # Current
     
     # Average energy per time
     #print("Avg. energy absorption (per time): " + str(simps(curr * rabi(omega0, Omega, t), t)))
 
     # Fourier transform (shift frequencies for better plots)
     freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
-    #curr_freq = np.fft.fftshift(np.fft.fftfreq(int(Nt+Nt_decay), d=dt))                                  # Current frequencies
     fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
     polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
     currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                               # Current
@@ -278,9 +291,9 @@ def main():
     ###############################################################################################
     # Real-time driving field, polarization, current
     pl.figure(1)
-    pl.plot(t/41.3, driving_field(E0, w, t, alpha), label = 'Driving field')
-    pl.plot(t/41.3, pol, label = 'Polarization')
-    pl.plot(t/41.3, curr, label = 'Current')
+    pl.plot(t/fs_conv, driving_field(E0, w, t, alpha), label = 'Driving field')
+    pl.plot(t/fs_conv, pol, label = 'Polarization')
+    pl.plot(t/fs_conv, curr, label = 'Current')
     ax = pl.gca()
     ax.set_xlabel(r'$t (fs)$', fontsize = 14)
     ax.legend(loc = 'best')
