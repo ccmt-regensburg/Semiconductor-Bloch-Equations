@@ -109,11 +109,11 @@ def f(t, y, kgrid, Nk, gamma2, E0, w, alpha):
                                   [wr,-(ecv-1j*gamma2),0.0,wr],\
                                   [-wr_c,0.0,(ecv+1j*gamma2),-wr_c],\
                                   [0.0,-wr_c,wr,0.0]])
-                      # Evers version
-                      # 1j*np.array([[0.0,-wr_c,wr,0.0],
-                      #            [-wr,(ecv+1j*gamma2),0.0,wr],\
-                      #            [wr_c,0.0,-(ecv-1j*gamma2),-wr_c],\
-                      #            [0.0,wr_c,-wr,0.0]])
+                      # Evers version 
+        #diag_block = 1j*np.array([[0.0,-wr_c,wr,0.0],
+        #                          [-wr,(ecv+1j*gamma2),0.0,wr],\
+        #                          [wr_c,0.0,-(ecv-1j*gamma2),-wr_c],\
+        #                          [0.0,wr_c,-wr,0.0]])
 
         '''
         Blocks for the forward and backwards portion of the finite difference derivative
@@ -180,21 +180,22 @@ def main():
     # PARAMETERS
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
-    gamma2 = 0.242131                           # Gamma2 parameter
+    gamma2 = 0.00242131                          # Gamma2 parameter
     Nk = 10                                     # Number of k-points
     w = 0.000725665                             # Driving frequency
     E0 = 0.015557                               # Driving field amplitude
-    alpha = 1000                                # Gaussian pulse width
-    t0 = -15000                                 # Initial time condition
-    tf = 50000                                  # Final time
-    dt = 0.1                                    # Integration time step
+    alpha = 2017.5                                # Gaussian pulse width
+    t0 = -10000                                 # Initial time condition
+    tf = 35000                                  # Final time
+    dt = 0.02                                    # Integration time step
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
     ###############################################################################################
-    fs_conv = 41.34137335
-    E_conv = 0.000194469
-    THz_conv = 0.000024188843266
+    fs_conv = 41.34137335        #(1fs = 41.341473335 a.u.)
+    E_conv = 0.0001944690381     #(1MV/cm = 1.944690381*10^-4 a.u.) 
+    THz_conv = 0.000024188843266 #(1THz = 2.4188843266*10^-5 a.u.)
+    amp_conv = 150.97488474      #(1A = 150.97488474)
 
     print("Solving for...(atomic units in parenthesis)")
     print("Pulse Frequency - THz = " + str(w/THz_conv) + " (" + str(w) + ")")
@@ -289,41 +290,70 @@ def main():
 
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
+    real_t_lims = (-10*(alpha/fs_conv), 10.0*(alpha/fs_conv))
+    
     # Real-time driving field, polarization, current
-    pl.figure(1)
-    pl.plot(t/fs_conv, driving_field(E0, w, t, alpha), label = 'Driving field')
-    pl.plot(t/fs_conv, pol, label = 'Polarization')
-    pl.plot(t/fs_conv, curr, label = 'Current')
+    pl.subplot(242)
+    pl.plot(t/fs_conv, driving_field(E0, w, t, alpha)/E_conv, label = 'Driving field')
     ax = pl.gca()
-    ax.set_xlabel(r'$t (fs)$', fontsize = 14)
-    ax.legend(loc = 'best')
+    ax.set_xlabel(r'$t\;(fs)$')
+    ax.set_ylabel('E (MV/cm)')
+    ax.set_xlim(real_t_lims)
+
+    pl.subplot(243)
+    pl.plot(t/fs_conv, pol, label = 'Polarization')
+    ax = pl.gca()
+    ax.set_xlabel(r'$t\;(fs)$')
+    ax.set_ylabel('P (a.u.)')
+    ax.set_xlim(real_t_lims)
+
+    pl.subplot(244)
+    pl.plot(t/fs_conv, curr/amp_conv, label = 'Current')
+    ax = pl.gca()
+    ax.set_xlabel(r'$t\;(fs)$')
+    ax.set_ylabel('Ampere')
+    ax.set_xlim(real_t_lims)
+
+    four_lims = (0.0,10.0)
 
     # Fourier spectra
-    pl.figure(2)
+    pl.subplot(246)
     pl.plot(freq/w, np.abs(fieldfourier), label = 'Driving field')
-    pl.plot(freq/w, np.abs(polfourier),  label = 'Polarization')
-    pl.plot(freq/w, np.abs(currfourier), label = 'Current')
-    pl.xlim((-10,10))
     ax = pl.gca()
-    ax.set_xlabel(r'$\omega/\omega_0$', fontsize = 14)
-    ax.legend(loc = 'best')
+    ax.set_xlabel(r'$\omega/\omega_0$')
+    ax.set_ylabel('Intensity')
+    ax.set_xlim(four_lims)
+
+    pl.subplot(247)
+    pl.plot(freq/w, np.abs(polfourier),  label = 'Polarization')
+    ax = pl.gca()
+    ax.set_xlabel(r'$\omega/\omega_0$')
+    ax.set_ylabel('Intensity')
+    ax.set_xlim(four_lims)
+
+    pl.subplot(248)
+    pl.plot(freq/w, np.abs(currfourier), label = 'Current')
+    ax = pl.gca()
+    ax.set_xlabel(r'$\omega/\omega_0$')
+    ax.set_ylabel('Intensity')
+    ax.set_xlim(four_lims)
 
     # Emission spectrum
-    pl.figure(3)
+    pl.subplot(245)
     pl.yscale('log')
     pl.xlim((0,30))
     pl.grid(True)
     pl.plot(freq/w, np.real(emis), label = 'Emission')
     ax = pl.gca()
     ax.set_xlabel(r'$\omega/\omega_0$', fontsize = 14)
-    ax.set_ylabel(r'$Intensity$', fontsize = 14)
+    ax.set_ylabel(r'$Intensity (a.u.)$', fontsize = 14)
     ax.legend(loc = 'best')
     ###############################################################################################
 
     # OUTPUT BANDSTRUCTURE (SAME FOR EACH PARAMETER)
     ###############################################################################################
     # Band structure/velocities
-    pl.figure(4)
+    pl.subplot(241)
     pl.scatter(kgrid, eband(2, kgrid), s = 5, label = 'Conduction band')
     pl.scatter(kgrid, eband(1, kgrid), s = 5, label = 'Valence band')
     #pl.scatter(kgrid, diff(kgrid, eband(1,kgrid)), s = 5, label = 'Conduction band velocity')
