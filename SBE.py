@@ -4,9 +4,6 @@ import time, os
 from scipy.integrate import ode
 import sys
 
-from pdb import set_trace() as bpnt
-
-
 def eband(n, k):
     '''
     Returns the energy of a band n, from the k-point.
@@ -29,8 +26,8 @@ def driving_field(E0, w, t, alpha):
     '''
     Returns the instantaneous driving electric field
     '''
-    #return E0*np.sin(2.0*np.pi*w*t)
-    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2*np.pi*w*t)
+    return E0*np.sin(2.0*np.pi*w*t)
+    #return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2*np.pi*w*t)
 
 def rabi(n,m,k,E0,w,t,alpha):
     '''
@@ -188,9 +185,9 @@ def main():
     w = 0.000725665                             # Driving frequency
     E0 = 0.015557                               # Driving field amplitude
     alpha = 2017.5                                # Gaussian pulse width
-    t0 = -10000                                 # Initial time condition
-    tf = 35000                                  # Final time
-    dt = 0.02                                    # Integration time step
+    t0 = 0                                      # Initial time condition
+    tf = 50000                                      # Final time
+    dt = 0.1                                    # Integration time step
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
@@ -242,7 +239,7 @@ def main():
     # Set solver
     solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, gamma2, E0, w, alpha)
 
-    bpnt
+    #breakpoint()
     
     # Integrate each time step
     tn = 0
@@ -265,7 +262,7 @@ def main():
     # Current decay start time (fraction of final time)
     decay_start = 0.4
     pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-np.heaviside(t-decay_start*tf,1)*(t-decay_start*tf)**2.0/(2.0*6000)**2.0) # Current
+    curr = current(kgrid, solution[:,:,0], solution[:,:,3])#*np.exp(-np.heaviside(t-decay_start*tf,1)*(t-decay_start*tf)**2.0/(2.0*6000)**2.0) # Current
     
     # Average energy per time
     #print("Avg. energy absorption (per time): " + str(simps(curr * rabi(omega0, Omega, t), t)))
@@ -295,7 +292,7 @@ def main():
 
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
-    real_t_lims = (-10*(alpha/fs_conv), 10.0*(alpha/fs_conv))
+    real_t_lims = (0, tf/fs_conv)
     
     # Real-time driving field, polarization, current
     pl.subplot(242)
