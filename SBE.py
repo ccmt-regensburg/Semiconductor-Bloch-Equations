@@ -4,6 +4,9 @@ import time, os
 from scipy.integrate import ode
 import sys
 
+from pdb import set_trace() as bpnt
+
+
 def eband(n, k):
     '''
     Returns the energy of a band n, from the k-point.
@@ -239,6 +242,8 @@ def main():
     # Set solver
     solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, gamma2, E0, w, alpha)
 
+    bpnt
+    
     # Integrate each time step
     tn = 0
     while solver.successful() and tn < Nt:        
