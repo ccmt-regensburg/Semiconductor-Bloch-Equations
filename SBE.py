@@ -27,14 +27,14 @@ def driving_field(E0, w, t, alpha):
     Returns the instantaneous driving electric field
     '''
     return E0*np.sin(2.0*np.pi*w*t)
-    #return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2*np.pi*w*t)
+    #return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 def rabi(n,m,k,E0,w,t,alpha):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
     return dipole(k)*driving_field(E0, w, t, alpha)
-
+    
 def diff(x,y):
     '''
     Takes the derivative of y w.r.t. x
@@ -55,13 +55,6 @@ def polarization(pvc,pcv):
     Nk = np.size(pvc, axis=0)
     return np.real(np.sum(pvc + pcv, axis=0))/Nk
 
-#def current(k, hop, Delta, fc, fv):
-#    '''
-#    Calculates the current by summing the contribution from all kpoints.
-#    '''
-#    Nk = np.size(fc, axis=0)
-#    return np.real(np.dot(diff(k, econd(k, hop, Delta)), fc) + np.dot(diff(k, -econd(k, hop, Delta)), fv))/Nk
-
 def current(k,fv,fc):
     '''
     Calculates current according to 
@@ -72,11 +65,14 @@ def current(k,fv,fc):
     Nk = np.size(fc, axis=0)
     return np.real(np.dot(diff(k, eband(2,k)), fc) + np.dot(diff(k, eband(1,k)), fv))/Nk
 
-def f(t, y, kgrid, Nk, gamma2, E0, w, alpha):
+def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     '''
     Function driving the dynamics of the system.
     This is required as input parameter to the ode solver
     '''
+    
+    #breakpoint()
+
     # Constant vector container
     b = []
 
@@ -87,29 +83,29 @@ def f(t, y, kgrid, Nk, gamma2, E0, w, alpha):
         '''
         Energy term eband(i,k) the energy of band i at point k
         '''
-        ecv = eband(2, k1) + eband(1, k1)
+        ecv = eband(2, kgrid[k1]) + eband(1, kgrid[k1])
 
         '''
         Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
         Rabi frequency conjugate
         '''
-        wr = rabi(1, 2, k1, E0, w, t, alpha)
+        wr = rabi(1, 2, kgrid[k1], E0, w, t, alpha)
         wr_c = np.conjugate(wr)
 
         '''
         Brillouin zone drift term coefficient: E(t)*grad_k
         Coefficient for finite difference derivative. 
         '''
-        drift_coef = driving_field(E0, w, t, alpha)/(2*(1/Nk))
+        drift_coef = 0.0#driving_field(E0, w, t, alpha)#/(2.0*dk)
 
         '''
         Diagonal block of the propagation matrix M. Contains all terms not related to drift term. 
         '''
-        diag_block = 1j*np.array([[0.0,wr,-wr_c,0.0],
+        diag_block = 1j*np.array([[0.0,wr,-wr_c,0.0],\
                                   [wr,-(ecv-1j*gamma2),0.0,wr],\
                                   [-wr_c,0.0,(ecv+1j*gamma2),-wr_c],\
                                   [0.0,-wr_c,wr,0.0]])
-                      # Evers version 
+        # Evers version 
         #diag_block = 1j*np.array([[0.0,-wr_c,wr,0.0],
         #                          [-wr,(ecv+1j*gamma2),0.0,wr],\
         #                          [wr_c,0.0,-(ecv-1j*gamma2),-wr_c],\
@@ -171,6 +167,8 @@ def f(t, y, kgrid, Nk, gamma2, E0, w, alpha):
     # Convert to numpy array
     b = 1j*np.array(b)
 
+    #print(np.array2string(M, max_line_width=np.inf))
+
     # Calculate the timestep
     svec = np.dot(M, y) + b
     return svec
@@ -180,14 +178,14 @@ def main():
     # PARAMETERS
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
-    gamma2 = 0.00242131                          # Gamma2 parameter
-    Nk = 10                                     # Number of k-points
-    w = 0.000725665                             # Driving frequency
-    E0 = 0.015557                               # Driving field amplitude
-    alpha = 2017.5                                # Gaussian pulse width
-    t0 = 0                                      # Initial time condition
-    tf = 50000                                      # Final time
-    dt = 0.1                                    # Integration time step
+    gamma2 = 0.0#0.0242131                         # Gamma2 parameter
+    Nk = 4                                     # Number of k-points
+    w = 1.0#0.000725665                             # Driving frequency
+    E0 = 1.0#0.015557                               # Driving field amplitude
+    alpha = 2017.5                              # Gaussian pulse width
+    t0 = 0#-15000                                 # Initial time condition
+    tf = 100#50000                                  # Final time
+    dt = 0.01                                    # Integration time step
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
@@ -216,6 +214,7 @@ def main():
 
     # Form the Brillouin zone in consideration
     kgrid = np.linspace(-0.5, 0.5, Nk, endpoint=False)
+    dk = (kgrid[-1]-kgrid[0])/Nk
     
     # Initial condition for density matrix and time
     # Initially no excited electrons (and thus no holes) all values set to zero. 
@@ -237,13 +236,11 @@ def main():
     # SOLVING THE MATRIX SBE
     ###############################################################################################
     # Set solver
-    solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, gamma2, E0, w, alpha)
+    solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, dk, gamma2, E0, w, alpha)
 
-    #breakpoint()
-    
     # Integrate each time step
     tn = 0
-    while solver.successful() and tn < Nt:        
+    while solver.successful() and tn < Nt:
         solver.integrate(solver.t + dt)    # Integrate the next time step
         solution.append(solver.y)          # Append last step to the solution array
         tn += 1                            # Keep track of t-steps 
@@ -254,15 +251,20 @@ def main():
     solution = np.array(solution)
     ###############################################################################################
     
+    # Output the solution vector to a file
+    ###############################################################################################
+    np.savetxt(save_dir + "/solution.dat", np.transpose([t,solution[1,:,0],solution[1,:,3],solution[1,:,1],solution[1,:,2]]), fmt='%.12f')
+
     # COMPUTE POLARIZATION,CURRENT,EMISSION,AVG.ABSORPTION
-    ##############################################################################################
+    ###############################################################################################
     # First index of solution is kpoint, second is timestep, third is fv, pvc, pcv, fc
-    
-    #N = np.sum(solution[:,:,0]+solution[:,:,3],axis=0) particle number
+
+    N_elec = np.sum(solution[:,:,3],axis=0)/Nk # Electron number as a function of time
+    N_hole = np.sum(solution[:,:,0],axis=0)/Nk # Hole number 
     # Current decay start time (fraction of final time)
     decay_start = 0.4
     pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])#*np.exp(-np.heaviside(t-decay_start*tf,1)*(t-decay_start*tf)**2.0/(2.0*6000)**2.0) # Current
+    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*6000)**2.0) # Current
     
     # Average energy per time
     #print("Avg. energy absorption (per time): " + str(simps(curr * rabi(omega0, Omega, t), t)))
@@ -292,18 +294,27 @@ def main():
 
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
-    real_t_lims = (0, tf/fs_conv)
+    real_t_lims = (t0/fs_conv, tf/fs_conv)
     
     # Real-time driving field, polarization, current
-    pl.subplot(242)
-    pl.plot(t/fs_conv, driving_field(E0, w, t, alpha)/E_conv, label = 'Driving field')
+    pl.subplot(241)
+    pl.plot(t/fs_conv, driving_field(E0, w, t, alpha)/E_conv)
     ax = pl.gca()
     ax.set_xlabel(r'$t\;(fs)$')
     ax.set_ylabel('E (MV/cm)')
     ax.set_xlim(real_t_lims)
 
+    pl.subplot(242)
+    pl.plot(t/fs_conv, N_elec)
+    pl.plot(t/fs_conv, N_hole)
+    ax = pl.gca()
+    ax.set_xlabel(r'$t\;(fs)$')
+    ax.set_ylabel('N electron')
+    ax.set_xlim(real_t_lims)
+
     pl.subplot(243)
     pl.plot(t/fs_conv, pol, label = 'Polarization')
+    pl.plot(t/fs_conv, driving_field(E0, w, t, alpha))
     ax = pl.gca()
     ax.set_xlabel(r'$t\;(fs)$')
     ax.set_ylabel('P (a.u.)')
@@ -319,21 +330,21 @@ def main():
     four_lims = (0.0,10.0)
 
     # Fourier spectra
-    pl.subplot(246)
+    pl.subplot(245)
     pl.plot(freq/w, np.abs(fieldfourier), label = 'Driving field')
     ax = pl.gca()
     ax.set_xlabel(r'$\omega/\omega_0$')
     ax.set_ylabel('Intensity')
     ax.set_xlim(four_lims)
 
-    pl.subplot(247)
+    pl.subplot(246)
     pl.plot(freq/w, np.abs(polfourier),  label = 'Polarization')
     ax = pl.gca()
     ax.set_xlabel(r'$\omega/\omega_0$')
     ax.set_ylabel('Intensity')
     ax.set_xlim(four_lims)
 
-    pl.subplot(248)
+    pl.subplot(247)
     pl.plot(freq/w, np.abs(currfourier), label = 'Current')
     ax = pl.gca()
     ax.set_xlabel(r'$\omega/\omega_0$')
@@ -341,28 +352,28 @@ def main():
     ax.set_xlim(four_lims)
 
     # Emission spectrum
-    pl.subplot(245)
+    pl.subplot(248)
     pl.yscale('log')
     pl.xlim((0,30))
     pl.grid(True)
     pl.plot(freq/w, np.real(emis), label = 'Emission')
     ax = pl.gca()
-    ax.set_xlabel(r'$\omega/\omega_0$', fontsize = 14)
-    ax.set_ylabel(r'$Intensity (a.u.)$', fontsize = 14)
+    ax.set_xlabel(r'$\omega/\omega_0$')
+    ax.set_ylabel(r'$Intensity (a.u.)$')
     ax.legend(loc = 'best')
     ###############################################################################################
 
     # OUTPUT BANDSTRUCTURE (SAME FOR EACH PARAMETER)
     ###############################################################################################
     # Band structure/velocities
-    pl.subplot(241)
+    pl.figure(2)
     pl.scatter(kgrid, eband(2, kgrid), s = 5, label = 'Conduction band')
     pl.scatter(kgrid, eband(1, kgrid), s = 5, label = 'Valence band')
     #pl.scatter(kgrid, diff(kgrid, eband(1,kgrid)), s = 5, label = 'Conduction band velocity')
     #pl.scatter(kgrid, diff(kgrid, eband(2, kgrid)), s = 5, label = 'Valence band velocity')
     ax = pl.gca()
-    ax.set_xlabel(r'$k$a', fontsize = 14)
-    ax.set_ylabel(r'$\epsilon(k)$',fontsize = 14)
+    ax.set_xlabel(r'$k$a')
+    ax.set_ylabel(r'$\epsilon(k)$')
     ax.legend(loc = 'best')
     ###############################################################################################
 
