@@ -201,7 +201,7 @@ def main():
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 120                                      # Number of k-points
+    Nk = 160                                      # Number of k-points
     w = 0.000725665                             # Driving frequency
     E0 = 0.015557                               # Driving field amplitude
     alpha = 2000.0                              # Gaussian pulse width
