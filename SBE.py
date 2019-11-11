@@ -12,8 +12,10 @@ def eband(n, k):
     '''
     envelope = ((4.0*k**2 - 1.0)**2.0)*((4.0*k**2 + 1.0)**2.0)
     if (n==1):   # Valence band
+        #return np.zeros(np.shape(k)) # Flat structure
         return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*k**2.0)*envelope
     elif (n==2): # Conduction band
+        #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*k**2.0)*envelope
 
 def dipole(k):
@@ -52,7 +54,10 @@ def polarization(pvc,pcv):
     '''
     Calculates the polarization by summing the contribtion from all kpoints.
     '''
+    # Determine number of k-points
     Nk = np.size(pvc, axis=0)
+
+    # Sum over k points, take real-part
     return np.real(np.sum(pvc + pcv, axis=0))/Nk
  
 def current(k,fv,fc):
@@ -62,8 +67,19 @@ def current(k,fv,fc):
     where n represents the band index and j_n(k) is the band velocity
     calculated as j_n(k) = grad_k eband(n,k)
     '''
+    # Determine number of k-points
     Nk = np.size(fc, axis=0)
-    return np.real(np.dot(diff(k, eband(2,k)), fc) + np.dot(diff(k, eband(1,k)), fv))/Nk
+    
+    # Pre factors
+    j_e = diff(k, eband(2,k))
+    j_h = diff(k, eband(1,k))
+
+    # Sum over the k's and multiply
+    curr_e = np.dot(j_e, fc)
+    curr_h = np.dot(j_h, fv)
+
+    #np.savetxt(os.path.dirname(os.path.realpath(__file__)) + '/current_factors.dat', np.transpose(np.real([diff(k,eband(2,k)), diff(k,eband(1,k))]))) 
+    return np.real(curr_e + curr_h)/Nk
 
 def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     '''
@@ -71,13 +87,12 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     '''
     ax1.set_xlim(xlims)                                      # Set x limits
     ax2 = ax1.twinx()                                        # Create secondary y-axis with shared x scale
+    ax2.set_xlim(xlims)                                      # Set x limits for secondary axis
     ax1.plot(xdata, data1, color='r', zorder=1)              # Plot data1 on the first y-axis
     ax1.set_xlabel(xlabel)                                   # Set the label for the x-axis
     ax1.set_ylabel(label1)                                   # Set the first y-axis label
-    ax1.tick_params(axis=ax1, color = 'r')                   # Color the first y-axis
     ax2.plot(xdata, data2, color='b', zorder=2, alpha=0.5)   # Plot data2 on the second y-axis
     ax2.set_ylabel(label2)                                   # Set the second y-axis label
-    ax2.tick_params(axis=ax2, color = 'b')                   # Color the second y-axis
     return ax1, ax2                                          # Returns these two axes with the data plotted
 
 def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
@@ -186,13 +201,13 @@ def main():
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 25                                     # Number of k-points
+    Nk = 120                                      # Number of k-points
     w = 0.000725665                             # Driving frequency
     E0 = 0.015557                               # Driving field amplitude
     alpha = 2000.0                              # Gaussian pulse width
     t0 = -15000                                 # Initial time condition
-    tf = 50000                                  # Final time
-    dt = 0.1                                    # Integration time step
+    tf = 35000                                  # Final time
+    dt = 1.0                                    # Integration time step
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
@@ -201,8 +216,10 @@ def main():
     E_conv = 0.0001944690381     #(1MV/cm = 1.944690381*10^-4 a.u.) 
     THz_conv = 0.000024188843266 #(1THz = 2.4188843266*10^-5 a.u.)
     amp_conv = 150.97488474      #(1A = 150.97488474)
+    eV_conv = 0.03674932176  #(1eV = 0.036749322176 a.u.)
 
     print("Solving for...")
+    print("Number of k-points              = " + str(Nk))
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
     print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
     print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
@@ -267,16 +284,17 @@ def main():
     # First index of solution is kpoint, second is timestep, third is fv, pvc, pcv, fc
 
     # Average number of electrons per k-point
-    N_elec = np.sum(solution[:,:,3],axis=0)/Nk # Electron number as a function of time
+    N_elec = np.real(np.sum(solution[:,:,3],axis=0)/Nk) 
 
-    N_elec_gamma = solution[int(Nk/2),:,3]
-    N_elec_k = solution[Nk-1,:,3]
-    N_elec_mid = solution[int(Nk*(3/4)),:,3]
+    # Electrons at the gamma point, K-point, and midway between in the Brillouin zone
+    N_elec_gamma = np.real(solution[int(Nk/2),:,3])
+    N_elec_k = np.real(solution[Nk-1,:,3])
+    N_elec_mid = np.real(solution[int(Nk*(3/4)),:,3])
 
     # Current decay start time (fraction of final time)
     decay_start = 0.4
     pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*5000)**2.0) # Current 
+    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*3000)**2.0) # Current 
 
     # Average energy per time
     #print("Avg. energy absorption (per time): " + str(simps(curr * rabi(omega0, Omega, t), t)))
@@ -291,17 +309,21 @@ def main():
 
     # FILE OUTPUT
     ###############################################################################################
-    emis_filename = 'emis_k' + str(Nk) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
-    emis_header = 'omega        emission spectrum'
-    np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq,emis]), header=emis_header, fmt='%.16f')
+    part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    part_header = 't            N_elec_avg.   N_elec_gamma   N_elec_mid     N_elec_K'
+    np.savetxt(save_dir + '/' + part_filename, np.transpose([freq/w,N_elec,N_elec_gamma,N_elec_mid,N_elec_k]), header=part_header, fmt='%.16e')
+    
+    emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    emis_header = 'w/w0        emission spectrum'
+    np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq/w,emis]), header=emis_header, fmt='%.16e')
 
-    pol_filename = 'pol_k' + str(Nk) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
-    pol_header = 't            polarization   omega          pol_fourier'
-    np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t,pol,freq,polfourier])), header=pol_header, fmt='%.16f')
+    pol_filename = str('pol_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    pol_header = 't            polarization   w/w0           pol_fourier'
+    np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
 
-    curr_filename = 'curr_k' + str(Nk) + '_g2-' + str('%.3f'%(gamma2)) + '.dat'
-    curr_header = 't            polarization   omega          curr_fourier'
-    np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16f')
+    curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    curr_header = 't            current       w/w0           curr_fourier'
+    np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
     ###############################################################################################
 
     # PLOTTING OF DATA FOR EACH PARAMETER
@@ -313,41 +335,52 @@ def main():
     freq_lims = (0,20)
 
     # Create figure, establish the set of requried axes
-    fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(8,4))
+    fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(18,10))
     
     # Plot band structure in the first set of axes
-    band_ax.scatter(kgrid, eband(2, kgrid), s=5)
-    band_ax.scatter(kgrid, eband(1, kgrid), s=5)
-    band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)), s=5, label='Conduction vel')
-    band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)), s=5, label='Valence vel')
-    
+    band_ax.scatter(kgrid, eband(2, kgrid)/eV_conv, s=5)
+    band_ax.scatter(kgrid, eband(1, kgrid)/eV_conv, s=5)
+    #band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)), s=5, label='Conduction vel')
+    #band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)), s=5, label='Valence vel')
+    band_ax.set_xlabel(r'$ka$')
+    band_ax.set_ylabel(r'$\epsilon(k)$')
+
     # Plot particle number (with driving field)
-    N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_elec_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'f_{e}', r'E (MV/cm)')
+    N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_elec_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$f_{e}$', r'$E(t)\;(MV/cm)$')
     #N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_elec_gamma, N_elec_k, real_t_lims, r'$t\;(fs)$', r'f_{e}', r'E (MV/cm)')
     
     # Plot polarization (with driving field)
-    P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'P (a.u.)', r'E (MV/cm)')
+    P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$P(t)\;[a.u.]$', r'$E(t)\;(MV/cm)$')
     
     # Plot current (with driving field)
-    J_ax, J_ax_E = double_scale_plot(J_ax, t/fs_conv, curr/amp_conv, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'J\;(A)', r'E (MV/cm)')
+    J_ax, J_ax_E = double_scale_plot(J_ax, t/fs_conv, curr/amp_conv, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$J(t)\;[Amp]$', r'$E(t)\;(MV/cm)$')
     
     # Plot emmision spectrum on a semi-log scale
-    emis_ax.semilogy(freq/w, emis)
+    emis_ax.semilogy(freq/w, emis, label='Emission spectrum')
     emis_ax.set_xlim(freq_lims)
+    emis_ax.set_ylabel(r'$I_{rad}(\omega)$')
+    emis_ax.set_xlabel(r'$\omega/\omega_0$')
     
     # Plot fourier transform of driving field
-    Efour_ax.plot(freq/w, fieldfourier)
+    Efour_ax.semilogy(freq/w, np.abs(fieldfourier))
     Efour_ax.set_xlim(freq_lims)
+    Efour_ax.set_ylabel(r'$E(\omega)$')
+    Efour_ax.set_xlabel(r'$\omega/\omega_0$')
 
     # Plot fourier transform of polarization
-    Pfour_ax.semilogy(freq/w, polfourier)
+    Pfour_ax.semilogy(freq/w, np.abs(polfourier), label='Polarization spectrum')
     Pfour_ax.set_xlim(freq_lims)
+    Pfour_ax.set_ylabel(r'$P(\omega)$')
+    Pfour_ax.set_xlabel(r'$\omega/\omega_0$')
     
     # Plot fourier transform of current
-    Jfour_ax.semilogy(freq/w, currfourier)
+    Jfour_ax.semilogy(freq/w, np.abs(currfourier), label='Current spectrum')
     Jfour_ax.set_xlim(freq_lims)
+    Jfour_ax.set_ylabel(r'$J(\omega)$')
+    Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
 
     # Show the plot after everything
+    pl.tight_layout()
     pl.show()
 
 if __name__ == "__main__":
