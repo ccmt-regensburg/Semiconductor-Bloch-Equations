@@ -8,12 +8,14 @@ def eband(n, k):
     '''
     Returns the energy of a band n, from the k-point.
     Band structure modeled as (e.g.)...
-    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2
+    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
+    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*((1/pi^2)k^2-1)^2((1/pi^2)k^2+)^2 (for kgrid = [-pi,pi])
     '''
-    envelope = ((4.0*k**2 - 1.0)**2.0)*((4.0*k**2 + 1.0)**2.0)
+    envelope = ((4.0*k**2 - 1.0)**2.0)*((4.0*k**2 + 1.0)**2.0) # Model defined on [-0.5,0.5]
+    #envelope = (((1/np.pi**2)*k**2 - 1.0)**2.0)*(((1/np.pi**2)*k**2 + 1.0)**2.0) # Model defined on [-pi,pi]
     if (n==1):   # Valence band
         #return np.zeros(np.shape(k)) # Flat structure
-        return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*k**2.0)*envelope
+        return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*k**2.0)*envelope 
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*k**2.0)*envelope
@@ -65,7 +67,7 @@ def current(k,fv,fc):
     Calculates current according to 
     J(t) = sum_k[sum_n j_n(k)*f_n(k)]
     where n represents the band index and j_n(k) is the band velocity
-    calculated as j_n(k) = grad_k eband(n,k)
+    calculated as j_n(k) = grad_k eband(n,k)100fs in atomic units
     '''
     # Determine number of k-points
     Nk = np.size(fc, axis=0)
@@ -110,7 +112,7 @@ def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
         '''
         Energy term eband(i,k) the energy of band i at point k
         '''
-        ecv = eband(2, kgrid[k1]) + eband(1, kgrid[k1])
+        ecv = eband(2, kgrid[k1]) - eband(1, kgrid[k1])
 
         '''
         Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
@@ -189,7 +191,9 @@ def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     # Convert to numpy array
     b = 1j*np.array(b)
 
-    #print(np.array2string(M, max_line_width=np.inf))
+    #if (t>-0.01):
+    #  print(np.array2string(M, max_line_width=np.inf))
+    #breakpoint()
 
     # Calculate the timestep
     svec = np.dot(M, y) + b 
@@ -201,12 +205,12 @@ def main():
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 160                                      # Number of k-points
+    Nk = 55                                      # Number of k-points
     w = 0.000725665                             # Driving frequency
-    E0 = 0.015557                               # Driving field amplitude
-    alpha = 2000.0                              # Gaussian pulse width
-    t0 = -15000                                 # Initial time condition
-    tf = 35000                                  # Final time
+    E0 = 0.0023336#0.015557                               # Driving field amplitude
+    alpha = 2500.0                              # Gaussian pulse width
+    t0 = -50000                                 # Initial time condition
+    tf = 70000                                  # Final time
     dt = 1.0                                    # Integration time step
     ###############################################################################################
 
@@ -237,7 +241,7 @@ def main():
     ###############################################################################################
 
     # Form the Brillouin zone in consideration
-    kgrid = np.linspace(-0.5, 0.5, Nk, endpoint=False)
+    kgrid = np.linspace(-0.5 + 1/(2*Nk), 0.5 - 1/(2*Nk), Nk)
     dk = (kgrid[-1]-kgrid[0])/Nk
     
     # Initial condition for density matrix and time
@@ -279,22 +283,25 @@ def main():
     ###############################################################################################
     np.savetxt(save_dir + "/solution.dat", np.transpose([t,solution[1,:,0],solution[1,:,3],solution[1,:,1],solution[1,:,2]]), fmt='%.12f')
 
-    # COMPUTE POLARIZATION,CURRENT,EMISSION,AVG.ABSORPTION
+    # COMPUTE OCCUPATIONS,POLARIZATION,CURRENT,EMISSION
     ###############################################################################################
     # First index of solution is kpoint, second is timestep, third is fv, pvc, pcv, fc
 
-    # Average number of electrons per k-point
-    N_elec = np.real(np.sum(solution[:,:,3],axis=0)/Nk) 
+    # Electrons occupations, gamma point, K points, and midway between those
+    N_elec = np.real(solution[:,:,3])
+    N_gamma = N_elec[int(Nk/2),:]
+    N_mid = N_elec[int(Nk*(3/4)),:]
+    N_K = N_elec[-1,:]
+    N_negmid = N_elec[int(Nk*(1/4)),:]
+    N_negK = N_elec[0,:]
 
-    # Electrons at the gamma point, K-point, and midway between in the Brillouin zone
-    N_elec_gamma = np.real(solution[int(Nk/2),:,3])
-    N_elec_k = np.real(solution[Nk-1,:,3])
-    N_elec_mid = np.real(solution[int(Nk*(3/4)),:,3])
-
+    # Calculate grad_k f_e
+    g_elec = np.gradient(N_elec,axis=0)
+    
     # Current decay start time (fraction of final time)
     decay_start = 0.4
     pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*3000)**2.0) # Current 
+    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current 
 
     # Average energy per time
     #print("Avg. energy absorption (per time): " + str(simps(curr * rabi(omega0, Omega, t), t)))
@@ -310,9 +317,9 @@ def main():
     # FILE OUTPUT
     ###############################################################################################
     part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    part_header = 't            N_elec_avg.   N_elec_gamma   N_elec_mid     N_elec_K'
-    np.savetxt(save_dir + '/' + part_filename, np.transpose([freq/w,N_elec,N_elec_gamma,N_elec_mid,N_elec_k]), header=part_header, fmt='%.16e')
-    
+    part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K'
+    np.savetxt(save_dir + '/' + part_filename, np.transpose([t/fs_conv,N_gamma,N_mid,N_K,N_negmid,N_negK]), header=part_header, fmt='%.16e') 
+
     emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
     emis_header = 'w/w0        emission spectrum'
     np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq/w,emis]), header=emis_header, fmt='%.16e')
@@ -322,6 +329,7 @@ def main():
     np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
 
     curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+
     curr_header = 't            current       w/w0           curr_fourier'
     np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
     ###############################################################################################
@@ -340,14 +348,14 @@ def main():
     # Plot band structure in the first set of axes
     band_ax.scatter(kgrid, eband(2, kgrid)/eV_conv, s=5)
     band_ax.scatter(kgrid, eband(1, kgrid)/eV_conv, s=5)
-    #band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)), s=5, label='Conduction vel')
-    #band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)), s=5, label='Valence vel')
+    band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)/eV_conv), s=5, label='Conduction vel')
+    band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)/eV_conv), s=5, label='Valence vel')
     band_ax.set_xlabel(r'$ka$')
     band_ax.set_ylabel(r'$\epsilon(k)$')
 
     # Plot particle number (with driving field)
-    N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_elec_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$f_{e}$', r'$E(t)\;(MV/cm)$')
-    #N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_elec_gamma, N_elec_k, real_t_lims, r'$t\;(fs)$', r'f_{e}', r'E (MV/cm)')
+    N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$f_{e}$', r'$E(t)\;(MV/cm)$')
+    #N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_elec_mid-N_elec_midminus, N_elec_gamma, real_t_lims, r'$t\;(fs)$', r'f_{e}', r'E (MV/cm)')
     
     # Plot polarization (with driving field)
     P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$P(t)\;[a.u.]$', r'$E(t)\;(MV/cm)$')
@@ -379,8 +387,74 @@ def main():
     Jfour_ax.set_ylabel(r'$J(\omega)$')
     Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
 
-    # Show the plot after everything
+    '''
+    PLOTS TO CHECK OCCUPATIONS! NOT NECESSARY FOR FINAL PRODUCT
+    fig2 = pl.figure()
+    
+    Nax1 = fig2.add_subplot(131)
+    Nax1.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    Nax1.plot(t/fs_conv,N_elec[0,:])
+    Nax1.plot(t/fs_conv,N_elec[1,:])
+    Nax1.plot(t/fs_conv,N_elec[2,:])
+    Nax1.legend(('k = ' + str(kgrid[0]),'k = ' + str(kgrid[1]),'k = ' + str(kgrid[2])))
+    
+    Nax2 = fig2.add_subplot(132)
+    Nax2.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    Nax2.plot(t/fs_conv,N_elec[3,:])
+    Nax2.plot(t/fs_conv,N_elec[4,:])
+    Nax2.plot(t/fs_conv,N_elec[5,:])
+    Nax2.legend(('k = ' + str(kgrid[3]),'k = ' + str(kgrid[4]),'k = ' + str(kgrid[5])))
+    
+    Nax3 = fig2.add_subplot(133)
+    Nax3.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    Nax3.plot(t/fs_conv,N_elec[6,:])
+    Nax3.plot(t/fs_conv,N_elec[7,:])
+    Nax3.plot(t/fs_conv,N_elec[8,:])
+    Nax3.legend(('k = ' + str(kgrid[6]),'k = ' + str(kgrid[7]),'k = ' + str(kgrid[8])))
+
+    # Figures for occupations for various points in the BZ
+    fig3 = pl.figure()
+
+    Nsax1 = fig3.add_subplot(131)
+    Nsax1.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    Nsax1.plot(t/fs_conv,N_elec[0,:])
+    Nsax1.plot(t/fs_conv,N_elec[-1,:])
+    Nsax1.legend(('k = ' + str(kgrid[0]), 'k = ' + str(kgrid[-1])))
+
+    Nsax2 = fig3.add_subplot(132)
+    Nsax2.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    Nsax2.plot(t/fs_conv,N_elec[1,:])
+    Nsax2.plot(t/fs_conv,N_elec[-2,:])
+    Nsax2.legend(('k = ' + str(kgrid[1]), 'k = ' + str(kgrid[-2])))
+
+    Nsax3 = fig3.add_subplot(133)
+    Nsax3.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    Nsax3.plot(t/fs_conv,N_elec[2,:])
+    Nsax3.plot(t/fs_conv,N_elec[-3,:])
+    Nsax3.legend(('k = ' + str(kgrid[2]), 'k = ' + str(kgrid[-3])))
+
     pl.tight_layout()
+    '''
+
+    # Countour plots of occupations and gradients of occupations
+    fig4 = pl.figure()
+    X, Y = np.meshgrid(t/fs_conv,kgrid)
+    pl.contourf(X, Y, N_elec, 50)
+    pl.colorbar().set_label(r'$f_e(k)$')
+    pl.xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    pl.xlabel(r'$t\;(fs)$')
+    pl.ylabel(r'$k$')
+    pl.tight_layout()
+
+    fig5 = pl.figure()
+    pl.contourf(X, Y, g_elec, 50)
+    pl.colorbar().set_label(r'$\nabla_kf_e(k)$')
+    pl.xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    pl.xlabel(r'$t\;(fs)$')
+    pl.ylabel(r'$k$')
+    pl.tight_layout()
+
+    # Show the plot after everything
     pl.show()
 
 if __name__ == "__main__":
