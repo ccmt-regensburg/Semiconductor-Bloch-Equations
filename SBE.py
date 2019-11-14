@@ -9,10 +9,8 @@ def eband(n, k):
     Returns the energy of a band n, from the k-point.
     Band structure modeled as (e.g.)...
     E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
-    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*((1/pi^2)k^2-1)^2((1/pi^2)k^2+)^2 (for kgrid = [-pi,pi])
     '''
     envelope = ((4.0*k**2 - 1.0)**2.0)*((4.0*k**2 + 1.0)**2.0) # Model defined on [-0.5,0.5]
-    #envelope = (((1/np.pi**2)*k**2 - 1.0)**2.0)*(((1/np.pi**2)*k**2 + 1.0)**2.0) # Model defined on [-pi,pi]
     if (n==1):   # Valence band
         #return np.zeros(np.shape(k)) # Flat structure
         return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*k**2.0)*envelope 
@@ -205,13 +203,13 @@ def main():
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 55                                      # Number of k-points
+    Nk = 9                                      # Number of k-points
     w = 0.000725665                             # Driving frequency
-    E0 = 0.0023336#0.015557                               # Driving field amplitude
+    E0 = 0.0023336                              # Driving field amplitude
     alpha = 2500.0                              # Gaussian pulse width
     t0 = -50000                                 # Initial time condition
     tf = 70000                                  # Final time
-    dt = 1.0                                    # Integration time step
+    dt = 0.5                                    # Integration time step
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
@@ -242,7 +240,7 @@ def main():
 
     # Form the Brillouin zone in consideration
     kgrid = np.linspace(-0.5 + 1/(2*Nk), 0.5 - 1/(2*Nk), Nk)
-    dk = (kgrid[-1]-kgrid[0])/Nk
+    dk = 1/Nk
     
     # Initial condition for density matrix and time
     # Initially no excited electrons (and thus no holes) all values set to zero. 
@@ -258,7 +256,7 @@ def main():
     solution = []
 
     # Set up solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf')
+    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step = dt)
     ###############################################################################################
 
     # SOLVING THE MATRIX SBE
@@ -281,7 +279,7 @@ def main():
     
     # Output the solution vector to a file
     ###############################################################################################
-    np.savetxt(save_dir + "/solution.dat", np.transpose([t,solution[1,:,0],solution[1,:,3],solution[1,:,1],solution[1,:,2]]), fmt='%.12f')
+    #np.savetxt(save_dir + "/solution.dat", np.transpose([t,solution[1,:,0],solution[1,:,3],solution[1,:,1],solution[1,:,2]]), fmt='%.12f')
 
     # COMPUTE OCCUPATIONS,POLARIZATION,CURRENT,EMISSION
     ###############################################################################################
@@ -317,7 +315,7 @@ def main():
     # FILE OUTPUT
     ###############################################################################################
     part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K'
+    part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K       N_elec_negmid  N_elec_negK'
     np.savetxt(save_dir + '/' + part_filename, np.transpose([t/fs_conv,N_gamma,N_mid,N_K,N_negmid,N_negK]), header=part_header, fmt='%.16e') 
 
     emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
@@ -388,7 +386,7 @@ def main():
     Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
 
     '''
-    PLOTS TO CHECK OCCUPATIONS! NOT NECESSARY FOR FINAL PRODUCT
+    PLOTS TO CHECK OCCUPATIONS! NOT NECESSARY FOR FINAL PRODUCT. ONLY VALID FOR Nk=9
     fig2 = pl.figure()
     
     Nax1 = fig2.add_subplot(131)
