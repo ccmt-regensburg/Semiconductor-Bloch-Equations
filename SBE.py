@@ -197,13 +197,23 @@ def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     svec = np.dot(M, y) + b 
     return svec
 
+def rk4_step(f, t, yn, dt, kgrid, Nk, dk, gamma2, E0, w, alpha):
+    
+    k1 = dt*f(t, yn, kgrid, Nk, dk, gamma2, E0, w, alpha)
+    k2 = dt*f(t+dt/2, yn + k1/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
+    k3 = dt*f(t+dt/2, yn + k2/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
+    k4 = dt*f(t+dt, yn + k3, kgrid, Nk, dk, gamma2, E0, w, alpha)
+
+    return y = yn + (1/6)*(k1 + 0.5*k2 + 0.5*k3 + k4) 
+
+
 def main():
 
     # PARAMETERS
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 9                                      # Number of k-points
+    Nk = 33                                     # Number of k-points
     w = 0.000725665                             # Driving frequency
     E0 = 0.0023336                              # Driving field amplitude
     alpha = 2500.0                              # Gaussian pulse width
