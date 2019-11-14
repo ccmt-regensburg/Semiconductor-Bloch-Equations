@@ -197,15 +197,17 @@ def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     svec = np.dot(M, y) + b 
     return svec
 
-def rk4_step(f, t, yn, dt, kgrid, Nk, dk, gamma2, E0, w, alpha):
-    
-    k1 = dt*f(t, yn, kgrid, Nk, dk, gamma2, E0, w, alpha)
-    k2 = dt*f(t+dt/2, yn + k1/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
-    k3 = dt*f(t+dt/2, yn + k2/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
-    k4 = dt*f(t+dt, yn + k3, kgrid, Nk, dk, gamma2, E0, w, alpha)
+def rk4_step(f, t, y, dt, kgrid, Nk, dk, gamma2, E0, w, alpha):
+    '''
+    Takes in the current time t, and y-vector yn (+ parameters).
+    Returns the Runge-Kutta approximation for y(t+dt)
+    '''
+    k1 = dt*f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha)
+    k2 = dt*f(t+dt/2, y + k1/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
+    k3 = dt*f(t+dt/2, y + k2/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
+    k4 = dt*f(t+dt, y + k3, kgrid, Nk, dk, gamma2, E0, w, alpha)
 
-    return y = yn + (1/6)*(k1 + 0.5*k2 + 0.5*k3 + k4) 
-
+    return ydt = y + (1/6)*(k1 + 0.5*k2 + 0.5*k3 + k4) 
 
 def main():
 
@@ -266,20 +268,26 @@ def main():
     solution = []
 
     # Set up solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step = dt)
+    #solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step = dt)
     ###############################################################################################
 
     # SOLVING THE MATRIX SBE
     ###############################################################################################
     # Set solver
-    solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, dk, gamma2, E0, w, alpha)
+    #solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, dk, gamma2, E0, w, alpha)
 
     # Integrate each time step
+    #tn = 0
+    #while solver.successful() and tn < Nt:
+    #    solver.integrate(solver.t + dt)    # Integrate the next time step
+    #    solution.append(solver.y)          # Append last step to the solution array
+    #    tn += 1                            # Keep track of t-steps 
+
     tn = 0
-    while solver.successful() and tn < Nt:
-        solver.integrate(solver.t + dt)    # Integrate the next time step
-        solution.append(solver.y)          # Append last step to the solution array
-        tn += 1                            # Keep track of t-steps 
+    while tn < Nt:
+        yn = rk4_step(f, t, y, dt, kgrid, Nk, dk, gamma2, E0, alpha)
+        tn += 1
+
 
     # Slice solution along each kpoint for easier observable calculation
     solution = np.array(solution)
