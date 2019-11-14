@@ -310,6 +310,7 @@ def main():
     polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
     currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                                       # Current
     emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
+    emis = emis/np.amax(emis)                                                                           # Normalize emmision spectrum
     ###############################################################################################
 
     # FILE OUTPUT
@@ -439,7 +440,7 @@ def main():
     X, Y = np.meshgrid(t/fs_conv,kgrid)
     pl.contourf(X, Y, N_elec, 50)
     pl.colorbar().set_label(r'$f_e(k)$')
-    pl.xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
     pl.xlabel(r'$t\;(fs)$')
     pl.ylabel(r'$k$')
     pl.tight_layout()
@@ -447,7 +448,7 @@ def main():
     fig5 = pl.figure()
     pl.contourf(X, Y, g_elec, 50)
     pl.colorbar().set_label(r'$\nabla_kf_e(k)$')
-    pl.xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
+    pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
     pl.xlabel(r'$t\;(fs)$')
     pl.ylabel(r'$k$')
     pl.tight_layout()
