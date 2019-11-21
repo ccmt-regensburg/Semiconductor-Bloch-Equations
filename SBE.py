@@ -17,6 +17,46 @@ def eband(n, k):
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*k**2.0)*envelope
 
+def hex_mesh(Nk, a):
+    # Calculate the alpha values needed based on the size of the Brillouin zone
+    alpha = np.linspace(-0.5 + (1/(2*Nk)), 0.5 - (1/(2*Nk)), num = Nk)
+
+    # Define the reciprocal lattice vectors
+    b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
+    b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
+    b22 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),1])
+    
+    def is_in_hex(p,a):
+        # Check if the point x is in the boundaries of a hexagon.
+        x = np.abs(p[0])
+        y = np.abs(p[1])
+        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+
+    mesh = []
+    # Iterate through each alpha value and append the kgrid array for each one
+    for a1 in alpha:
+        for a2 in alpha:
+            kpoint = a1*b1 + a2*b2
+            if (is_in_hex(kpoint,a)):
+                mesh.append(kpoint)
+            else:
+                while (is_in_hex(kpoint,a) != True):
+                    if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):
+                        kpoint += b1
+                    elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)):
+                        kpoint -= b1
+                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
+                        kpoint -= b2 + b1
+                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
+                        kpoint -= b2
+                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
+                        kpoint += b2 + b1
+                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
+                        kpoint += b2
+                mesh.append(kpoint)
+
+    return np.array(mesh)
+
 def dipole(k):
     '''
     Returns the dipole matrix element for making the transition from band n to band m at the current k-point
