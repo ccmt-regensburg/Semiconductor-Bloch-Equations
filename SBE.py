@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as pl
-import time, os
 from scipy.integrate import ode
+import time, os
 import sys
 
 def eband(n, k):
@@ -85,8 +85,8 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     '''
     Plots the two input sets: data1, data2 on the same x-scale, but with a secondary y-scale (twin of ax1).
     '''
-    ax1.set_xlim(xlims)                                      # Set x limits
     ax2 = ax1.twinx()                                        # Create secondary y-axis with shared x scale
+    ax1.set_xlim(xlims)                                      # Set x limits
     ax2.set_xlim(xlims)                                      # Set x limits for secondary axis
     ax1.plot(xdata, data1, color='r', zorder=1)              # Plot data1 on the first y-axis
     ax1.set_xlabel(xlabel)                                   # Set the label for the x-axis
@@ -96,6 +96,53 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     return ax1, ax2                                          # Returns these two axes with the data plotted
 
 def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
+
+    x = np.empty(np.shape(y),dtype='complex')
+    '''
+    Gradient term coefficient
+    '''
+    D = driving_field(E0, w, t, alpha)/(2*dk)
+
+    '''
+    Update the solution vector
+    '''
+    for k in range(Nk):
+        i = 4*k
+        if k == 0:
+            m = 4*(k+1)
+            n = 4*(Nk-1)
+        elif k == Nk-1:
+            m = 0
+            n = 4*(k-1)
+        else:
+            m = 4*(k+1)
+            n = 4*(k-1)
+
+        '''
+        Energy term eband(i,k) the energy of band i at point k
+        '''
+        ecv = eband(2, kgrid[k]) - eband(1, kgrid[k])
+        ep_p = ecv + 1j*gamma2
+        ep_n = ecv - 1j*gamma2
+
+        '''
+        Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
+        Rabi frequency conjugate
+        '''
+        wr = rabi(1, 2, kgrid[k], E0, w, t, alpha)
+        wr_c = np.conjugate(wr)
+
+        '''
+        Update each component of the solution vector
+        '''
+        x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
+        x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c
+        x[i+2] = -1j*wr*y[i] + 1j*ep_p*y[i+2] - 1j*wr_c*y[i+3] + D*(y[m+2] - y[n+2]) + 1j*wr
+        x[i+3] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m+3] - y[n+3])
+
+    return x
+    
+def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     '''
     Function driving the dynamics of the system.
     This is required as input parameter to the ode solver
@@ -189,25 +236,9 @@ def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     # Convert to numpy array
     b = 1j*np.array(b)
 
-    #if (t>-0.01):
-    #  print(np.array2string(M, max_line_width=np.inf))
-    #breakpoint()
-
     # Calculate the timestep
     svec = np.dot(M, y) + b 
     return svec
-
-def rk4_step(f, t, y, dt, kgrid, Nk, dk, gamma2, E0, w, alpha):
-    '''
-    Takes in the current time t, and y-vector yn (+ parameters).
-    Returns the Runge-Kutta approximation for y(t+dt)
-    '''
-    k1 = dt*f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha)
-    k2 = dt*f(t+dt/2, y + k1/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
-    k3 = dt*f(t+dt/2, y + k2/2, kgrid, Nk, dk, gamma2, E0, w, alpha)
-    k4 = dt*f(t+dt, y + k3, kgrid, Nk, dk, gamma2, E0, w, alpha)
-
-    return ydt = y + (1/6)*(k1 + 0.5*k2 + 0.5*k3 + k4) 
 
 def main():
 
@@ -215,13 +246,14 @@ def main():
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 33                                     # Number of k-points
+    Nk = 15                                      # Number of k-points
     w = 0.000725665                             # Driving frequency
     E0 = 0.0023336                              # Driving field amplitude
     alpha = 2500.0                              # Gaussian pulse width
     t0 = -50000                                 # Initial time condition
     tf = 70000                                  # Final time
-    dt = 0.5                                    # Integration time step
+    dt = 0.2                                    # Integration time step
+    sol_method = 'vector'                       # 'Vector' or 'matrix' updates in f(t,y)
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
@@ -230,7 +262,7 @@ def main():
     E_conv = 0.0001944690381     #(1MV/cm = 1.944690381*10^-4 a.u.) 
     THz_conv = 0.000024188843266 #(1THz = 2.4188843266*10^-5 a.u.)
     amp_conv = 150.97488474      #(1A = 150.97488474)
-    eV_conv = 0.03674932176  #(1eV = 0.036749322176 a.u.)
+    eV_conv = 0.03674932176      #(1eV = 0.036749322176 a.u.)
 
     print("Solving for...")
     print("Number of k-points              = " + str(Nk))
@@ -256,7 +288,7 @@ def main():
     
     # Initial condition for density matrix and time
     # Initially no excited electrons (and thus no holes) all values set to zero. 
-    y0= []
+    y0 = []
     for k in kgrid:
         y0.extend([0.0,0.0,0.0,0.0])
 
@@ -264,45 +296,37 @@ def main():
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
 
-    # Solutions container
+    # Solution container
     solution = []
 
-    # Set up solver
-    #solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step = dt)
+    # Initialize ode solver according to chosen method
+    if sol_method == 'vector':
+        solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
+    elif sol_method == 'matrix':
+        solver = ode(f_matrix, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
+
+    # Set the initual values and function parameters
+    solver.set_initial_value(y0,t0).set_f_params(kgrid,Nk,dk,gamma2,E0,w,alpha)
     ###############################################################################################
 
-    # SOLVING THE MATRIX SBE
+    # SOLVING
     ###############################################################################################
-    # Set solver
-    #solver.set_initial_value(y0, t0).set_f_params(kgrid, Nk, dk, gamma2, E0, w, alpha)
-
-    # Integrate each time step
-    #tn = 0
-    #while solver.successful() and tn < Nt:
-    #    solver.integrate(solver.t + dt)    # Integrate the next time step
-    #    solution.append(solver.y)          # Append last step to the solution array
-    #    tn += 1                            # Keep track of t-steps 
-
-    tn = 0
-    while tn < Nt:
-        yn = rk4_step(f, t, y, dt, kgrid, Nk, dk, gamma2, E0, alpha)
-        tn += 1
-
-
+    ti = 0
+    while solver.successful() and ti < Nt:
+        solver.integrate(solver.t + dt)
+        solution.append(solver.y)
+        ti += 1
+        
     # Slice solution along each kpoint for easier observable calculation
     solution = np.array(solution)
     solution = np.array_split(solution,Nk,axis=1)
     solution = np.array(solution)
     ###############################################################################################
-    
-    # Output the solution vector to a file
-    ###############################################################################################
-    #np.savetxt(save_dir + "/solution.dat", np.transpose([t,solution[1,:,0],solution[1,:,3],solution[1,:,1],solution[1,:,2]]), fmt='%.12f')
 
     # COMPUTE OCCUPATIONS,POLARIZATION,CURRENT,EMISSION
     ###############################################################################################
     # First index of solution is kpoint, second is timestep, third is fv, pvc, pcv, fc
-
+    
     # Electrons occupations, gamma point, K points, and midway between those
     N_elec = np.real(solution[:,:,3])
     N_gamma = N_elec[int(Nk/2),:]
@@ -336,7 +360,7 @@ def main():
     part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
     part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K       N_elec_negmid  N_elec_negK'
     np.savetxt(save_dir + '/' + part_filename, np.transpose([t/fs_conv,N_gamma,N_mid,N_K,N_negmid,N_negK]), header=part_header, fmt='%.16e') 
-
+    
     emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
     emis_header = 'w/w0        emission spectrum'
     np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq/w,emis]), header=emis_header, fmt='%.16e')
@@ -404,59 +428,10 @@ def main():
     Jfour_ax.set_ylabel(r'$J(\omega)$')
     Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
 
-    '''
-    PLOTS TO CHECK OCCUPATIONS! NOT NECESSARY FOR FINAL PRODUCT. ONLY VALID FOR Nk=9
-    fig2 = pl.figure()
-    
-    Nax1 = fig2.add_subplot(131)
-    Nax1.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
-    Nax1.plot(t/fs_conv,N_elec[0,:])
-    Nax1.plot(t/fs_conv,N_elec[1,:])
-    Nax1.plot(t/fs_conv,N_elec[2,:])
-    Nax1.legend(('k = ' + str(kgrid[0]),'k = ' + str(kgrid[1]),'k = ' + str(kgrid[2])))
-    
-    Nax2 = fig2.add_subplot(132)
-    Nax2.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
-    Nax2.plot(t/fs_conv,N_elec[3,:])
-    Nax2.plot(t/fs_conv,N_elec[4,:])
-    Nax2.plot(t/fs_conv,N_elec[5,:])
-    Nax2.legend(('k = ' + str(kgrid[3]),'k = ' + str(kgrid[4]),'k = ' + str(kgrid[5])))
-    
-    Nax3 = fig2.add_subplot(133)
-    Nax3.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
-    Nax3.plot(t/fs_conv,N_elec[6,:])
-    Nax3.plot(t/fs_conv,N_elec[7,:])
-    Nax3.plot(t/fs_conv,N_elec[8,:])
-    Nax3.legend(('k = ' + str(kgrid[6]),'k = ' + str(kgrid[7]),'k = ' + str(kgrid[8])))
-
-    # Figures for occupations for various points in the BZ
-    fig3 = pl.figure()
-
-    Nsax1 = fig3.add_subplot(131)
-    Nsax1.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
-    Nsax1.plot(t/fs_conv,N_elec[0,:])
-    Nsax1.plot(t/fs_conv,N_elec[-1,:])
-    Nsax1.legend(('k = ' + str(kgrid[0]), 'k = ' + str(kgrid[-1])))
-
-    Nsax2 = fig3.add_subplot(132)
-    Nsax2.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
-    Nsax2.plot(t/fs_conv,N_elec[1,:])
-    Nsax2.plot(t/fs_conv,N_elec[-2,:])
-    Nsax2.legend(('k = ' + str(kgrid[1]), 'k = ' + str(kgrid[-2])))
-
-    Nsax3 = fig3.add_subplot(133)
-    Nsax3.set_xlim([-6*alpha/fs_conv,6*alpha/fs_conv])
-    Nsax3.plot(t/fs_conv,N_elec[2,:])
-    Nsax3.plot(t/fs_conv,N_elec[-3,:])
-    Nsax3.legend(('k = ' + str(kgrid[2]), 'k = ' + str(kgrid[-3])))
-
-    pl.tight_layout()
-    '''
-
     # Countour plots of occupations and gradients of occupations
     fig4 = pl.figure()
     X, Y = np.meshgrid(t/fs_conv,kgrid)
-    pl.contourf(X, Y, N_elec, 50)
+    pl.contourf(X, Y, N_elec, 100)
     pl.colorbar().set_label(r'$f_e(k)$')
     pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
     pl.xlabel(r'$t\;(fs)$')
