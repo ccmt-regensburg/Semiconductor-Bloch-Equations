@@ -246,26 +246,14 @@ def main():
     ###############################################################################################
     # All physical parameters in atomic units (hbar = charge = mass = 1)
     gamma2 = 0.0242131                          # Gamma2 parameter
-<<<<<<< HEAD
-<<<<<<< HEAD
-    Nk = 3                                     # Number of k-points
-=======
-    Nk = 15                                      # Number of k-points
->>>>>>> rk4
-=======
-    Nk = 160                                      # Number of k-points
->>>>>>> 91c69c9... Working one-dimensional. Current still somewhat questionable.
+    Nk = 15                                     # Number of k-points
     w = 0.000725665                             # Driving frequency
     E0 = 0.0023336                              # Driving field amplitude
     alpha = 2500.0                              # Gaussian pulse width
     t0 = -50000                                 # Initial time condition
     tf = 70000                                  # Final time
-<<<<<<< HEAD
-    dt = 1.0                                    # Integration time step
-=======
     dt = 0.2                                    # Integration time step
     sol_method = 'vector'                       # 'Vector' or 'matrix' updates in f(t,y)
->>>>>>> rk4
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
