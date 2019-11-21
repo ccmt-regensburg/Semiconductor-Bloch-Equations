@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.integrate import ode
-import time, os
-import sys
+import time, os, sys, argparse
 
 def eband(n, k):
     '''
@@ -242,18 +241,18 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
 
 def main():
 
-    # PARAMETERS
+    # USER INPUT FROM COMMAND LINE
     ###############################################################################################
-    # All physical parameters in atomic units (hbar = charge = mass = 1)
-    gamma2 = 0.0242131                          # Gamma2 parameter
-    Nk = 15                                     # Number of k-points
-    w = 0.000725665                             # Driving frequency
-    E0 = 0.0023336                              # Driving field amplitude
-    alpha = 2500.0                              # Gaussian pulse width
-    t0 = -50000                                 # Initial time condition
-    tf = 70000                                  # Final time
-    dt = 0.2                                    # Integration time step
-    sol_method = 'vector'                       # 'Vector' or 'matrix' updates in f(t,y)
+    parser = argparse.ArgumentParser(description='Parameters to simulate')
+    parser.add_argument('Nk',     type=int,   help='Number of k-points in the Brillouin zone')
+    parser.add_argument('E0',     type=float, help='Maximum pulse field value (in MV/cm)')
+    parser.add_argument('w',      type=float, help='Central pulse frequency (in THz)')
+    parser.add_argument('alpha',  type=float, help='Width of pulse Gaussian envelope (in femtoseconds)')
+    parser.add_argument('T2',     type=float, help='Phenomenological damping time (in femtoseconds)')
+    parser.add_argument('t0',     type=float, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
+    parser.add_argument('tf',     type=float, help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
+    parser.add_argument('dt',     type=float, help='Time step (in femtoseconds)')
+    args = parser.parse_args()
     ###############################################################################################
 
     # UNIT CONVERSION FACTORS
@@ -264,13 +263,30 @@ def main():
     amp_conv = 150.97488474      #(1A = 150.97488474)
     eV_conv = 0.03674932176      #(1eV = 0.036749322176 a.u.)
 
+    # PARAMETERS
+    ###############################################################################################
+    # All physical parameters in atomic units (hbar = charge = mass = 1)
+    Nk = args.Nk                                # Number of k-points
+    E0 = args.E0*E_conv                         # Driving field amplitude
+    w = args.w*THz_conv                         # Driving frequency
+    alpha = args.alpha*fs_conv                  # Gaussian pulse width
+    T2 = args.T2*fs_conv                        # Damping time
+    gamma2 = 1/T2                               # Gamma parameter
+    t0 = int(args.t0*fs_conv)                   # Initial time condition
+    tf = int(args.tf*fs_conv)                   # Final time
+    dt = args.dt*fs_conv                        # Integration time step
+    sol_method = 'vector'                       # 'Vector' or 'matrix' updates in f(t,y)
+    ###############################################################################################
+
     print("Solving for...")
     print("Number of k-points              = " + str(Nk))
+    print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
     print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
-    print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
+    print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
     print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
-
+    print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
+    
     # FILENAME/DIRECTORY DETAILS
     ###############################################################################################
     time_struct = time.localtime()
@@ -281,7 +297,6 @@ def main():
 
     # INITIALIZATIONS
     ###############################################################################################
-
     # Form the Brillouin zone in consideration
     kgrid = np.linspace(-0.5 + 1/(2*Nk), 0.5 - 1/(2*Nk), Nk)
     dk = 1/Nk
@@ -381,7 +396,7 @@ def main():
     real_t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
     
     # Frequency plot limits
-    freq_lims = (0,20)
+    freq_lims = (0,25)
 
     # Create figure, establish the set of requried axes
     fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(18,10))
@@ -433,14 +448,6 @@ def main():
     X, Y = np.meshgrid(t/fs_conv,kgrid)
     pl.contourf(X, Y, N_elec, 100)
     pl.colorbar().set_label(r'$f_e(k)$')
-    pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
-    pl.xlabel(r'$t\;(fs)$')
-    pl.ylabel(r'$k$')
-    pl.tight_layout()
-
-    fig5 = pl.figure()
-    pl.contourf(X, Y, g_elec, 50)
-    pl.colorbar().set_label(r'$\nabla_kf_e(k)$')
     pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
     pl.xlabel(r'$t\;(fs)$')
     pl.ylabel(r'$k$')
