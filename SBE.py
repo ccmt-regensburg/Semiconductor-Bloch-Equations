@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as pl
 from scipy.integrate import ode
-import time, os, sys, argparse
+import time, os, argparse
 
 
 def main():
@@ -9,7 +9,7 @@ def main():
     # USER INPUT FROM COMMAND LINE
     ###############################################################################################
     parser = argparse.ArgumentParser(description='Simulation of the semiconductor-bloch equations')
-    parser.add_argument('Nk',    type=int,   nargs='?', default=20,    help='Number of k-points in the Brillouin zone')
+    parser.add_argument('Nk',    type=int,   nargs='?', default=30,    help='Number of k-points in the Brillouin zone')
     parser.add_argument('E0',    type=float, nargs='?', default=12.0,  help='Maximum pulse field value (in MV/cm)')
     parser.add_argument('w',     type=float, nargs='?', default=30.0,  help='Central pulse frequency (in THz)')
     parser.add_argument('alpha', type=float, nargs='?', default=48.0,  help='Width of pulse Gaussian envelope (in femtoseconds)')
@@ -47,6 +47,10 @@ def main():
     # USER OUTPUT
     ###############################################################################################
     print("Solving for...")
+    if Nk<20:
+        print("***WARNING***: Convergence issues may result from Nk < 20")
+    if args.dt > 1.0:
+        print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
     print("Number of k-points              = " + str(Nk))
     print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
@@ -117,9 +121,6 @@ def main():
     N_K = N_elec[-1,:]
     N_negmid = N_elec[int(Nk*(1/4)),:]
     N_negK = N_elec[0,:]
-
-    # Calculate grad_k f_e
-    g_elec = np.gradient(N_elec,axis=0)
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
@@ -138,11 +139,19 @@ def main():
     ##############################################################################################
     if args.t:
         t_zero = np.argwhere(t == 0)
-        np.savetxt(sys.stdout.buffer, pol[t_zero], fmt='%.16e')
-        np.savetxt(sys.stdout.buffer, curr[t_zero], fmt='%.16e')
-        np.savetxt(sys.stdout.buffer, N_gamma[t_zero], fmt='%.16e')
+        f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
+        f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
+        f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
+        f_5 = f5[int(np.size(f5)/2)]
+        f_125 = f125[int(np.size(f125)/2)]
+        f_15 = f15[int(np.size(f15)/2)]
+        print(pol[t_zero])
+        print(curr[t_zero])
         print(N_gamma[Nt-1])
-
+        print(emis[f_5])
+        print(emis[f_125])
+        print(emis[f_15])
+        
 
     # FILE OUTPUT
     ###############################################################################################
@@ -159,7 +168,6 @@ def main():
     np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
 
     curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-
     curr_header = 't            current       w/w0           curr_fourier'
     np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
 
@@ -252,7 +260,7 @@ def hex_mesh(Nk, a):
     # Define the reciprocal lattice vectors
     b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
     b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
-    b22 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),1])
+    #b22 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),1])
     
     def is_in_hex(p,a):
         # Check if the point x is in the boundaries of a hexagon.
