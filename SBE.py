@@ -9,7 +9,7 @@ def main():
     # USER INPUT FROM COMMAND LINE
     ###############################################################################################
     parser = argparse.ArgumentParser(description='Simulation of the semiconductor-bloch equations')
-    parser.add_argument('Nk',    type=int,   nargs='?', default=30,    help='Number of k-points in the Brillouin zone')
+    parser.add_argument('Nk',    type=int,   nargs='?', default=20,    help='Number of k-points in the Brillouin zone')
     parser.add_argument('E0',    type=float, nargs='?', default=12.0,  help='Maximum pulse field value (in MV/cm)')
     parser.add_argument('w',     type=float, nargs='?', default=30.0,  help='Central pulse frequency (in THz)')
     parser.add_argument('alpha', type=float, nargs='?', default=48.0,  help='Width of pulse Gaussian envelope (in femtoseconds)')
@@ -17,7 +17,7 @@ def main():
     parser.add_argument('t0',    type=float, nargs='?', default=-1500, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
     parser.add_argument('tf',    type=float, nargs='?', default=1500,  help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
     parser.add_argument('dt',    type=float, nargs='?', default=0.01,  help='Time step (in femtoseconds)')
-    parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values')
+    parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values: P(t=0), J(t=0), N_gamma(tf), emis(5/w), emis(12.5/w), emis(15/w). Standard parameters: Nk=20, E0=12, w=30, alpha=48, T2=1, t0=-1500, tf=1500, dt=0.01.')
     args = parser.parse_args()
 
 
