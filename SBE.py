@@ -72,14 +72,14 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    kgrid = np.linspace(-0.5 + 1/(2*Nk), 0.5 - 1/(2*Nk), Nk)
+    kgrid = np.linspace(-0.5 + (1/(2*Nk)), 0.5 - (1/(2*Nk)), Nk)
     dk = 1/Nk
     
     # Initially no excited electrons (and thus no holes) all values set to zero. 
     y0 = []
     for k in kgrid:
         y0.extend([0.0,0.0,0.0,0.0])
-
+        
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
@@ -138,6 +138,8 @@ def main():
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
     if args.t:
+        test_vals = []
+        test_names = []
         t_zero = np.argwhere(t == 0)
         f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
         f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
@@ -145,12 +147,10 @@ def main():
         f_5 = f5[int(np.size(f5)/2)]
         f_125 = f125[int(np.size(f125)/2)]
         f_15 = f15[int(np.size(f15)/2)]
-        print(pol[t_zero])
-        print(curr[t_zero])
-        print(N_gamma[Nt-1])
-        print(emis[f_5])
-        print(emis[f_125])
-        print(emis[f_15])
+        test_out = np.zeros(6, dtype=[('names','U16'),('values',float)])
+        test_out['names'] = np.array(['P(t=0)','J(t=0)','N_gamma(t=tf)','Emis(w/w0=5)','Emis(w/w0=12.5)','Emis(w/w0=15)'])
+        test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
+        np.savetxt('test.dat',test_out, fmt='%16s %.16e')
         
 
     # FILE OUTPUT
@@ -270,9 +270,9 @@ def hex_mesh(Nk, a):
             kpoint = a1*b1 + a2*b2
             mesh.append(kpoint)
             path_K.append(kpoint)
-        gamma_K_paths.append(path_K)
+        gamma_M_paths.append(path_K)
         
-    return np.array(mesh), np.array(gamma_K_paths)
+    return np.array(mesh), np.array(gamma_M_paths)
 
 
 def dipole(k):
@@ -357,7 +357,6 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     ax2.plot(xdata, data2, color='b', zorder=2, alpha=0.5)   # Plot data2 on the second y-axis
     ax2.set_ylabel(label2)                                   # Set the second y-axis label
     return ax1, ax2                                          # Returns these two axes with the data plotted
-
 
 def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
 
