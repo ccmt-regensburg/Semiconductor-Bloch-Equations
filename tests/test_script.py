@@ -4,16 +4,22 @@ import pytest
 
 def main():
 
-   filename = "../test.dat"
    filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.dat"
    threshold_rel_error = 1.0E-12
    threshold_abs_error = 1.0E-24
 
-   exists = os.path.isfile(filename)
-   assert exists
+   assert os.path.isfile(filename_reference), "Reference file is missing."
 
-   exists_reference = os.path.isfile(filename_reference)
-   assert exists_reference
+   print ("===============\nStart with test number xyz\n================\n")
+
+   # first line in filename_reference is the command to execute the code
+   with open(filename_reference) as f:
+       first_line = f.readline()
+       os.system(first_line)
+
+   filename = "test.dat"
+
+   assert os.path.isfile(filename), "Testfile is not printed from the code"
 
    with open(filename) as f:
        count = 0
