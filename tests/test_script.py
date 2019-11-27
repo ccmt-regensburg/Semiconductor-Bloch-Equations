@@ -2,16 +2,9 @@ import numpy as np
 import os
 import pytest
 
-def main():
+def check_test(filename_reference):
 
-   for filename_reference in os.listdir("."):
-       if filename_reference.endswith(".test"): 
-           print(filename_reference)
-           continue
-       else:
-           continue
-
-   filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.test"
+#   filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.test"
    threshold_rel_error = 1.0E-12
    threshold_abs_error = 1.0E-24
    filename = "test.dat"
@@ -19,8 +12,9 @@ def main():
 
    assert os.path.isfile(filename_reference), "Reference file is missing."
 
-   print ("\n=========================\nStart with test number xyz\
-           \n=========================\n")
+   print ("\n\n=====================================================\n\nStart with test:\
+           \n\n"+filename_reference+\
+          "\n\n=====================================================\n")
 
    # first line in filename_reference is the command to execute the code
    with open(filename_reference) as f:
@@ -72,6 +66,15 @@ def main():
 #               rel_error = 
    
    f.close()
-   
+
+def main():
+
+   for filename_reference in os.listdir("."):
+       if filename_reference.endswith(".reference"): 
+           check_test(filename_reference)
+           continue
+       else:
+           continue
+
 if __name__ == "__main__":
   main()
