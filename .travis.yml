@@ -4,4 +4,4 @@ python:
 install:
   pip install -r requirements.txt
 script:
-  - python3 ./SBE.py
+  - python3 tests/test_script.py
