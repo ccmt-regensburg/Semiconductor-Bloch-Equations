@@ -24,24 +24,24 @@ def main():
     # SET SIMULATION PARAMETERS
     ###############################################################################################
     # Unit converstion factors
-    fs_conv = 41.34137335                           #(1fs = 41.341473335 a.u.)
+    fs_conv = 41.34137335                           #(1fs    = 41.341473335 a.u.)
     E_conv = 0.0001944690381                        #(1MV/cm = 1.944690381*10^-4 a.u.) 
-    THz_conv = 0.000024188843266                    #(1THz = 2.4188843266*10^-5 a.u.)
-    amp_conv = 150.97488474                         #(1A = 150.97488474)
-    eV_conv = 0.03674932176                         #(1eV = 0.036749322176 a.u.)
+    THz_conv = 0.000024188843266                    #(1THz   = 2.4188843266*10^-5 a.u.)
+    amp_conv = 150.97488474                         #(1A     = 150.97488474)
+    eV_conv = 0.03674932176                         #(1eV    = 0.036749322176 a.u.)
 
     sol_method = 'vector'                           # 'Vector' or 'matrix' updates in f(t,y)
 
     # Set parameters
-    Nk = args.Nk                                # Number of k-points
-    E0 = args.E0*E_conv                         # Driving field amplitude
-    w = args.w*THz_conv                         # Driving frequency
-    alpha = args.alpha*fs_conv                  # Gaussian pulse width
-    T2 = args.T2*fs_conv                        # Damping time
-    gamma2 = 1/T2                               # Gamma parameter
-    t0 = int(args.t0*fs_conv)                   # Initial time condition
-    tf = int(args.tf*fs_conv)                   # Final time
-    dt = args.dt*fs_conv                        # Integration time step
+    Nk = args.Nk                                    # Number of k-points
+    E0 = args.E0*E_conv                             # Driving field amplitude
+    w = args.w*THz_conv                             # Driving frequency
+    alpha = args.alpha*fs_conv                      # Gaussian pulse width
+    T2 = args.T2*fs_conv                            # Damping time
+    gamma2 = 1/T2                                   # Gamma parameter
+    t0 = int(args.t0*fs_conv)                       # Initial time condition
+    tf = int(args.tf*fs_conv)                       # Final time
+    dt = args.dt*fs_conv                            # Integration time step
 
 
     # USER OUTPUT
@@ -72,38 +72,41 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    kgrid = np.linspace(-0.5 + (1/(2*Nk)), 0.5 - (1/(2*Nk)), Nk)
+    a = 1
+    kgrid, GM_paths = hex_mesh(Nk, a)
     dk = 1/Nk
-    
-    # Initially no excited electrons (and thus no holes) all values set to zero. 
-    y0 = []
-    for k in kgrid:
-        y0.extend([0.0,0.0,0.0,0.0])
-        
+
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
 
     # Solution container
-    solution = []
+    solution = []    
 
     # Initialize ode solver according to chosen method
     if sol_method == 'vector':
         solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
     elif sol_method == 'matrix':
         solver = ode(f_matrix, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
-
-    # Set the initual values and function parameters
-    solver.set_initial_value(y0,t0).set_f_params(kgrid,Nk,dk,gamma2,E0,w,alpha)
     
 
     # SOLVING
     ###############################################################################################
-    ti = 0
-    while solver.successful() and ti < Nt:
-        solver.integrate(solver.t + dt)
-        solution.append(solver.y)
-        ti += 1
+    # Initially no excited electrons (and thus no holes) all values set to zero.
+    for kpath in GM_paths:
+        y0 = []
+        for k in kgrid:
+            y0.extend([0.0,0.0,0.0,0.0])
+
+            # Set the initual values and function parameters
+            solver.set_initial_value(y0,t0).set_f_params(kpath,dk,gamma2,E0,w,alpha)
+
+            # Propagate through time
+            ti = 0
+            while solver.successful() and ti < Nt:
+                solver.integrate(solver.t + dt)
+                solution.append(solver.y)
+                ti += 1
         
 
     # COMPUTE OBSERVABLES
@@ -276,7 +279,7 @@ def hex_mesh(Nk, a):
     return np.array(mesh), np.array(gamma_M_paths)
 
 
-def dipole(k):
+def dipole(kx, ky):
     '''
     Returns the dipole matrix element for making the transition from band n to band m at the current k-point
     '''
@@ -291,7 +294,7 @@ def driving_field(E0, w, t, alpha):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 
-def rabi(n,m,k,E0,w,t,alpha):
+def rabi(n,m,kx,ky,E0,w,t,alpha):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
@@ -345,7 +348,7 @@ def current(k,fv,fc):
     return np.real(curr_e + curr_h)/Nk
 
 
-def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
+def f(t, y, kpath, Nk, dk, gamma2, E0, w, alpha):
 
     x = np.empty(np.shape(y),dtype='complex')
     '''
@@ -356,12 +359,13 @@ def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     '''
     Update the solution vector
     '''
-    for k in range(Nk):
+    Nk_path = np.size(kpath):
+    for k in range(Nk_path):
         i = 4*k
         if k == 0:
             m = 4*(k+1)
-            n = 4*(Nk-1)
-        elif k == Nk-1:
+            n = 4*(Nk_path-1)
+        elif k == Nk_path-1:
             m = 0
             n = 4*(k-1)
         else:
