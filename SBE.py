@@ -150,7 +150,7 @@ def main():
         f_15 = f15[int(np.size(f15)/2)]
         test_out = np.zeros(6, dtype=[('names','U16'),('values',float)])
         test_out['names'] = np.array(['P(t=0)','J(t=0)','N_gamma(t=tf)','Emis(w/w0=5)','Emis(w/w0=12.5)','Emis(w/w0=15)'])
-        test_out['values'] = np.array(0,[pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
+        test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
         
 
