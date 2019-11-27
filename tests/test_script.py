@@ -16,11 +16,16 @@ def main():
    assert exists_reference
 
    with open(filename) as f:
-      count = 1
-      for line in f:
-          print("Line {}: {}".format(count, line.strip()))
-          count += 1
-#          rel_error = 
+       with open(filename_reference) as f_reference:
+           count = 1
+           for line in f:
+               print("Line {}: {}".format(count, line.strip()))
+               fields = line.split()
+               print(fields[0])
+               print(fields[1])
+
+               count += 1
+#               rel_error = 
    
    f.close()
    
