@@ -6,7 +6,7 @@ def main():
 
    filename = "../test.dat"
    filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.dat"
-   threshold_rel_error = 1.0E-14
+   threshold_rel_error = 1.0E-12
    threshold_abs_error = 1.0E-24
 
    exists = os.path.isfile(filename)
@@ -40,11 +40,16 @@ def main():
                        abs_error = np.abs(value_test - value_reference)
                        rel_error = abs_error/np.abs(value_reference)
 
-                       print ("abs error, abs error thresh =", abs_error, threshold_abs_error)
-                       print (abs_error < threshold_abs_error)
+                       print ("abs error, rel error =", abs_error, rel_error)
 
-                       assert abs_error < threshold_abs_error, \
-                              "Absolute error of variable too big"
+                       check_abs = abs_error < threshold_abs_error
+                       check_rel = rel_error < threshold_rel_error
+
+                       assert check_abs or check_rel, \
+                              "\n\nAbsolute and relative error of variable number "+str(count)+\
+                              " compared to reference too big:"\
+                              "\n\nRelative error: "+str(rel_error)+" and treshold: "+str(threshold_rel_error)+\
+                              "\n\nAbsolute error: "+str(abs_error)+" and treshold: "+str(threshold_abs_error)
 
                        print("abs_error =", abs_error)
 
