@@ -95,18 +95,23 @@ def main():
     # Initially no excited electrons (and thus no holes) all values set to zero.
     for kpath in GM_paths:
         y0 = []
-        for k in kgrid:
+        for k in kpath:
             y0.extend([0.0,0.0,0.0,0.0])
 
-            # Set the initual values and function parameters
-            solver.set_initial_value(y0,t0).set_f_params(kpath,dk,gamma2,E0,w,alpha)
+        #print(kpath)
+        #print(np.shape(kpath))
+        #print(np.size(y0))
+        #print(np.size(kpath, axis=0))
 
-            # Propagate through time
-            ti = 0
-            while solver.successful() and ti < Nt:
-                solver.integrate(solver.t + dt)
-                solution.append(solver.y)
-                ti += 1
+        # Set the initual values and function parameters
+        solver.set_initial_value(y0,t0).set_f_params(kpath,dk,gamma2,E0,w,alpha)
+
+        # Propagate through time
+        ti = 0
+        while solver.successful() and ti < Nt:
+            solver.integrate(solver.t + dt)
+            solution.append(solver.y)
+            ti += 1
         
 
     # COMPUTE OBSERVABLES
@@ -242,19 +247,19 @@ def main():
     pl.show()
 
     
-def eband(n, k):
+def eband(n, kx, ky):
     '''
     Returns the energy of a band n, from the k-point.
     Band structure modeled as (e.g.)...
     E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
     '''
-    envelope = ((4.0*k**2 - 1.0)**2.0)*((4.0*k**2 + 1.0)**2.0) # Model defined on [-0.5,0.5]
+    envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
     if (n==1):   # Valence band
         #return np.zeros(np.shape(k)) # Flat structure
-        return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*k**2.0)*envelope 
+        return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope 
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
-        return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*k**2.0)*envelope
+        return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
 
     
 def hex_mesh(Nk, a):
@@ -298,7 +303,7 @@ def rabi(n,m,kx,ky,E0,w,t,alpha):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole(k)*driving_field(E0, w, t, alpha)
+    return dipole(kx,ky)*driving_field(E0, w, t, alpha)
 
 
 def diff(x,y):
@@ -348,7 +353,7 @@ def current(k,fv,fc):
     return np.real(curr_e + curr_h)/Nk
 
 
-def f(t, y, kpath, Nk, dk, gamma2, E0, w, alpha):
+def f(t, y, kpath, dk, gamma2, E0, w, alpha):
 
     x = np.empty(np.shape(y),dtype='complex')
     '''
@@ -359,8 +364,11 @@ def f(t, y, kpath, Nk, dk, gamma2, E0, w, alpha):
     '''
     Update the solution vector
     '''
-    Nk_path = np.size(kpath):
+    Nk_path = np.size(kpath, axis=0)
     for k in range(Nk_path):
+        kx = kpath[k,0]
+        ky = kpath[k,1]
+        
         i = 4*k
         if k == 0:
             m = 4*(k+1)
@@ -375,7 +383,7 @@ def f(t, y, kpath, Nk, dk, gamma2, E0, w, alpha):
         '''
         Energy term eband(i,k) the energy of band i at point k
         '''
-        ecv = eband(2, kgrid[k]) - eband(1, kgrid[k])
+        ecv = eband(2, kx, ky) - eband(1, kx, ky)
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 
@@ -383,7 +391,7 @@ def f(t, y, kpath, Nk, dk, gamma2, E0, w, alpha):
         Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
         Rabi frequency conjugate
         '''
-        wr = rabi(1, 2, kgrid[k], E0, w, t, alpha)
+        wr = rabi(1, 2, kx, ky, E0, w, t, alpha)
         wr_c = np.conjugate(wr)
 
         '''
