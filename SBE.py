@@ -135,6 +135,7 @@ def main():
     emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
     emis = emis/np.amax(emis)                                                                           # Normalize emmision spectrum
     
+    
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
     if args.t:
@@ -225,7 +226,6 @@ def main():
     Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
 
     # Countour plots of occupations and gradients of occupations
-    fig4 = pl.figure()
     X, Y = np.meshgrid(t/fs_conv,kgrid)
     pl.contourf(X, Y, N_elec, 100)
     pl.colorbar().set_label(r'$f_e(k)$')
@@ -262,7 +262,7 @@ def hex_mesh(Nk, a):
     b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
 
     mesh = []
-    gamma_K_paths = []
+    gamma_M_paths = []
     # Iterate through each alpha value and append the kgrid array for each one
     for a1 in alpha:
         path_K = []
@@ -343,20 +343,6 @@ def current(k,fv,fc):
     #np.savetxt(os.path.dirname(os.path.realpath(__file__)) + '/current_factors.dat', np.transpose(np.real([diff(k,eband(2,k)), diff(k,eband(1,k))]))) 
     return np.real(curr_e + curr_h)/Nk
 
-
-def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
-    '''
-    Plots the two input sets: data1, data2 on the same x-scale, but with a secondary y-scale (twin of ax1).
-    '''
-    ax2 = ax1.twinx()                                        # Create secondary y-axis with shared x scale
-    ax1.set_xlim(xlims)                                      # Set x limits
-    ax2.set_xlim(xlims)                                      # Set x limits for secondary axis
-    ax1.plot(xdata, data1, color='r', zorder=1)              # Plot data1 on the first y-axis
-    ax1.set_xlabel(xlabel)                                   # Set the label for the x-axis
-    ax1.set_ylabel(label1)                                   # Set the first y-axis label
-    ax2.plot(xdata, data2, color='b', zorder=2, alpha=0.5)   # Plot data2 on the second y-axis
-    ax2.set_ylabel(label2)                                   # Set the second y-axis label
-    return ax1, ax2                                          # Returns these two axes with the data plotted
 
 def f(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
 
@@ -504,6 +490,20 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     svec = np.dot(M, y) + b 
     return svec
 
+
+def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
+    '''
+    Plots the two input sets: data1, data2 on the same x-scale, but with a secondary y-scale (twin of ax1).
+    '''
+    ax2 = ax1.twinx()                                        # Create secondary y-axis with shared x scale
+    ax1.set_xlim(xlims)                                      # Set x limits
+    ax2.set_xlim(xlims)                                      # Set x limits for secondary axis
+    ax1.plot(xdata, data1, color='r', zorder=1)              # Plot data1 on the first y-axis
+    ax1.set_xlabel(xlabel)                                   # Set the label for the x-axis
+    ax1.set_ylabel(label1)                                   # Set the first y-axis label
+    ax2.plot(xdata, data2, color='b', zorder=2, alpha=0.5)   # Plot data2 on the second y-axis
+    ax2.set_ylabel(label2)                                   # Set the second y-axis label
+    return ax1, ax2                                          # Returns these two axes with the data plotted
 
 if __name__ == "__main__":
     main()
