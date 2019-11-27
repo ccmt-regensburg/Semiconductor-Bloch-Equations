@@ -175,67 +175,69 @@ def main():
 
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
-    # Real-time plot limits
-    real_t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
-    
-    # Frequency plot limits
-    freq_lims = (0,25)
+    if not args.t: # Don't plot in testing mode
+        # Real-time plot limits
+        real_t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
 
-    # Create figure, establish the set of requried axes
-    fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(18,10))
-    
-    # Plot band structure in the first set of axes
-    band_ax.scatter(kgrid, eband(2, kgrid)/eV_conv, s=5)
-    band_ax.scatter(kgrid, eband(1, kgrid)/eV_conv, s=5)
-    band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)/eV_conv), s=5, label='Conduction vel')
-    band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)/eV_conv), s=5, label='Valence vel')
-    band_ax.set_xlabel(r'$ka$')
-    band_ax.set_ylabel(r'$\epsilon(k)$')
+        # Frequency plot limits
+        freq_lims = (0,25)
 
-    # Plot particle number (with driving field)
-    N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$f_{e}(k=\Gamma)$', r'$E(t)\;(MV/cm)$')
-    
-    # Plot polarization (with driving field)
-    P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$P(t)\;[a.u.]$', r'$E(t)\;(MV/cm)$')
-    
-    # Plot current (with driving field)
-    J_ax, J_ax_E = double_scale_plot(J_ax, t/fs_conv, curr/amp_conv, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$J(t)\;[Amp]$', r'$E(t)\;(MV/cm)$')
-    
-    # Plot emmision spectrum on a semi-log scale
-    emis_ax.semilogy(freq/w, emis, label='Emission spectrum')
-    emis_ax.set_xlim(freq_lims)
-    emis_ax.set_ylabel(r'$I_{rad}(\omega)$')
-    emis_ax.set_xlabel(r'$\omega/\omega_0$')
-    
-    # Plot fourier transform of driving field
-    Efour_ax.semilogy(freq/w, np.abs(fieldfourier))
-    Efour_ax.set_xlim(freq_lims)
-    Efour_ax.set_ylabel(r'$E(\omega)$')
-    Efour_ax.set_xlabel(r'$\omega/\omega_0$')
+        # Create figure, establish the set of requried axes
+        fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(18,10))
 
-    # Plot fourier transform of polarization
-    Pfour_ax.semilogy(freq/w, np.abs(polfourier), label='Polarization spectrum')
-    Pfour_ax.set_xlim(freq_lims)
-    Pfour_ax.set_ylabel(r'$P(\omega)$')
-    Pfour_ax.set_xlabel(r'$\omega/\omega_0$')
-    
-    # Plot fourier transform of current
-    Jfour_ax.semilogy(freq/w, np.abs(currfourier), label='Current spectrum')
-    Jfour_ax.set_xlim(freq_lims)
-    Jfour_ax.set_ylabel(r'$J(\omega)$')
-    Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
+        # Plot band structure in the first set of axes
+        band_ax.scatter(kgrid, eband(2, kgrid)/eV_conv, s=5)
+        band_ax.scatter(kgrid, eband(1, kgrid)/eV_conv, s=5)
+        band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)/eV_conv), s=5, label='Conduction vel')
+        band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)/eV_conv), s=5, label='Valence vel')
+        band_ax.set_xlabel(r'$ka$')
+        band_ax.set_ylabel(r'$\epsilon(k)$')
 
-    # Countour plots of occupations and gradients of occupations
-    X, Y = np.meshgrid(t/fs_conv,kgrid)
-    pl.contourf(X, Y, N_elec, 100)
-    pl.colorbar().set_label(r'$f_e(k)$')
-    pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
-    pl.xlabel(r'$t\;(fs)$')
-    pl.ylabel(r'$k$')
-    pl.tight_layout()
+        # Plot particle number (with driving field)
+        N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$f_{e}(k=\Gamma)$', r'$E(t)\;(MV/cm)$')
 
-    # Show the plot after everything
-    pl.show()
+        # Plot polarization (with driving field)
+        P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$P(t)\;[a.u.]$', r'$E(t)\;(MV/cm)$')
+
+        # Plot current (with driving field)
+        J_ax, J_ax_E = double_scale_plot(J_ax, t/fs_conv, curr/amp_conv, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$J(t)\;[Amp]$', r'$E(t)\;(MV/cm)$')
+
+        # Plot emmision spectrum on a semi-log scale
+        emis_ax.semilogy(freq/w, emis, label='Emission spectrum')
+        emis_ax.set_xlim(freq_lims)
+        emis_ax.set_ylabel(r'$I_{rad}(\omega)$')
+        emis_ax.set_xlabel(r'$\omega/\omega_0$')
+
+        # Plot fourier transform of driving field
+        Efour_ax.semilogy(freq/w, np.abs(fieldfourier))
+        Efour_ax.set_xlim(freq_lims)
+        Efour_ax.set_ylabel(r'$E(\omega)$')
+        Efour_ax.set_xlabel(r'$\omega/\omega_0$')
+
+        # Plot fourier transform of polarization
+        Pfour_ax.semilogy(freq/w, np.abs(polfourier), label='Polarization spectrum')
+        Pfour_ax.set_xlim(freq_lims)
+        Pfour_ax.set_ylabel(r'$P(\omega)$')
+        Pfour_ax.set_xlabel(r'$\omega/\omega_0$')
+
+        # Plot fourier transform of current
+        Jfour_ax.semilogy(freq/w, np.abs(currfourier), label='Current spectrum')
+        Jfour_ax.set_xlim(freq_lims)
+        Jfour_ax.set_ylabel(r'$J(\omega)$')
+        Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
+
+        # Countour plots of occupations and gradients of occupations
+        fig1 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kgrid)
+        pl.contourf(X, Y, N_elec, 100)
+        pl.colorbar().set_label(r'$f_e(k)$')
+        pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        # Show the plot after everything
+        pl.show()
 
     
 def eband(n, k):
