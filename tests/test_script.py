@@ -4,23 +4,27 @@ import pytest
 
 def main():
 
-   exists = os.path.isfile("../test.dat")
+   filename = "../test.dat"
+   filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.dat"
+   threshold_rel_error = 1.0E-18
+   threshold_abs_error = 1.0E-24
 
+   exists = os.path.isfile(filename)
    assert exists
 
-   if exists: 
+   exists_reference = os.path.isfile(filename_reference)
+   assert exists_reference
 
-      with open("../test.dat") as f:
-         line = f.readline()
-         cnt = 1
-         while line:
-             print("Line {}: {}".format(cnt, line.strip()))
-             line = f.readline()
-             cnt += 1
+   with open(filename) as f:
+      line = f.readline()
+      cnt = 1
+      while line:
+          print("Line {}: {}".format(cnt, line.strip()))
+          line = f.readline()
+          cnt += 1
+#          rel_error = 
    
-      f.close()
+   f.close()
    
-      print("check")
-
 if __name__ == "__main__":
   main()
