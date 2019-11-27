@@ -6,7 +6,7 @@ def main():
 
    filename = "../test.dat"
    filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.dat"
-   threshold_rel_error = 1.0E-18
+   threshold_rel_error = 1.0E-14
    threshold_abs_error = 1.0E-24
 
    exists = os.path.isfile(filename)
@@ -31,15 +31,21 @@ def main():
                    count_reference += 1
                    fields_reference = line_reference.split()
 
-                   print("count, count_reference =", count, count_reference)
-
                    # we have the -1 because there is the header with executing command
                    # in the reference file
                    if count == count_reference-1:
                        print(fields_reference[1])
                        value_reference = float(fields_reference[1])
+
                        abs_error = np.abs(value_test - value_reference)
                        rel_error = abs_error/np.abs(value_reference)
+
+                       print ("abs error, abs error thresh =", abs_error, threshold_abs_error)
+                       print (abs_error < threshold_abs_error)
+
+                       assert abs_error < threshold_abs_error, \
+                              "Absolute error of variable too big"
+
                        print("abs_error =", abs_error)
 
            f_reference.close()
