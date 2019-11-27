@@ -1,19 +1,26 @@
 import numpy as np
 import os
+import pytest
 
 def main():
 
-   with open("../filename_has_to_be_set") as f:
-      line = f.readline()
-      cnt = 1
-      while line:
-          print("Line {}: {}".format(cnt, line.strip()))
-          line = f.readline()
-          cnt += 1
+   exists = os.path.isfile("../test.dat")
 
-   f.close()
+   assert exists
 
-   print("check")
+   if exists: 
+
+      with open("../test.dat") as f:
+         line = f.readline()
+         cnt = 1
+         while line:
+             print("Line {}: {}".format(cnt, line.strip()))
+             line = f.readline()
+             cnt += 1
+   
+      f.close()
+   
+      print("check")
 
 if __name__ == "__main__":
   main()
