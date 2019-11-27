@@ -2,47 +2,70 @@ import numpy as np
 import os
 import pytest
 
-def main():
+def check_test(filename_reference):
 
-   filename = "../test.dat"
-   filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.dat"
-   threshold_rel_error = 1.0E-18
+   threshold_rel_error = 1.0E-12
    threshold_abs_error = 1.0E-24
+   filename = "test.dat"
 
-   exists = os.path.isfile(filename)
-   assert exists
+   assert os.path.isfile(filename_reference), "Reference file is missing."
 
-   exists_reference = os.path.isfile(filename_reference)
-   assert exists_reference
+   print ("\n\n=====================================================\n\nStart with test:\
+           \n\n"+filename_reference+\
+          "\n\n=====================================================\n")
+
+   # first line in filename_reference is the command to execute the code
+   with open(filename_reference) as f:
+       first_line = f.readline()
+       os.system(first_line)
+
+   assert os.path.isfile(filename), "Testfile is not printed from the code"
 
    with open(filename) as f:
-       with open(filename_reference) as f_reference:
-           count = 1
-           for line in f:
-               fields = line.split()
-               print(fields[0])
-               print(fields[1])
-               value_test = float(fields[1])
+       count = 0
+       for line in f:
+           count += 1
+           fields = line.split()
+           value_test = float(fields[1])
 
-               count_reference = 1
+           with open(filename_reference) as f_reference:
+
+               count_reference = 0
                for line_reference in f_reference:
+                   count_reference += 1
                    fields_reference = line_reference.split()
 
                    # we have the -1 because there is the header with executing command
                    # in the reference file
                    if count == count_reference-1:
-                       print(fields_reference[1])
                        value_reference = float(fields_reference[1])
+
                        abs_error = np.abs(value_test - value_reference)
                        rel_error = abs_error/np.abs(value_reference)
-                       print("abs_error =", abs_error)
 
-                   count_reference += 1
+                       check_abs = abs_error < threshold_abs_error
+                       check_rel = rel_error < threshold_rel_error
 
-               count += 1
-#               rel_error = 
-   
+                       assert check_abs or check_rel, \
+                              "\n\nAbsolute and relative error of variable number "+str(count)+\
+                              " compared to reference too big:"\
+                              "\n\nRelative error: "+str(rel_error)+" and treshold: "+str(threshold_rel_error)+\
+                              "\n\nAbsolute error: "+str(abs_error)+" and treshold: "+str(threshold_abs_error)
+
+           f_reference.close()
+
+   print("\n\nTest passed successfully.\n\n")
+
    f.close()
-   
+
+def main():
+
+   for filename_reference in os.listdir("."):
+       if filename_reference.endswith(".reference"): 
+           check_test(filename_reference)
+           continue
+       else:
+           continue
+
 if __name__ == "__main__":
   main()
