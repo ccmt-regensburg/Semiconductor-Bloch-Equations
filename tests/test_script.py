@@ -4,11 +4,9 @@ import pytest
 
 def check_test(filename_reference):
 
-#   filename_reference = "01_1d_model_bandstructure_5_kpoints_and_default_E_field.test"
    threshold_rel_error = 1.0E-12
    threshold_abs_error = 1.0E-24
    filename = "test.dat"
-
 
    assert os.path.isfile(filename_reference), "Reference file is missing."
 
@@ -28,8 +26,6 @@ def check_test(filename_reference):
        for line in f:
            count += 1
            fields = line.split()
-           print(fields[0])
-           print(fields[1])
            value_test = float(fields[1])
 
            with open(filename_reference) as f_reference:
@@ -42,13 +38,10 @@ def check_test(filename_reference):
                    # we have the -1 because there is the header with executing command
                    # in the reference file
                    if count == count_reference-1:
-                       print(fields_reference[1])
                        value_reference = float(fields_reference[1])
 
                        abs_error = np.abs(value_test - value_reference)
                        rel_error = abs_error/np.abs(value_reference)
-
-                       print ("abs error, rel error =", abs_error, rel_error)
 
                        check_abs = abs_error < threshold_abs_error
                        check_rel = rel_error < threshold_rel_error
@@ -59,12 +52,10 @@ def check_test(filename_reference):
                               "\n\nRelative error: "+str(rel_error)+" and treshold: "+str(threshold_rel_error)+\
                               "\n\nAbsolute error: "+str(abs_error)+" and treshold: "+str(threshold_abs_error)
 
-                       print("abs_error =", abs_error)
-
            f_reference.close()
 
-#               rel_error = 
-   
+   print("\n\nTest passed successfully.\n\n")
+
    f.close()
 
 def main():
