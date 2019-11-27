@@ -16,12 +16,10 @@ def main():
    assert exists_reference
 
    with open(filename) as f:
-      line = f.readline()
-      cnt = 1
-      while line:
-          print("Line {}: {}".format(cnt, line.strip()))
-          line = f.readline()
-          cnt += 1
+      count = 1
+      for line in f:
+          print("Line {}: {}".format(count, line.strip()))
+          count += 1
 #          rel_error = 
    
    f.close()
