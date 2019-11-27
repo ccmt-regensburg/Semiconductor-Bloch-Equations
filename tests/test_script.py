@@ -16,17 +16,22 @@ def main():
    assert exists_reference
 
    with open(filename) as f:
-       with open(filename_reference) as f_reference:
-           count = 1
-           for line in f:
-               fields = line.split()
-               print(fields[0])
-               print(fields[1])
-               value_test = float(fields[1])
+       count = 0
+       for line in f:
+           count += 1
+           fields = line.split()
+           print(fields[0])
+           print(fields[1])
+           value_test = float(fields[1])
 
-               count_reference = 1
+           with open(filename_reference) as f_reference:
+
+               count_reference = 0
                for line_reference in f_reference:
+                   count_reference += 1
                    fields_reference = line_reference.split()
+
+                   print("count, count_reference =", count, count_reference)
 
                    # we have the -1 because there is the header with executing command
                    # in the reference file
@@ -37,9 +42,8 @@ def main():
                        rel_error = abs_error/np.abs(value_reference)
                        print("abs_error =", abs_error)
 
-                   count_reference += 1
+           f_reference.close()
 
-               count += 1
 #               rel_error = 
    
    f.close()
