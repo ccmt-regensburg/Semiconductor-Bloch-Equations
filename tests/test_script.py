@@ -6,7 +6,7 @@ import pytest
 
 def check_test(filename_reference):
 
-   threshold_rel_error = 1.0E-12
+   threshold_rel_error = 1.0E-10
    threshold_abs_error = 1.0E-24
    filename = "./test.dat"
 
