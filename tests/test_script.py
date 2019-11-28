@@ -2,7 +2,9 @@ import numpy as np
 import os
 import pytest
 
-# THIS SCRIPT NEEDS TO BE EXECUTED IN THE MAIN GIT DIRECTORY BY CALLING python3 tests/test_script.py
+######################################################################################################
+# THIS SCRIPT NEEDS TO BE EXECUTED IN THE MAIN GIT DIRECTORY BY CALLING python3 tests/test_script.py #
+######################################################################################################
 
 def check_test(filename_reference):
 
@@ -14,7 +16,8 @@ def check_test(filename_reference):
 
    print ("\n\n=====================================================\n\nStart with test:\
            \n\n"+filename_reference+\
-          "\n\n=====================================================\n")
+          "\n\n=====================================================\n\n"\
+          "Output from the script:\n")
 
    # first line in filename_reference is the command to execute the code
    with open(filename_reference) as f:
@@ -23,8 +26,12 @@ def check_test(filename_reference):
 
    assert os.path.isfile(filename), "Testfile is not printed from the code"
 
-   print ("\n\n*****************************************************\n\nThe following numbers are tested:\n\n")
-   print ('{:<15} {:<25} {:<25}'.format("Quantity", "Reference number", "Number obtained from current git version"))
+   print ("\n=====================================================")
+   print ("\nRelative threshold: "+str(threshold_rel_error)+", absolute threshold: "+str(threshold_abs_error)+\
+          " (One of both thresholds needs to be satisfied)")
+   print("\nThe following numbers are tested:\n")
+   print ('{:<15} {:<25} {:<25} {:<25} {:<25}'.format("Quantity", "Reference number", \
+          "Number from current git", "Relative error", "Absolute error"))
    print ("")
 
    with open(filename) as f:
@@ -52,7 +59,8 @@ def check_test(filename_reference):
                        check_abs = abs_error < threshold_abs_error
                        check_rel = rel_error < threshold_rel_error
 
-                       print('{:<15} {:>25} {:>25}'.format(fields_reference[0], value_reference, value_test))
+                       print('{:<15} {:>25} {:>25} {:>25} {:>25}'.format(fields_reference[0], \
+                             value_reference, value_test, rel_error, abs_error))
 
                        assert check_abs or check_rel, \
                               "\n\nAbsolute and relative error of variable number "+str(count)+\
