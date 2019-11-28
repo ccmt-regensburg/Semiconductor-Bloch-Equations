@@ -26,7 +26,7 @@ def check_test(filename_reference, args):
    assert os.path.isfile(filename), "Testfile is not printed from the code"
 
    print ("\n=====================================================")
-   print ("\nRelative threshold: "+str(threshold_rel_error)+", absolute threshold: "+str(threshold_abs_error)+\
+   print ("\nRelative-error threshold: "+str(threshold_rel_error)+", absolute-error threshold: "+str(threshold_abs_error)+\
           " (One of both thresholds needs to be satisfied)")
    print("\nThe following numbers are tested:\n")
    print ('{:<15} {:<25} {:<25} {:<25} {:<25}'.format("Quantity", "Reference number", \
