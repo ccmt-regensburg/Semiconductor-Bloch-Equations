@@ -2,17 +2,22 @@ import numpy as np
 import os
 import pytest
 
+######################################################################################################
+# THIS SCRIPT NEEDS TO BE EXECUTED IN THE MAIN GIT DIRECTORY BY CALLING python3 tests/test_script.py #
+######################################################################################################
+
 def check_test(filename_reference):
 
-   threshold_rel_error = 1.0E-12
+   threshold_rel_error = 1.0E-10
    threshold_abs_error = 1.0E-24
-   filename = "test.dat"
+   filename = "./test.dat"
 
    assert os.path.isfile(filename_reference), "Reference file is missing."
 
    print ("\n\n=====================================================\n\nStart with test:\
            \n\n"+filename_reference+\
-          "\n\n=====================================================\n")
+          "\n\n=====================================================\n\n"\
+          "Output from the script:\n")
 
    # first line in filename_reference is the command to execute the code
    with open(filename_reference) as f:
@@ -20,6 +25,14 @@ def check_test(filename_reference):
        os.system(first_line)
 
    assert os.path.isfile(filename), "Testfile is not printed from the code"
+
+   print ("\n=====================================================")
+   print ("\nRelative threshold: "+str(threshold_rel_error)+", absolute threshold: "+str(threshold_abs_error)+\
+          " (One of both thresholds needs to be satisfied)")
+   print("\nThe following numbers are tested:\n")
+   print ('{:<15} {:<25} {:<25} {:<25} {:<25}'.format("Quantity", "Reference number", \
+          "Number from current git", "Relative error", "Absolute error"))
+   print ("")
 
    with open(filename) as f:
        count = 0
@@ -46,6 +59,9 @@ def check_test(filename_reference):
                        check_abs = abs_error < threshold_abs_error
                        check_rel = rel_error < threshold_rel_error
 
+                       print('{:<15} {:>25} {:>25} {:>25} {:>25}'.format(fields_reference[0], \
+                             value_reference, value_test, rel_error, abs_error))
+
                        assert check_abs or check_rel, \
                               "\n\nAbsolute and relative error of variable number "+str(count)+\
                               " compared to reference too big:"\
@@ -60,12 +76,21 @@ def check_test(filename_reference):
 
 def main():
 
-   for filename_reference in os.listdir("."):
+   is_dir = os.path.isdir("./tests")
+   dirpath = os.getcwd()
+
+   assert is_dir, "The directory ./tests does not exist inside the directory "+dirpath
+
+   count = 0
+   for filename_reference in os.listdir("./tests"):
        if filename_reference.endswith(".reference"): 
-           check_test(filename_reference)
+           count += 1
+           check_test("./tests/"+filename_reference)
            continue
        else:
            continue
+
+   assert count > 0, "There are no test files with ending .reference in directory "+dirpath+"/tests"
 
 if __name__ == "__main__":
   main()
