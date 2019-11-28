@@ -2,11 +2,13 @@ import numpy as np
 import os
 import pytest
 
+# THIS SCRIPT NEEDS TO BE EXECUTED IN THE MAIN GIT DIRECTORY BY CALLING python3 tests/test_script.py
+
 def check_test(filename_reference):
 
    threshold_rel_error = 1.0E-12
    threshold_abs_error = 1.0E-24
-   filename = "test.dat"
+   filename = "./test.dat"
 
    assert os.path.isfile(filename_reference), "Reference file is missing."
 
@@ -60,12 +62,21 @@ def check_test(filename_reference):
 
 def main():
 
-   for filename_reference in os.listdir("."):
+   is_dir = os.path.isdir("./tests")
+   dirpath = os.getcwd()
+
+   assert is_dir, "The directory ./tests does not exist inside the directory "+dirpath
+
+   count = 0
+   for filename_reference in os.listdir("./tests"):
        if filename_reference.endswith(".reference"): 
-           check_test(filename_reference)
+           count += 1
+           check_test("./tests/"+filename_reference)
            continue
        else:
            continue
+
+   assert count > 0, "There are no test files with ending .reference in directory "+dirpath+"/tests"
 
 if __name__ == "__main__":
   main()
