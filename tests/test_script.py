@@ -24,7 +24,8 @@ def check_test(filename_reference):
    assert os.path.isfile(filename), "Testfile is not printed from the code"
 
    print ("\n\n*****************************************************\n\nThe following numbers are tested:\n\n")
-   print ("\n\nQuantity    Reference number       Number obtained from current git version\n\n")
+   print ('{:<15} {:<25} {:<25}'.format("Quantity", "Reference number", "Number obtained from current git version"))
+   print ("")
 
    with open(filename) as f:
        count = 0
@@ -51,7 +52,7 @@ def check_test(filename_reference):
                        check_abs = abs_error < threshold_abs_error
                        check_rel = rel_error < threshold_rel_error
 
-                       print (fields_reference[0]+"  "+str(value_reference)+"  "+str(value_test))
+                       print('{:<15} {:>25} {:>25}'.format(fields_reference[0], value_reference, value_test))
 
                        assert check_abs or check_rel, \
                               "\n\nAbsolute and relative error of variable number "+str(count)+\
