@@ -9,13 +9,14 @@ def main():
     # USER INPUT FROM COMMAND LINE
     ###############################################################################################
     parser = argparse.ArgumentParser(description='Simulation of the semiconductor-bloch equations')
-    parser.add_argument('Nk',    type=int,   nargs='?', default=20,    help='Number of k-points in the Brillouin zone')
+    parser.add_argument('Nk1',   type=int,   nargs='?', default=4,     help='Number of k-points in b1 direction of the Brillouin zone')
+    parser.add_argument('Nk2',   type=int,   nargs='?', default=4,     help='Number of k-points in b2 direction of the Brillouin zone')
     parser.add_argument('E0',    type=float, nargs='?', default=12.0,  help='Maximum pulse field value (in MV/cm)')
     parser.add_argument('w',     type=float, nargs='?', default=30.0,  help='Central pulse frequency (in THz)')
     parser.add_argument('alpha', type=float, nargs='?', default=48.0,  help='Width of pulse Gaussian envelope (in femtoseconds)')
     parser.add_argument('T2',    type=float, nargs='?', default=1.0,   help='Phenomenological damping time (in femtoseconds)')
-    parser.add_argument('t0',    type=float, nargs='?', default=-1500, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
-    parser.add_argument('tf',    type=float, nargs='?', default=1500,  help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
+    parser.add_argument('t0',    type=float, nargs='?', default=-1000, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
+    parser.add_argument('tf',    type=float, nargs='?', default=1000,  help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
     parser.add_argument('dt',    type=float, nargs='?', default=0.01,  help='Time step (in femtoseconds)')
     parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values: P(t=0), J(t=0), N_gamma(tf), emis(5/w), emis(12.5/w), emis(15/w). Standard parameters: Nk=20, E0=12, w=30, alpha=48, T2=1, t0=-1500, tf=1500, dt=0.01.')
     args = parser.parse_args()
@@ -33,7 +34,9 @@ def main():
     sol_method = 'vector'                           # 'Vector' or 'matrix' updates in f(t,y)
 
     # Set parameters
-    Nk = args.Nk                                    # Number of k-points
+    Nk1 = args.Nkx                                  # Number of k_x points
+    Nk2 = args.Nky                                  # Number of k_y points
+    Nk = Nk1*Nk2                                    # Total number of k points
     E0 = args.E0*E_conv                             # Driving field amplitude
     w = args.w*THz_conv                             # Driving frequency
     alpha = args.alpha*fs_conv                      # Gaussian pulse width
@@ -73,9 +76,10 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
     a = 1
-    kgrid, GM_paths = hex_mesh(Nk, a)
-    dk = 1/Nk
-
+    kgrid, GM_paths = hex_mesh(Nk1, Nk2, a)
+    dk1 = 1/Nk1
+    dk2 = 1/Nk2
+    
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
@@ -104,7 +108,7 @@ def main():
         #print(np.size(kpath, axis=0))
 
         # Set the initual values and function parameters
-        solver.set_initial_value(y0,t0).set_f_params(kpath,dk,gamma2,E0,w,alpha)
+        solver.set_initial_value(y0,t0).set_f_params(kpath,dkx,gamma2,E0,w,alpha)
 
         # Propagate through time
         ti = 0
@@ -117,6 +121,7 @@ def main():
     # COMPUTE OBSERVABLES
     ###############################################################################################
     # Slice solution along each kpoint for easier observable calculation
+    print(np.shape(solution))
     solution = np.array(solution)
     solution = np.array_split(solution,Nk,axis=1)
     solution = np.array(solution)
@@ -262,10 +267,11 @@ def eband(n, kx, ky):
         return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
 
     
-def hex_mesh(Nk, a):
+def hex_mesh(Nk1, Nk2, a):
     # Calculate the alpha values needed based on the size of the Brillouin zone
-    alpha = np.linspace(-0.5 + (1/(2*Nk)), 0.5 - (1/(2*Nk)), num = Nk)
-
+    alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+    alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
+    
     # Define the reciprocal lattice vectors
     b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
     b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
@@ -273,9 +279,9 @@ def hex_mesh(Nk, a):
     mesh = []
     gamma_M_paths = []
     # Iterate through each alpha value and append the kgrid array for each one
-    for a1 in alpha:
+    for a1 in alpha1:
         path_K = []
-        for a2 in alpha:
+        for a2 in alpha2:
             kpoint = a1*b1 + a2*b2
             mesh.append(kpoint)
             path_K.append(kpoint)
