@@ -34,8 +34,8 @@ def main():
     sol_method = 'vector'                           # 'Vector' or 'matrix' updates in f(t,y)
 
     # Set parameters
-    Nk1 = args.Nkx                                  # Number of k_x points
-    Nk2 = args.Nky                                  # Number of k_y points
+    Nk1 = args.Nk1                                  # Number of k_x points
+    Nk2 = args.Nk2                                  # Number of k_y points
     Nk = Nk1*Nk2                                    # Total number of k points
     E0 = args.E0*E_conv                             # Driving field amplitude
     w = args.w*THz_conv                             # Driving frequency
@@ -50,7 +50,7 @@ def main():
     # USER OUTPUT
     ###############################################################################################
     print("Solving for...")
-    if Nk<20:
+    if Nk < 20:
         print("***WARNING***: Convergence issues may result from Nk < 20")
     if args.dt > 1.0:
         print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
@@ -94,51 +94,55 @@ def main():
         solver = ode(f_matrix, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
     
 
-    # SOLVING
+    # SOLVING 
     ###############################################################################################
-    # Initially no excited electrons (and thus no holes) all values set to zero.
+    # Iterate through each path in the Brillouin zone
     for kpath in GM_paths:
+
+        # Solution container for the current path
+        path_solution = []
+        
+        # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
         for k in kpath:
             y0.extend([0.0,0.0,0.0,0.0])
 
-        #print(kpath)
-        #print(np.shape(kpath))
-        #print(np.size(y0))
-        #print(np.size(kpath, axis=0))
-
-        # Set the initual values and function parameters
-        solver.set_initial_value(y0,t0).set_f_params(kpath,dkx,gamma2,E0,w,alpha)
+        # Set the initual values and function parameters for the current kpath
+        solver.set_initial_value(y0,t0).set_f_params(kpath,dk1,gamma2,E0,w,alpha)
 
         # Propagate through time
         ti = 0
         while solver.successful() and ti < Nt:
             solver.integrate(solver.t + dt)
-            solution.append(solver.y)
+            path_solution.append(solver.y)
             ti += 1
-        
+
+        solution.append(path_solution)
+        print(np.shape(path_solution))
+        print(np.shape(solution))
+
+    # Slice solution along each for easier observable calculation
+    solution = np.array(solution)
+    solution = np.array_split(solution,Nk1,axis=2)
+    solution = np.array(solution)
 
     # COMPUTE OBSERVABLES
     ###############################################################################################
-    # Slice solution along each kpoint for easier observable calculation
-    print(np.shape(solution))
-    solution = np.array(solution)
-    solution = np.array_split(solution,Nk,axis=1)
-    solution = np.array(solution)
     # First index of solution is kpoint, second is timestep, third is f_h, p_he, p_eh, f_e
     
     # Electrons occupations, gamma point, K points, and midway between those
-    N_elec = np.real(solution[:,:,3])
-    N_gamma = N_elec[int(Nk/2),:]
-    N_mid = N_elec[int(Nk*(3/4)),:]
-    N_K = N_elec[-1,:]
-    N_negmid = N_elec[int(Nk*(1/4)),:]
-    N_negK = N_elec[0,:]
+    #N_elec = np.real(solution[:,:,3])
+    #N_gamma = N_elec[int(Nk/2),:]
+    #N_mid = N_elec[int(Nk*(3/4)),:]
+    #N_K = N_elec[-1,:]
+    #N_negmid = N_elec[int(Nk*(1/4)),:]
+    #N_negK = N_elec[0,:]
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
-    pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current 
+    pol = polarization(solution[:,:,:,1],solution[:,:,:,2]) # Polarization
+    print(pol)
+    curr = current(GM_paths, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current 
 
     # Fourier transform (shift frequencies for better plots)
     freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
@@ -330,14 +334,15 @@ def polarization(pvc,pcv):
     '''
     Calculates the polarization by summing the contribtion from all kpoints.
     '''
-    # Determine number of k-points
-    Nk = np.size(pvc, axis=0)
+    # Determine number of k-points in each direction
+    Nk1 = np.size(pvc, axis=0)
+    Nk2 = np.size(pvc, axis=1)
 
     # Sum over k points, take real-part
-    return np.real(np.sum(pvc + pcv, axis=0))/Nk
+    return np.real(np.sum(np.sum(pvc + pcv, axis=0)/Nk1, axis=0))/Nk2
 
 
-def current(k,fv,fc):
+def current(paths,fv,fc):
     '''
     Calculates current according to 
     J(t) = sum_k[sum_n j_n(k)*f_n(k)]
@@ -345,18 +350,23 @@ def current(k,fv,fc):
     calculated as j_n(k) = grad_k eband(n,k)100fs in atomic units
     '''
     # Determine number of k-points
-    Nk = np.size(fc, axis=0)
-    
+    Nk1 = np.size(fc, axis=0)
+    Nk2 = np.size(fc, axis=1)
+
+    j_e = []
+    j_h = []
     # Pre factors
-    j_e = diff(k, eband(2,k))
-    j_h = diff(k, eband(1,k))
+    for path in paths:
+        j_e.append(diff(path, eband(2,path[:,0],path[:,1])))
+        j_h.append(diff(path, eband(1,path[:,0],path[:,1])))
+    print(np.shape(j_e))
 
     # Sum over the k's and multiply
     curr_e = np.dot(j_e, fc)
     curr_h = np.dot(j_h, fv)
 
     #np.savetxt(os.path.dirname(os.path.realpath(__file__)) + '/current_factors.dat', np.transpose(np.real([diff(k,eband(2,k)), diff(k,eband(1,k))]))) 
-    return np.real(curr_e + curr_h)/Nk
+    return np.real(curr_e + curr_h)/Nk1
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha):
