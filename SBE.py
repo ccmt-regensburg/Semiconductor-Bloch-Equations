@@ -76,7 +76,7 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
     a = 1
-    kgrid, GM_paths = hex_mesh(Nk1, Nk2, a)
+    kpnts, GM_paths = hex_mesh(Nk1, Nk2, a)
     dk1 = 1/Nk1
     dk2 = 1/Nk2
     
@@ -118,8 +118,6 @@ def main():
             ti += 1
 
         solution.append(path_solution)
-        print(np.shape(path_solution))
-        print(np.shape(solution))
 
     # Slice solution along each for easier observable calculation
     solution = np.array(solution)
@@ -128,7 +126,7 @@ def main():
 
     # COMPUTE OBSERVABLES
     ###############################################################################################
-    # First index of solution is kpoint, second is timestep, third is f_h, p_he, p_eh, f_e
+    # First index of solution is kx-point, second is ky-point, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
     # Electrons occupations, gamma point, K points, and midway between those
     #N_elec = np.real(solution[:,:,3])
@@ -141,8 +139,8 @@ def main():
     # Current decay start time (fraction of final time)
     decay_start = 0.4
     pol = polarization(solution[:,:,:,1],solution[:,:,:,2]) # Polarization
-    print(pol)
-    curr = current(GM_paths, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current 
+    curr = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])#*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current
+    print(np.shape(curr))
 
     # Fourier transform (shift frequencies for better plots)
     freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
@@ -262,7 +260,7 @@ def eband(n, kx, ky):
     Band structure modeled as (e.g.)...
     E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
     '''
-    envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
+    envelope = 1#((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
     if (n==1):   # Valence band
         #return np.zeros(np.shape(k)) # Flat structure
         return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope 
@@ -284,12 +282,12 @@ def hex_mesh(Nk1, Nk2, a):
     gamma_M_paths = []
     # Iterate through each alpha value and append the kgrid array for each one
     for a1 in alpha1:
-        path_K = []
+        path_M = []
         for a2 in alpha2:
             kpoint = a1*b1 + a2*b2
             mesh.append(kpoint)
-            path_K.append(kpoint)
-        gamma_M_paths.append(path_K)
+            path_M.append(kpoint)
+        gamma_M_paths.append(path_M)
         
     return np.array(mesh), np.array(gamma_M_paths)
 
@@ -342,31 +340,40 @@ def polarization(pvc,pcv):
     return np.real(np.sum(np.sum(pvc + pcv, axis=0)/Nk1, axis=0))/Nk2
 
 
-def current(paths,fv,fc):
+def current(kgrid,fv,fc):
     '''
     Calculates current according to 
     J(t) = sum_k[sum_n j_n(k)*f_n(k)]
     where n represents the band index and j_n(k) is the band velocity
-    calculated as j_n(k) = grad_k eband(n,k)100fs in atomic units
+    calculated as j_n(k) = grad_k eband(n,k)
     '''
+  
     # Determine number of k-points
     Nk1 = np.size(fc, axis=0)
     Nk2 = np.size(fc, axis=1)
 
-    j_e = []
-    j_h = []
-    # Pre factors
-    for path in paths:
-        j_e.append(diff(path, eband(2,path[:,0],path[:,1])))
-        j_h.append(diff(path, eband(1,path[:,0],path[:,1])))
-    print(np.shape(j_e))
+    # Define the kx and ky points
+    kx_grid, ky_grid = kgrid[:,0], kgrid[:,1]
 
-    # Sum over the k's and multiply
-    curr_e = np.dot(j_e, fc)
-    curr_h = np.dot(j_h, fv)
+    # Perform the sums over the k mesh
+    J = []
+    ki, kj = 0, 0
+    for kx in kx_grid:
+        for ky in ky_grid:
+            jex = -20.0*kx*np.exp(-10*(kx**2+ky**2))
+            jey = -20.0*ky*np.exp(-10*(kx**2+ky**2))
+            jhx = -10.0*kx*np.exp(-5*(kx**2+ky**2))
+            jhy = -10.0*ky*np.exp(-5*(kx**2+ky**2))
+            cx = (jex*fc[ki,kj,:] + jhx*fv[ki,kj,:])*np.array([1,0])
+            cy = (jey*fc[ki,kj,:] + jhy*fv[ki,kj,:])*np.array([0,1])
+            J.append(cx + cy)
+            kj += 1
+        ki += 1
 
+    print(J)
+        
     #np.savetxt(os.path.dirname(os.path.realpath(__file__)) + '/current_factors.dat', np.transpose(np.real([diff(k,eband(2,k)), diff(k,eband(1,k))]))) 
-    return np.real(curr_e + curr_h)/Nk1
+    return np.real(J)/(Nk1*Nk2)
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha):
