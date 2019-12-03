@@ -138,10 +138,14 @@ def main():
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
-    pol = polarization(solution[:,:,:,1],solution[:,:,:,2]) # Polarization
-    curr = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])#*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current
-    print(np.shape(curr))
+    #pol = polarization(solution[:,:,:,1],solution[:,:,:,2]) # Polarization
+    #curr = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])#*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current
 
+    Jx, Jy = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])
+
+    pl.plot(Jx)
+    pl.show()
+    
     # Fourier transform (shift frequencies for better plots)
     freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
     fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
@@ -341,39 +345,35 @@ def polarization(pvc,pcv):
 
 
 def current(kgrid,fv,fc):
-    '''
-    Calculates current according to 
-    J(t) = sum_k[sum_n j_n(k)*f_n(k)]
-    where n represents the band index and j_n(k) is the band velocity
-    calculated as j_n(k) = grad_k eband(n,k)
-    '''
-  
+
     # Determine number of k-points
     Nk1 = np.size(fc, axis=0)
     Nk2 = np.size(fc, axis=1)
+    Nt  = np.size(fc, axis=2)
+    
+    print(np.shape(fc))
 
-    # Define the kx and ky points
-    kx_grid, ky_grid = kgrid[:,0], kgrid[:,1]
 
+    Jx, Jy = [], []
     # Perform the sums over the k mesh
-    J = []
-    ki, kj = 0, 0
-    for kx in kx_grid:
-        for ky in ky_grid:
-            jex = -20.0*kx*np.exp(-10*(kx**2+ky**2))
-            jey = -20.0*ky*np.exp(-10*(kx**2+ky**2))
-            jhx = -10.0*kx*np.exp(-5*(kx**2+ky**2))
-            jhy = -10.0*ky*np.exp(-5*(kx**2+ky**2))
-            cx = (jex*fc[ki,kj,:] + jhx*fv[ki,kj,:])*np.array([1,0])
-            cy = (jey*fc[ki,kj,:] + jhy*fv[ki,kj,:])*np.array([0,1])
-            J.append(cx + cy)
-            kj += 1
-        ki += 1
-
-    print(J)
+    for k in kgrid:
+        kx = k[0]
+        ky = k[1]
         
+        # Band gradient at this k-point (for simplified band structure model)
+        jex = -20.0*kx*np.exp(-10*(kx**2+ky**2))
+        jey = -20.0*ky*np.exp(-10*(kx**2+ky**2))
+        jhx = -10.0*kx*np.exp(-5*(kx**2+ky**2))
+        jhy = -10.0*ky*np.exp(-5*(kx**2+ky**2))
+
+        Jx.append(jex*fc + jhx*fv)
+        Jy.append(jey*fc + jhy*fv)
+
+    Jx = np.sum(np.sum(Jx, axis=0), axis=1)
+    Jy = np.sum(np.sum(Jy, axis=0), axis=1)
+    
     #np.savetxt(os.path.dirname(os.path.realpath(__file__)) + '/current_factors.dat', np.transpose(np.real([diff(k,eband(2,k)), diff(k,eband(1,k))]))) 
-    return np.real(J)/(Nk1*Nk2)
+    return np.real(Jx), np.real(Jy)
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha):
