@@ -143,7 +143,7 @@ def main():
 
     Jx, Jy = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])
 
-    pl.plot(Jx)
+    pl.plot(Jx[::100])
     pl.show()
     
     # Fourier transform (shift frequencies for better plots)
@@ -264,13 +264,14 @@ def eband(n, kx, ky):
     Band structure modeled as (e.g.)...
     E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
     '''
-    envelope = 1#((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
+    #envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
     if (n==1):   # Valence band
         #return np.zeros(np.shape(k)) # Flat structure
-        return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope 
+        #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)#*envelope
+        return (-1.0/27.211)+(1.0/27.211)*np.exp(-0.4*kx**2 - 0.4*ky**2)#*envelope
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
-        return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
+        return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
 
     
 def hex_mesh(Nk1, Nk2, a):
@@ -350,9 +351,6 @@ def current(kgrid,fv,fc):
     Nk1 = np.size(fc, axis=0)
     Nk2 = np.size(fc, axis=1)
     Nt  = np.size(fc, axis=2)
-    
-    print(np.shape(fc))
-
 
     Jx, Jy = [], []
     # Perform the sums over the k mesh
@@ -361,10 +359,10 @@ def current(kgrid,fv,fc):
         ky = k[1]
         
         # Band gradient at this k-point (for simplified band structure model)
-        jex = -20.0*kx*np.exp(-10*(kx**2+ky**2))
-        jey = -20.0*ky*np.exp(-10*(kx**2+ky**2))
-        jhx = -10.0*kx*np.exp(-5*(kx**2+ky**2))
-        jhy = -10.0*ky*np.exp(-5*(kx**2+ky**2))
+        jex = -(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2))
+        jey = -(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2))
+        jhx = -(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2))
+        jhy = -(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2))
 
         Jx.append(jex*fc + jhx*fv)
         Jy.append(jey*fc + jhy*fv)
