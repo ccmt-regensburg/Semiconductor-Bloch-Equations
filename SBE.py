@@ -3,6 +3,15 @@ import matplotlib.pyplot as pl
 from scipy.integrate import ode
 import time, os, argparse
 
+'''
+TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+- legacy matrix method not compatible with two-dimensional case.
+- current function not compatible with K-paths.
+- arbitrary (circular) polarization (big task).
+- plots for two-dimensional case
+- Emission spectrum for arbitrary direction
+'''
+
 
 def main():
 
@@ -14,10 +23,12 @@ def main():
     parser.add_argument('E0',    type=float, nargs='?', default=12.0,  help='Maximum pulse field value (in MV/cm)')
     parser.add_argument('w',     type=float, nargs='?', default=30.0,  help='Central pulse frequency (in THz)')
     parser.add_argument('alpha', type=float, nargs='?', default=48.0,  help='Width of pulse Gaussian envelope (in femtoseconds)')
+    parser.add_argument('align', type=str,   nargs='?', default='M',   help='Alignment of the pulse polarization. Set to \'M\' for gamma-M direction, \'K\' for gamma-K direction.')
     parser.add_argument('T2',    type=float, nargs='?', default=1.0,   help='Phenomenological damping time (in femtoseconds)')
     parser.add_argument('t0',    type=float, nargs='?', default=-1000, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
     parser.add_argument('tf',    type=float, nargs='?', default=1000,  help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
     parser.add_argument('dt',    type=float, nargs='?', default=0.01,  help='Time step (in femtoseconds)')
+    parser.add_argument('-m',    default=False, action='store_true',   help='Use matrix method for solving (legacy)')
     parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values: P(t=0), J(t=0), N_gamma(tf), emis(5/w), emis(12.5/w), emis(15/w). Standard parameters: Nk=20, E0=12, w=30, alpha=48, T2=1, t0=-1500, tf=1500, dt=0.01.')
     args = parser.parse_args()
 
@@ -31,7 +42,7 @@ def main():
     amp_conv = 150.97488474                         #(1A     = 150.97488474)
     eV_conv = 0.03674932176                         #(1eV    = 0.036749322176 a.u.)
 
-    sol_method = 'vector'                           # 'Vector' or 'matrix' updates in f(t,y)
+    matrix_method = args.m                          # 'Vector' or 'matrix' updates in f(t,y)
 
     # Set parameters
     Nk1 = args.Nk1                                  # Number of k_x points
@@ -40,6 +51,7 @@ def main():
     E0 = args.E0*E_conv                             # Driving field amplitude
     w = args.w*THz_conv                             # Driving frequency
     alpha = args.alpha*fs_conv                      # Gaussian pulse width
+    align = args.align                              # Pulse polarization direction
     T2 = args.T2*fs_conv                            # Damping time
     gamma2 = 1/T2                                   # Gamma parameter
     t0 = int(args.t0*fs_conv)                       # Initial time condition
@@ -54,6 +66,8 @@ def main():
         print("***WARNING***: Convergence issues may result from Nk < 20")
     if args.dt > 1.0:
         print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
+    if matrix_method:
+        print("*** USING MATRIX METHOD SOLVER ***")
     print("Number of k-points              = " + str(Nk))
     print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
@@ -61,6 +75,7 @@ def main():
     print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
     print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
     print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
+    print("Driving field polarization      = " + "Gamma-" + str(align))
     
     
     # FILENAME/DIRECTORY DETAILS
@@ -76,7 +91,7 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
     a = 1
-    kpnts, GM_paths = hex_mesh(Nk1, Nk2, a)
+    kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a)
     dk1 = 1/Nk1
     dk2 = 1/Nk2
     
@@ -88,27 +103,35 @@ def main():
     solution = []    
 
     # Initialize ode solver according to chosen method
-    if sol_method == 'vector':
-        solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
-    elif sol_method == 'matrix':
+    if matrix_method:
         solver = ode(f_matrix, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
+    else:
+        solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
+
+    # Determine the Brillouin zone paths to use
+    if align == 'M':
+        paths = M_paths
+    elif align == 'K':
+        paths = K_paths
     
 
     # SOLVING 
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
-    for kpath in GM_paths:
+    for path in paths:
+        # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
+        path = np.array(path)
 
         # Solution container for the current path
         path_solution = []
-        
+
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
-        for k in kpath:
+        for k in path:
             y0.extend([0.0,0.0,0.0,0.0])
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(kpath,dk1,gamma2,E0,w,alpha)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha)
 
         # Propagate through time
         ti = 0
@@ -123,10 +146,10 @@ def main():
     solution = np.array(solution)
     solution = np.array_split(solution,Nk1,axis=2)
     solution = np.array(solution)
-
+    # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
+    
     # COMPUTE OBSERVABLES
     ###############################################################################################
-    # First index of solution is kx-point, second is ky-point, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
     # Electrons occupations, gamma point, K points, and midway between those
     #N_elec = np.real(solution[:,:,3])
@@ -138,21 +161,46 @@ def main():
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
-    #pol = polarization(solution[:,:,:,1],solution[:,:,:,2]) # Polarization
-    #curr = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])#*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current
 
-    Jx, Jy = current(kpnts, solution[:,:,:,0], solution[:,:,:,3])
+    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3])
+    Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
+    Ix, Iy = emission(paths, Px, Py, Jx, Jy)
 
-    pl.plot(Jx[::100])
+    freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
+    Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
+    Iw_y = np.fft.fftshift(np.fft.fft(Iy, norm='ortho'))
+
+    #pl.plot(freq/w,np.abs(Iw_x))
+    #pl.plot(freq/w,np.abs(Iw_y))
+
+    f2 = np.argwhere(np.logical_and(freq/w > 1.9, freq/w < 2.1))
+    f4 = np.argwhere(np.logical_and(freq/w > 3.9, freq/w < 4.1))
+    f6= np.argwhere(np.logical_and(freq/w > 5.9, freq/w < 6.1))
+    f_2 = f2[int(np.size(f2)/2)]
+    f_4 = f4[int(np.size(f4)/2)]
+    f_6 = f6[int(np.size(f6)/2)]
+
+    theta = np.linspace(0,2.0*np.pi,50)
+    r5 = np.sqrt(Iw_x[f_2]**2.0 + Iw_y[f_2]**2.0)
+    r7 = np.sqrt(Iw_x[f_4]**2.0 + Iw_y[f_4]**2.0)
+    r10 = np.sqrt(Iw_x[f_6]**2.0 + Iw_y[f_6]**2.0)
+    
+    ax1 = pl.subplot(131,projection='polar')
+    ax1.plot(theta, r5)
+    ax2 = pl.subplot(132,projection='polar')
+    ax2.plot(theta, r7)
+    ax3 = pl.subplot(133,projection='polar')
+    ax3.plot(theta, r10)
+
     pl.show()
     
     # Fourier transform (shift frequencies for better plots)
-    freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
-    fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
-    polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
-    currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                                       # Current
-    emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
-    emis = emis/np.amax(emis)                                                                           # Normalize emmision spectrum
+    #freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
+    #fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
+    #polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
+    #currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                                       # Current
+    #emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
+    #emis = emis/np.amax(emis)                                                                           # Normalize emmision spectrum
     
     
     # OUTPUT STANDARD TEST VALUES
@@ -195,6 +243,7 @@ def main():
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
     # Real-time plot limits
+    '''
     real_t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
     
     # Frequency plot limits
@@ -256,7 +305,7 @@ def main():
 
     # Show the plot after everything
     pl.show()
-
+    '''
     
 def eband(n, kx, ky):
     '''
@@ -273,7 +322,7 @@ def eband(n, kx, ky):
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
 
-    
+
 def hex_mesh(Nk1, Nk2, a):
     # Calculate the alpha values needed based on the size of the Brillouin zone
     alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
@@ -283,18 +332,68 @@ def hex_mesh(Nk1, Nk2, a):
     b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
     b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
 
+    def is_in_hex(p,a):
+        # Returns true if the point is in the hexagonal BZ.
+        # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
+        x = np.abs(p[0])
+        y = np.abs(p[1])
+        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+
+    # Containers for the mesh, and BZ directional paths
     mesh = []
-    gamma_M_paths = []
-    # Iterate through each alpha value and append the kgrid array for each one
+    M_paths = []
+    K_paths = []
+
+    # Create the Monkhorst-Pack mesh
     for a1 in alpha1:
+        # Container for a single gamma-M path
         path_M = []
         for a2 in alpha2:
+            # Create a k-point
             kpoint = a1*b1 + a2*b2
-            mesh.append(kpoint)
-            path_M.append(kpoint)
-        gamma_M_paths.append(path_M)
-        
-    return np.array(mesh), np.array(gamma_M_paths)
+            # If the current point is in the BZ, append it to the mesh and path_M
+            if (is_in_hex(kpoint,a)):
+                mesh.append(kpoint)
+                path_M.append(kpoint)
+            # If the current point is NOT in the BZ, reflect is along the appropriate axis to get it in the BZ, then append.
+            else:
+                while (is_in_hex(kpoint,a) != True):
+                    if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):
+                        kpoint += b1
+                    elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)):
+                        kpoint -= b1
+                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
+                        kpoint -= b1 + b2
+                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
+                        kpoint -= b2
+                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
+                        kpoint += b1 + b2
+                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
+                        kpoint += b2
+                mesh.append(kpoint)
+                path_M.append(kpoint) 
+
+        # Append the a1'th path to the paths array
+        M_paths.append(path_M)
+
+    # Temp mesh array that gets progressively deleted
+    path_K_mesh = np.array(mesh)
+
+    while np.size(path_K_mesh) != 0:
+        path_K = []
+        # Determine the top horizontal points in the current path_K_mesh (a gamma-K path) and their arguments.
+        y_top = np.amax(path_K_mesh[:,1])
+        y_top_args = np.argwhere(np.logical_and(path_K_mesh[:,1] <= y_top+1/(4*Nk1), path_K_mesh[:,1] >= y_top-1/(4*Nk1)))
+
+        # Iterate through the arguments of the top most path, adding each point to the path. Delete these points as they are added.
+        for arg in y_top_args:
+            path_K.append(path_K_mesh[arg,:])
+
+        path_K_mesh = np.delete(path_K_mesh, y_top_args, 0)
+
+        K_paths.append(path_K)
+    
+    return np.array(mesh), M_paths, K_paths
 
 
 def dipole(kx, ky):
@@ -333,7 +432,7 @@ def diff(x,y):
         return dy/dx
 
     
-def polarization(pvc,pcv):
+def polarization(paths,pvc,pcv):
     '''
     Calculates the polarization by summing the contribtion from all kpoints.
     '''
@@ -341,42 +440,83 @@ def polarization(pvc,pcv):
     Nk1 = np.size(pvc, axis=0)
     Nk2 = np.size(pvc, axis=1)
 
-    # Sum over k points, take real-part
-    return np.real(np.sum(np.sum(pvc + pcv, axis=0)/Nk1, axis=0))/Nk2
+    d_x, d_y = [],[]
+    for path in paths:
+        for k in path:
+            kx = k[0]
+            ky = k[1]
+            d_x.append(ky/np.sqrt(kx**2.0 + ky**2.0))
+            d_y.append(-kx/np.sqrt(kx**2.0 + ky**2.0))
 
+    d_x = np.array_split(d_x,Nk2)
+    d_y = np.array_split(d_y,Nk2)
 
-def current(kgrid,fv,fc):
-
-    # Determine number of k-points
-    Nk1 = np.size(fc, axis=0)
-    Nk2 = np.size(fc, axis=1)
-    Nt  = np.size(fc, axis=2)
-
-    Jx, Jy = [], []
-    # Perform the sums over the k mesh
-    for k in kgrid:
-        kx = k[0]
-        ky = k[1]
-        
-        # Band gradient at this k-point (for simplified band structure model)
-        jex = -(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2))
-        jey = -(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2))
-        jhx = -(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2))
-        jhy = -(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2))
-
-        Jx.append(jex*fc + jhx*fv)
-        Jy.append(jey*fc + jhy*fv)
-
-    Jx = np.sum(np.sum(Jx, axis=0), axis=1)
-    Jy = np.sum(np.sum(Jy, axis=0), axis=1)
+    px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
+    py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
     
-    #np.savetxt(os.path.dirname(os.path.realpath(__file__)) + '/current_factors.dat', np.transpose(np.real([diff(k,eband(2,k)), diff(k,eband(1,k))]))) 
+    Px = np.sum(np.sum(px,axis=0),axis=0)
+    Py = np.sum(np.sum(py,axis=0),axis=0)
+
+    # Sum over k points, take real-part
+    return np.real(Px), np.real(Py)
+
+
+def current(paths,fv,fc):
+
+    Nk2 = np.size(fc,axis=1)
+    
+    Jx, Jy = [], []
+    jex,jey,jhx,jhy = [],[],[],[]
+    for path in paths:
+        for k in path:
+            kx = k[0]
+            ky = k[1]
+            # Band gradient at this k-point (for simplified band structure model)
+            jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
+            jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
+            jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
+            jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
+            
+    jex = np.array_split(jex,Nk2)
+    jhx = np.array_split(jhx,Nk2)
+    jey = np.array_split(jey,Nk2)
+    jhy = np.array_split(jhy,Nk2)
+
+    jx = np.dot(jex,fc) + np.dot(jhx,fv)
+    jy = np.dot(jey,fc) + np.dot(jhy,fv)
+
+    Jx = np.sum(np.sum(jx,axis=0), axis=0)
+    Jy = np.sum(np.sum(jy,axis=0), axis=0)
+    
     return np.real(Jx), np.real(Jy)
+
+def emission(paths, Px, Py, Jx, Jy):
+    '''
+    Input: The vector components of the time-dependent polarization and current
+    Output: Vector components of the time-dependent emission parameterized by a direction e_hat
+    '''
+
+    angles = np.linspace(0, 2.0*np.pi, 50)
+
+    dir_vecs = []
+    for angle in angles:
+        dir_vecs.append([np.cos(angle),np.sin(angle)])
+
+    Ix = np.abs(1j*Jx + Px)**2.0
+    Iy = np.abs(1j*Jy + Py)**2.0
+
+    #Ix, Iy = [],[]
+    #for e in dir_vecs:
+    #    Ix.append(ix*e[0])
+    #    Iy.append(iy*e[1])
+    
+    return np.array(Ix), np.array(Iy)
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha):
 
     x = np.empty(np.shape(y),dtype='complex')
+    
     '''
     Gradient term coefficient
     '''
