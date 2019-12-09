@@ -118,6 +118,7 @@ def main():
     # SOLVING 
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
+    ki = 1
     for path in paths:
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
@@ -135,13 +136,17 @@ def main():
 
         # Propagate through time
         ti = 0
+        print('k path: ' + str(ki))
         while solver.successful() and ti < Nt:
+            if (ti%10000) == 0:
+                print('{:5.2f}%'.format(ti/Nt*100))
             solver.integrate(solver.t + dt)
             path_solution.append(solver.y)
             ti += 1
 
         solution.append(path_solution)
-
+        ki += 1
+        
     # Slice solution along each for easier observable calculation
     solution = np.array(solution)
     solution = np.array_split(solution,Nk1,axis=2)
@@ -151,57 +156,63 @@ def main():
     # COMPUTE OBSERVABLES
     ###############################################################################################
     
-    # Electrons occupations, gamma point, K points, and midway between those
-    #N_elec = np.real(solution[:,:,3])
-    #N_gamma = N_elec[int(Nk/2),:]
-    #N_mid = N_elec[int(Nk*(3/4)),:]
-    #N_K = N_elec[-1,:]
-    #N_negmid = N_elec[int(Nk*(1/4)),:]
-    #N_negK = N_elec[0,:]
+    # Electrons occupations
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
 
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3])
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
-    Ix, Iy = emission(paths, Px, Py, Jx, Jy)
+    Ix, Iy = emission(Px, Py, Jx, Jy)
 
+    Ir_x = []
+    Ir_y = []
+    angles = np.linspace(0,2.0*np.pi,50)
+    for angle in angles:
+        e = [np.cos(angle),np.sin(angle)]
+        Ir_x.append(Ix*e[0])
+        Ir_y.append(Iy*e[1])
+
+    Ir_x = np.array(Ir_x)
+    Ir_y = np.array(Ir_y)
+    
     freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
     Iw_y = np.fft.fftshift(np.fft.fft(Iy, norm='ortho'))
-
-    #pl.plot(freq/w,np.abs(Iw_x))
-    #pl.plot(freq/w,np.abs(Iw_y))
-
-    f2 = np.argwhere(np.logical_and(freq/w > 1.9, freq/w < 2.1))
-    f4 = np.argwhere(np.logical_and(freq/w > 3.9, freq/w < 4.1))
-    f6= np.argwhere(np.logical_and(freq/w > 5.9, freq/w < 6.1))
-    f_2 = f2[int(np.size(f2)/2)]
-    f_4 = f4[int(np.size(f4)/2)]
-    f_6 = f6[int(np.size(f6)/2)]
-
-    theta = np.linspace(0,2.0*np.pi,50)
-    r5 = np.sqrt(Iw_x[f_2]**2.0 + Iw_y[f_2]**2.0)
-    r7 = np.sqrt(Iw_x[f_4]**2.0 + Iw_y[f_4]**2.0)
-    r10 = np.sqrt(Iw_x[f_6]**2.0 + Iw_y[f_6]**2.0)
     
-    ax1 = pl.subplot(131,projection='polar')
-    ax1.plot(theta, r5)
-    ax2 = pl.subplot(132,projection='polar')
-    ax2.plot(theta, r7)
-    ax3 = pl.subplot(133,projection='polar')
-    ax3.plot(theta, r10)
+    fig1, (ax0,ax1,ax2,ax3) = pl.subplots(1,4)
+    t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
+    freq_lims = (0,25)
+    ax0.set_xlim(t_lims)
+    ax0.plot(t/fs_conv,driving_field(E0,w,t,alpha))
+    ax1.set_xlim(t_lims)
+    ax1.plot(t/fs_conv,Px)
+    ax1.plot(t/fs_conv,Py)
+    ax2.set_xlim(t_lims)
+    ax2.plot(t/fs_conv,Jx)
+    ax2.plot(t/fs_conv,Jy)
+    ax3.set_xlim(freq_lims)
+    ax3.semilogy(freq/w,np.abs(Iw_x))
+    ax3.semilogy(freq/w,np.abs(Iw_y))
 
+    f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
+    f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
+    f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
+    f_5 = f5[int(np.size(f5)/2)]
+    f_125 = f125[int(np.size(f125)/2)]
+    f_15 = f15[int(np.size(f15)/2)]
+
+    fig2 = pl.figure()
+    pax0 = fig2.add_subplot(131,projection='polar')
+    pax0.plot(angles,np.sqrt(Ir_x[:,f_5]**2 + Ir_y[:,f_5]**2))
+    pax1 = fig2.add_subplot(132,projection='polar')
+    pax1.plot(angles,np.sqrt(Ir_x[:,f_125]**2 + Ir_y[:,f_125]**2))
+    pax2 = fig2.add_subplot(133,projection='polar')
+    pax2.plot(angles,np.sqrt(Ir_x[:,f_15]**2 + Ir_y[:,f_15]**2))
+
+    
     pl.show()
-    
-    # Fourier transform (shift frequencies for better plots)
-    #freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
-    #fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
-    #polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
-    #currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                                       # Current
-    #emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
-    #emis = emis/np.amax(emis)                                                                           # Normalize emmision spectrum
-    
+   
     
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -223,21 +234,21 @@ def main():
 
     # FILE OUTPUT
     ###############################################################################################
-    part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K       N_elec_negmid  N_elec_negK'
-    np.savetxt(save_dir + '/' + part_filename, np.transpose([t/fs_conv,N_gamma,N_mid,N_K,N_negmid,N_negK]), header=part_header, fmt='%.16e') 
+    #part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    #part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K       N_elec_negmid  N_elec_negK'
+    #np.savetxt(save_dir + '/' + part_filename, np.transpose([t/fs_conv,N_gamma,N_mid,N_K,N_negmid,N_negK]), header=part_header, fmt='%.16e') 
     
-    emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    emis_header = 'w/w0        emission spectrum'
-    np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq/w,emis]), header=emis_header, fmt='%.16e')
+    #emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    #emis_header = 'w/w0        emission spectrum'
+    #np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq/w,emis]), header=emis_header, fmt='%.16e')
 
-    pol_filename = str('pol_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    pol_header = 't            polarization   w/w0           pol_fourier'
-    np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
+    #pol_filename = str('pol_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    #pol_header = 't            polarization   w/w0           pol_fourier'
+    #np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
 
-    curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    curr_header = 't            current       w/w0           curr_fourier'
-    np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
+    #curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    #curr_header = 't            current       w/w0           curr_fourier'
+    #np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
 
 
     # PLOTTING OF DATA FOR EACH PARAMETER
@@ -490,26 +501,14 @@ def current(paths,fv,fc):
     
     return np.real(Jx), np.real(Jy)
 
-def emission(paths, Px, Py, Jx, Jy):
+def emission(Px, Py, Jx, Jy):
     '''
     Input: The vector components of the time-dependent polarization and current
-    Output: Vector components of the time-dependent emission parameterized by a direction e_hat
-    '''
-
-    angles = np.linspace(0, 2.0*np.pi, 50)
-
-    dir_vecs = []
-    for angle in angles:
-        dir_vecs.append([np.cos(angle),np.sin(angle)])
-
+    Output: Vector components of the time-dependent emission
+    '''      
     Ix = np.abs(1j*Jx + Px)**2.0
     Iy = np.abs(1j*Jy + Py)**2.0
-
-    #Ix, Iy = [],[]
-    #for e in dir_vecs:
-    #    Ix.append(ix*e[0])
-    #    Iy.append(iy*e[1])
-    
+      
     return np.array(Ix), np.array(Iy)
 
 
