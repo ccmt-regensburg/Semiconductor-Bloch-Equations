@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as pl
+from matplotlib import patches
 from scipy.integrate import ode
-import time, os, argparse
+import time, os
+import params
 
 '''
 TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -12,59 +14,40 @@ TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 - Emission spectrum for arbitrary direction
 '''
 
-
 def main():
-
-    # USER INPUT FROM COMMAND LINE
-    ###############################################################################################
-    parser = argparse.ArgumentParser(description='Simulation of the semiconductor-bloch equations')
-    parser.add_argument('Nk1',   type=int,   nargs='?', default=4,     help='Number of k-points in b1 direction of the Brillouin zone')
-    parser.add_argument('Nk2',   type=int,   nargs='?', default=4,     help='Number of k-points in b2 direction of the Brillouin zone')
-    parser.add_argument('E0',    type=float, nargs='?', default=12.0,  help='Maximum pulse field value (in MV/cm)')
-    parser.add_argument('w',     type=float, nargs='?', default=30.0,  help='Central pulse frequency (in THz)')
-    parser.add_argument('alpha', type=float, nargs='?', default=48.0,  help='Width of pulse Gaussian envelope (in femtoseconds)')
-    parser.add_argument('align', type=str,   nargs='?', default='M',   help='Alignment of the pulse polarization. Set to \'M\' for gamma-M direction, \'K\' for gamma-K direction.')
-    parser.add_argument('T2',    type=float, nargs='?', default=1.0,   help='Phenomenological damping time (in femtoseconds)')
-    parser.add_argument('t0',    type=float, nargs='?', default=-1000, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
-    parser.add_argument('tf',    type=float, nargs='?', default=1000,  help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
-    parser.add_argument('dt',    type=float, nargs='?', default=0.01,  help='Time step (in femtoseconds)')
-    parser.add_argument('-m',    default=False, action='store_true',   help='Use matrix method for solving (legacy)')
-    parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values: P(t=0), J(t=0), N_gamma(tf), emis(5/w), emis(12.5/w), emis(15/w). Standard parameters: Nk=20, E0=12, w=30, alpha=48, T2=1, t0=-1500, tf=1500, dt=0.01.')
-    args = parser.parse_args()
-
-
-    # SET SIMULATION PARAMETERS
+    
+    # RETRIEVE PARAMETERS
     ###############################################################################################
     # Unit converstion factors
-    fs_conv = 41.34137335                           #(1fs    = 41.341473335 a.u.)
-    E_conv = 0.0001944690381                        #(1MV/cm = 1.944690381*10^-4 a.u.) 
-    THz_conv = 0.000024188843266                    #(1THz   = 2.4188843266*10^-5 a.u.)
-    amp_conv = 150.97488474                         #(1A     = 150.97488474)
-    eV_conv = 0.03674932176                         #(1eV    = 0.036749322176 a.u.)
-
-    matrix_method = args.m                          # 'Vector' or 'matrix' updates in f(t,y)
-
+    fs_conv = params.fs_conv
+    E_conv = params.E_conv 
+    THz_conv = params.THz_conv
+    amp_conv = params.amp_conv
+    eV_conv = params.eV_conv
+    matrix_method = params.matrix_method               # 'Vector' or 'matrix' updates in f(t,y)
     # Set parameters
-    Nk1 = args.Nk1                                  # Number of k_x points
-    Nk2 = args.Nk2                                  # Number of k_y points
-    Nk = Nk1*Nk2                                    # Total number of k points
-    E0 = args.E0*E_conv                             # Driving field amplitude
-    w = args.w*THz_conv                             # Driving frequency
-    alpha = args.alpha*fs_conv                      # Gaussian pulse width
-    align = args.align                              # Pulse polarization direction
-    T2 = args.T2*fs_conv                            # Damping time
-    gamma2 = 1/T2                                   # Gamma parameter
-    t0 = int(args.t0*fs_conv)                       # Initial time condition
-    tf = int(args.tf*fs_conv)                       # Final time
-    dt = args.dt*fs_conv                            # Integration time step
-
+    Nk1 = params.Nk1                                  # Number of k_x points
+    Nk2 = params.Nk2                                  # Number of k_y points
+    b1 = params.b1                                    # Reciprocal lattice vector 
+    b2 = params.b2                                    # Reciprocal lattice vector
+    Nk = Nk1*Nk2                                      # Total number of k points
+    E0 = params.E0*E_conv                             # Driving field amplitude
+    w = params.w*THz_conv                             # Driving frequency
+    alpha = params.alpha*fs_conv                      # Gaussian pulse width
+    align = params.align                              # Pulse polarization direction
+    T2 = params.T2*fs_conv                            # Damping time
+    gamma2 = 1/T2                                     # Gamma parameter
+    t0 = int(params.t0*fs_conv)                       # Initial time condition
+    tf = int(params.tf*fs_conv)                       # Final time
+    dt = params.dt*fs_conv                            # Integration time step
+    test = params.test
 
     # USER OUTPUT
     ###############################################################################################
     print("Solving for...")
     if Nk < 20:
         print("***WARNING***: Convergence issues may result from Nk < 20")
-    if args.dt > 1.0:
+    if params.dt > 1.0:
         print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
     if matrix_method:
         print("*** USING MATRIX METHOD SOLVER ***")
@@ -91,7 +74,7 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
     a = 1
-    kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a)
+    kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2)
     dk1 = 1/Nk1
     dk2 = 1/Nk2
     
@@ -147,7 +130,7 @@ def main():
         solution.append(path_solution)
         ki += 1
         
-    # Slice solution along each for easier observable calculation
+    # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
     solution = np.array_split(solution,Nk1,axis=2)
     solution = np.array(solution)
@@ -157,65 +140,69 @@ def main():
     ###############################################################################################
     
     # Electrons occupations
+    N_elec = solution[:,:,:,3]
+    N_gamma = N_elec[int(Nk1/2), int(Nk2/2),:]
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
 
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3])
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
-    Ix, Iy = emission(Px, Py, Jx, Jy)
+    Ix, Iy = (diff(t,Px) + Jx)**2.0, (diff(t,Py) + Jy)**2.0
 
-    Ir_x = []
-    Ir_y = []
+    Ir = []
     angles = np.linspace(0,2.0*np.pi,50)
     for angle in angles:
-        e = [np.cos(angle),np.sin(angle)]
-        Ir_x.append(Ix*e[0])
-        Ir_y.append(Iy*e[1])
-
-    Ir_x = np.array(Ir_x)
-    Ir_y = np.array(Ir_y)
-    
+        Ir.append(np.sqrt((Ix*np.cos(angle))**2.0 + (Iy*np.sin(angle))**2.0))
+        
     freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
     Iw_y = np.fft.fftshift(np.fft.fft(Iy, norm='ortho'))
-    
-    fig1, (ax0,ax1,ax2,ax3) = pl.subplots(1,4)
-    t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
-    freq_lims = (0,25)
-    ax0.set_xlim(t_lims)
-    ax0.plot(t/fs_conv,driving_field(E0,w,t,alpha))
-    ax1.set_xlim(t_lims)
-    ax1.plot(t/fs_conv,Px)
-    ax1.plot(t/fs_conv,Py)
-    ax2.set_xlim(t_lims)
-    ax2.plot(t/fs_conv,Jx)
-    ax2.plot(t/fs_conv,Jy)
-    ax3.set_xlim(freq_lims)
-    ax3.semilogy(freq/w,np.abs(Iw_x))
-    ax3.semilogy(freq/w,np.abs(Iw_y))
+    Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
 
-    f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
-    f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
-    f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
-    f_5 = f5[int(np.size(f5)/2)]
-    f_125 = f125[int(np.size(f125)/2)]
-    f_15 = f15[int(np.size(f15)/2)]
+    if not test:
+        fig1, (ax0,ax1,ax2,ax3) = pl.subplots(1,4)
+        t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
+        freq_lims = (0,30)
+        ax0.set_xlim(t_lims)
+        ax0.plot(t/fs_conv,N_gamma)
+        ax1.set_xlim(t_lims)
+        ax1.plot(t/fs_conv,Px)
+        ax1.plot(t/fs_conv,Py)
+        ax2.set_xlim(t_lims)
+        ax2.plot(t/fs_conv,Jx)
+        ax2.plot(t/fs_conv,Jy)
+        ax3.set_xlim(freq_lims)
+        ax3.semilogy(freq/w,np.abs(Iw_x))
+        ax3.semilogy(freq/w,np.abs(Iw_y))
 
-    fig2 = pl.figure()
-    pax0 = fig2.add_subplot(131,projection='polar')
-    pax0.plot(angles,np.sqrt(Ir_x[:,f_5]**2 + Ir_y[:,f_5]**2))
-    pax1 = fig2.add_subplot(132,projection='polar')
-    pax1.plot(angles,np.sqrt(Ir_x[:,f_125]**2 + Ir_y[:,f_125]**2))
-    pax2 = fig2.add_subplot(133,projection='polar')
-    pax2.plot(angles,np.sqrt(Ir_x[:,f_15]**2 + Ir_y[:,f_15]**2))
+        f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
+        f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
+        f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
+        f_5 = f5[int(np.size(f5)/2)]
+        f_125 = f125[int(np.size(f125)/2)]
+        f_15 = f15[int(np.size(f15)/2)]
 
-    pl.show()
-   
+        fig2 = pl.figure()
+        pax0 = fig2.add_subplot(131,projection='polar')
+        pax0.plot(angles,Iw_r[:,f_5])
+        pax1 = fig2.add_subplot(132,projection='polar')
+        pax1.plot(angles,Iw_r[:,f_125])
+        pax2 = fig2.add_subplot(133,projection='polar')
+        pax2.plot(angles,Iw_r[:,f_15])
+
+        BZ_plot(kpnts,a)
+
+        pl.show()
+
+    np.save('occupations',N_elec)
+    np.save('current', [t/fs_conv, Jx, Jy])
+    np.save('polarization', [t/fs_conv,Px,Py])
+    np.save('emission', [freq/w, Iw_x, Iw_y])
     
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
-    if args.t:
+    if test:
         test_vals = []
         test_names = []
         t_zero = np.argwhere(t == 0)
@@ -230,25 +217,6 @@ def main():
         test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
         
-
-    # FILE OUTPUT
-    ###############################################################################################
-    #part_filename = str('part_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    #part_header = 't           N_elec_gamma   N_elec_mid     N_elec_K       N_elec_negmid  N_elec_negK'
-    #np.savetxt(save_dir + '/' + part_filename, np.transpose([t/fs_conv,N_gamma,N_mid,N_K,N_negmid,N_negK]), header=part_header, fmt='%.16e') 
-    
-    #emis_filename = str('emis_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    #emis_header = 'w/w0        emission spectrum'
-    #np.savetxt(save_dir + '/' + emis_filename, np.transpose([freq/w,emis]), header=emis_header, fmt='%.16e')
-
-    #pol_filename = str('pol_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    #pol_header = 't            polarization   w/w0           pol_fourier'
-    #np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
-
-    #curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    #curr_header = 't            current       w/w0           curr_fourier'
-    #np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
-
 
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
@@ -333,15 +301,18 @@ def eband(n, kx, ky):
         return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
 
 
-def hex_mesh(Nk1, Nk2, a):
+def hex_mesh(Nk1, Nk2, a, b1, b2):
     # Calculate the alpha values needed based on the size of the Brillouin zone
-    alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-    alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
+    if Nk1 == 1:
+        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+        alpha2 = [1.0]
+    else:
+        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+        alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
     
-    # Define the reciprocal lattice vectors
-    b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
-    b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
-
+    #if test and Nk1 == 1:
+    #    b1 = [1,0]
+    
     def is_in_hex(p,a):
         # Returns true if the point is in the hexagonal BZ.
         # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
@@ -676,6 +647,43 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     ax2.plot(xdata, data2, color='b', zorder=2, alpha=0.5)   # Plot data2 on the second y-axis
     ax2.set_ylabel(label2)                                   # Set the second y-axis label
     return ax1, ax2                                          # Returns these two axes with the data plotted
+
+def BZ_plot(kpnts,a):
+    
+    R  = 4.0*np.pi/3*a
+    r = 2.0*np.pi/(np.sqrt(3)*a)
+    b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
+    b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
+
+    BZ_fig = pl.figure()
+    ax = BZ_fig.add_subplot(111,aspect='equal')
+    
+    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
+
+    pl.scatter(0,0,s=15,c='black')
+    pl.text(0.05,0.05,r'$\Gamma$')
+    pl.scatter(R,0,s=15,c='black')
+    pl.text(R,0.05,r'$K$')
+    pl.scatter(r*np.cos(np.pi/6),-r*np.sin(np.pi/6),s=15,c='black')
+    pl.text(r*np.cos(np.pi/6),-r*np.sin(np.pi/6)-0.2,r'$M$')
+    pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
+    pl.xlim(-4.5,4.5)
+    pl.ylim(-4.5,4.5)
+    
+    return
+
+def path_plot(paths):
+
+    for path in paths:
+        plt.plot(path[:,0], path[:,1])
+
+    return
 
 if __name__ == "__main__":
     main()
