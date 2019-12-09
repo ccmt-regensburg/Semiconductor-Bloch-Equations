@@ -232,7 +232,6 @@ def main():
     pax2 = fig2.add_subplot(133,projection='polar')
     pax2.plot(angles,np.sqrt(Ir_x[:,f_15]**2 + Ir_y[:,f_15]**2))
 
-    
     pl.show()
    
 >>>>>>> 2d
