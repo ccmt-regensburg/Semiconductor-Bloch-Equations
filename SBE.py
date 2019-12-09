@@ -17,14 +17,9 @@ def main():
 
     # USER INPUT FROM COMMAND LINE
     ###############################################################################################
-<<<<<<< HEAD
-    parser = argparse.ArgumentParser(description='Numerical semiconductor-bloch equations simulating terahertz high-harmonic generation')
-    parser.add_argument('Nk',    type=int,   nargs='?', default=20,    help='Number of k-points in the Brillouin zone')
-=======
     parser = argparse.ArgumentParser(description='Simulation of the semiconductor-bloch equations')
     parser.add_argument('Nk1',   type=int,   nargs='?', default=4,     help='Number of k-points in b1 direction of the Brillouin zone')
     parser.add_argument('Nk2',   type=int,   nargs='?', default=4,     help='Number of k-points in b2 direction of the Brillouin zone')
->>>>>>> 2d
     parser.add_argument('E0',    type=float, nargs='?', default=12.0,  help='Maximum pulse field value (in MV/cm)')
     parser.add_argument('w',     type=float, nargs='?', default=30.0,  help='Central pulse frequency (in THz)')
     parser.add_argument('alpha', type=float, nargs='?', default=48.0,  help='Width of pulse Gaussian envelope (in femtoseconds)')
@@ -33,12 +28,8 @@ def main():
     parser.add_argument('t0',    type=float, nargs='?', default=-1000, help='Simulation start time. Note: pulse centered about t=0, start with negative values. (in femtoseconds)')
     parser.add_argument('tf',    type=float, nargs='?', default=1000,  help='Simulation final time. Note: Allow for ~200fs for current to decay. (in femtoseconds)')
     parser.add_argument('dt',    type=float, nargs='?', default=0.01,  help='Time step (in femtoseconds)')
-<<<<<<< HEAD
-    parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values: P(t=0), J(t=0), N_gamma(tf), emis(5/w), emis(12.5/w), emis(15/w). Standard parameters (if no others given): Nk=20, E0=12, w=30, alpha=48, T2=1, t0=-1500, tf=1500, dt=0.01.')
-=======
     parser.add_argument('-m',    default=False, action='store_true',   help='Use matrix method for solving (legacy)')
     parser.add_argument('-t',    default=False, action='store_true',   help='Flag to output standard testing values: P(t=0), J(t=0), N_gamma(tf), emis(5/w), emis(12.5/w), emis(15/w). Standard parameters: Nk=20, E0=12, w=30, alpha=48, T2=1, t0=-1500, tf=1500, dt=0.01.')
->>>>>>> 2d
     args = parser.parse_args()
 
 
@@ -169,19 +160,6 @@ def main():
     
     # Current decay start time (fraction of final time)
     decay_start = 0.4
-<<<<<<< HEAD
-    pol = polarization(solution[:,:,1],solution[:,:,2]) # Polarization
-    curr = current(kgrid, solution[:,:,0], solution[:,:,3])*np.exp(-0.5*(np.sign(t-decay_start*tf)+1)*(t-decay_start*tf)**2.0/(2.0*8000)**2.0) # Current 
-
-    # Fourier transform (shift frequencies for better plots)
-    freq = np.fft.fftshift(np.fft.fftfreq(Nt, d=dt))                                                    # Frequencies
-    fieldfourier = np.fft.fftshift(np.fft.fft(driving_field(E0, w, t, alpha), norm='ortho'))            # Driving field
-    polfourier = np.fft.fftshift(np.fft.fft(pol, norm='ortho'))                                         # Polarization
-    currfourier = np.fft.fftshift(np.fft.fft(curr, norm='ortho'))                                       # Current
-    emis = np.abs(freq*polfourier + 1j*currfourier)**2                                                  # Emission spectrum
-    emis = emis/np.amax(emis)                                                                           # Normalize emmision spectrum
-
-=======
 
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3])
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
@@ -234,12 +212,13 @@ def main():
 
     pl.show()
    
->>>>>>> 2d
     
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
     if args.t:
-        t_zero = -int(t0/dt)
+        test_vals = []
+        test_names = []
+        t_zero = np.argwhere(t == 0)
         f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
         f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
         f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
@@ -266,83 +245,13 @@ def main():
     #pol_header = 't            polarization   w/w0           pol_fourier'
     #np.savetxt(save_dir + '/' + pol_filename, np.transpose(np.real([t/fs_conv,pol,freq/w,polfourier])), header=pol_header, fmt='%.16e')
 
-<<<<<<< HEAD
-    curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    curr_header = 't            current       w/w0           curr_fourier'
-    np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t/fs_conv,curr,freq/w,currfourier])), header=curr_header, fmt='%.16e')
-=======
     #curr_filename = str('curr_Nk{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
     #curr_header = 't            current       w/w0           curr_fourier'
     #np.savetxt(save_dir + '/' + curr_filename, np.transpose(np.real([t,curr,freq,currfourier])), header=curr_header, fmt='%.16e')
->>>>>>> 2d
 
 
     # PLOTTING OF DATA FOR EACH PARAMETER
     ###############################################################################################
-<<<<<<< HEAD
-    if not args.t: # Don't plot in testing mode
-        # Time and frequency plot limits
-        time_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
-        freq_lims = (0,25)
-
-        # Create figure, establish the set of requried axes
-        fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(18,10))
-
-        # Plot band structure in the first set of axes
-        band_ax.scatter(kgrid, eband(2, kgrid)/eV_conv, s=5)
-        band_ax.scatter(kgrid, eband(1, kgrid)/eV_conv, s=5)
-        band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)/eV_conv), s=5, label='Conduction vel')
-        band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)/eV_conv), s=5, label='Valence vel')
-        band_ax.set_xlabel(r'$ka$')
-        band_ax.set_ylabel(r'$\epsilon(k)$')
-
-        # Plot particle number (with driving field)
-        N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_gamma, driving_field(E0, w, t, alpha)/E_conv, time_lims, r'$t\;(fs)$', r'$f_{e}(k=\Gamma)$', r'$E(t)\;(MV/cm)$')
-
-        # Plot polarization (with driving field)
-        P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, time_lims, r'$t\;(fs)$', r'$P(t)\;[a.u.]$', r'$E(t)\;(MV/cm)$')
-
-        # Plot current (with driving field)
-        J_ax, J_ax_E = double_scale_plot(J_ax, t/fs_conv, curr/amp_conv, driving_field(E0, w, t, alpha)/E_conv, time_lims, r'$t\;(fs)$', r'$J(t)\;[Amp]$', r'$E(t)\;(MV/cm)$')
-
-        # Plot emmision spectrum on a semi-log scale
-        emis_ax.semilogy(freq/w, emis, label='Emission spectrum')
-        emis_ax.set_xlim(freq_lims)
-        emis_ax.set_ylabel(r'$I_{rad}(\omega)$')
-        emis_ax.set_xlabel(r'$\omega/\omega_0$')
-
-        # Plot fourier transform of driving field
-        Efour_ax.semilogy(freq/w, np.abs(fieldfourier))
-        Efour_ax.set_xlim(freq_lims)
-        Efour_ax.set_ylabel(r'$E(\omega)$')
-        Efour_ax.set_xlabel(r'$\omega/\omega_0$')
-
-        # Plot fourier transform of polarization
-        Pfour_ax.semilogy(freq/w, np.abs(polfourier), label='Polarization spectrum')
-        Pfour_ax.set_xlim(freq_lims)
-        Pfour_ax.set_ylabel(r'$P(\omega)$')
-        Pfour_ax.set_xlabel(r'$\omega/\omega_0$')
-
-        # Plot fourier transform of current
-        Jfour_ax.semilogy(freq/w, np.abs(currfourier), label='Current spectrum')
-        Jfour_ax.set_xlim(freq_lims)
-        Jfour_ax.set_ylabel(r'$J(\omega)$')
-        Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
-
-        # Countour plots of occupations and gradients of occupations
-        fig1 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kgrid)
-        pl.contourf(X, Y, N_elec, 100)
-        pl.colorbar().set_label(r'$f_e(k)$')
-        pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        # Show the plot after everything
-        pl.show()
-
-=======
     # Real-time plot limits
     '''
     real_t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
@@ -407,7 +316,6 @@ def main():
     # Show the plot after everything
     pl.show()
     '''
->>>>>>> 2d
     
 def eband(n, kx, ky):
     '''
@@ -443,19 +351,6 @@ def hex_mesh(Nk1, Nk2, a):
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
-<<<<<<< HEAD
-    gamma_M_paths = []
-    # Iterate through each alpha value and append the kgrid array for each one
-    for a1 in alpha:
-        path_M = []
-        for a2 in alpha:
-            kpoint = a1*b1 + a2*b2
-            mesh.append(kpoint)
-            path_M.append(kpoint)
-        gamma_M_paths.append(path_K)
-        
-    return np.array(mesh), np.array(gamma_M_paths)
-=======
     M_paths = []
     K_paths = []
 
@@ -509,7 +404,6 @@ def hex_mesh(Nk1, Nk2, a):
         K_paths.append(path_K)
     
     return np.array(mesh), M_paths, K_paths
->>>>>>> 2d
 
 
 def dipole(kx, ky):
