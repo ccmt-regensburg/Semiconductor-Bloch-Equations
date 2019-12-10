@@ -11,7 +11,9 @@ TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 - current function not compatible with K-paths.
 - arbitrary (circular) polarization (big task).
 - plots for two-dimensional case
-- Emission spectrum for arbitrary direction
+- emission spectrum for arbitrary direction
+- change testing outputs for 1d case 
+- generalize energy band gradient (adaptable for 2d case)
 '''
 
 def main():
@@ -74,7 +76,7 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
     a = 1
-    kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2)
+    kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2, test)
     dk1 = 1/Nk1
     dk2 = 1/Nk2
     
@@ -105,6 +107,7 @@ def main():
     for path in paths:
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
+        print(path)
 
         # Solution container for the current path
         path_solution = []
@@ -192,6 +195,7 @@ def main():
         pax2.plot(angles,Iw_r[:,f_15])
 
         BZ_plot(kpnts,a)
+        path_plot(paths)
 
         pl.show()
 
@@ -203,8 +207,6 @@ def main():
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
     if test:
-        test_vals = []
-        test_names = []
         t_zero = np.argwhere(t == 0)
         f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
         f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
@@ -301,17 +303,15 @@ def eband(n, kx, ky):
         return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
 
 
-def hex_mesh(Nk1, Nk2, a, b1, b2):
+def hex_mesh(Nk1, Nk2, a, b1, b2, test):
     # Calculate the alpha values needed based on the size of the Brillouin zone
-    if Nk1 == 1:
-        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        alpha2 = [1.0]
-    else:
+    if Nk2 == 1: # 1d case set by Nk2 value
+        alpha1 = [0.0]
+        alpha2 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+        #b2 = np.array([0,1]) #Rescale reciprocal lattice vector to original 1d case
+    else: 
         alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
         alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
-    
-    #if test and Nk1 == 1:
-    #    b1 = [1,0]
     
     def is_in_hex(p,a):
         # Returns true if the point is in the hexagonal BZ.
@@ -417,7 +417,7 @@ def polarization(paths,pvc,pcv):
     '''
     Calculates the polarization by summing the contribtion from all kpoints.
     '''
-    # Determine number of k-points in each direction
+    # Determine number of k-points in b2 direction
     Nk1 = np.size(pvc, axis=0)
     Nk2 = np.size(pvc, axis=1)
 
@@ -428,9 +428,9 @@ def polarization(paths,pvc,pcv):
             ky = k[1]
             d_x.append(ky/np.sqrt(kx**2.0 + ky**2.0))
             d_y.append(-kx/np.sqrt(kx**2.0 + ky**2.0))
-
-    d_x = np.array_split(d_x,Nk2)
-    d_y = np.array_split(d_y,Nk2)
+    
+    d_x = np.reshape(d_x, (Nk1,Nk2))
+    d_y = np.reshape(d_y, (Nk1,Nk2))
 
     px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
     py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
@@ -444,6 +444,7 @@ def polarization(paths,pvc,pcv):
 
 def current(paths,fv,fc):
 
+    Nk1 = np.size(fc,axis=0)
     Nk2 = np.size(fc,axis=1)
     
     Jx, Jy = [], []
@@ -458,10 +459,10 @@ def current(paths,fv,fc):
             jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
             jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
             
-    jex = np.array_split(jex,Nk2)
-    jhx = np.array_split(jhx,Nk2)
-    jey = np.array_split(jey,Nk2)
-    jhy = np.array_split(jhy,Nk2)
+    jex = np.reshape(jex, (Nk1,Nk2))
+    jhx = np.reshape(jhx, (Nk1,Nk2))
+    jey = np.reshape(jey, (Nk1,Nk2))
+    jhy = np.reshape(jhy, (Nk1,Nk2))
 
     jx = np.dot(jex,fc) + np.dot(jhx,fv)
     jy = np.dot(jey,fc) + np.dot(jhy,fv)
@@ -681,7 +682,8 @@ def BZ_plot(kpnts,a):
 def path_plot(paths):
 
     for path in paths:
-        plt.plot(path[:,0], path[:,1])
+        path = np.array(path)
+        pl.plot(path[:,0], path[:,1])
 
     return
 
