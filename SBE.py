@@ -173,8 +173,8 @@ def main():
         ax1.plot(t/fs_conv,Px)
         ax1.plot(t/fs_conv,Py)
         ax2.set_xlim(t_lims)
-        ax2.plot(t/fs_conv,Jx)
-        ax2.plot(t/fs_conv,Jy)
+        ax2.plot(t/fs_conv,Jx/amp_conv)
+        ax2.plot(t/fs_conv,Jy/amp_conv)
         ax3.set_xlim(freq_lims)
         ax3.semilogy(freq/w,np.abs(Iw_x))
         ax3.semilogy(freq/w,np.abs(Iw_y))
@@ -199,10 +199,14 @@ def main():
 
         pl.show()
 
-    np.save('occupations',N_elec)
-    np.save('current', [t/fs_conv, Jx, Jy])
-    np.save('polarization', [t/fs_conv,Px,Py])
-    np.save('emission', [freq/w, Iw_x, Iw_y])
+    occu_filename = str('occu_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    np.save(occu_filename, N_elec)
+    curr_filename = str('curr_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    np.save(curr_filename, [t/fs_conv, Jx, Jy])
+    pol_filename = str('pol_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    np.save(pol_filename, [t/fs_conv,Px,Py])
+    emis_filename = str('emis_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+    np.save(emis_filename, [freq/w, Iw_x, Iw_y])
     
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -293,22 +297,25 @@ def eband(n, kx, ky):
     Band structure modeled as (e.g.)...
     E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
     '''
-    #envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
+    envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
     if (n==1):   # Valence band
         #return np.zeros(np.shape(k)) # Flat structure
-        #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)#*envelope
+        #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope
         return (-1.0/27.211)+(1.0/27.211)*np.exp(-0.4*kx**2 - 0.4*ky**2)#*envelope
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
+        #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
         return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
 
 
 def hex_mesh(Nk1, Nk2, a, b1, b2, test):
     # Calculate the alpha values needed based on the size of the Brillouin zone
     if Nk2 == 1: # 1d case set by Nk2 value
+        # alpha1 zero to ensure 1d lane running through gamma-point
         alpha1 = [0.0]
         alpha2 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        #b2 = np.array([0,1]) #Rescale reciprocal lattice vector to original 1d case
+        # Rescale reciprocal lattice vector to original 1d case
+        #b2 = np.array([0,1]) 
     else: 
         alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
         alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
@@ -432,11 +439,15 @@ def polarization(paths,pvc,pcv):
     d_x = np.reshape(d_x, (Nk1,Nk2))
     d_y = np.reshape(d_y, (Nk1,Nk2))
 
+    if (Nk2 == 1):
+        d_x = 1.0
+        d_y = 1.0
+
     px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
     py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
     
-    Px = np.sum(np.sum(px,axis=0),axis=0)
-    Py = np.sum(np.sum(py,axis=0),axis=0)
+    Px = np.sum(np.sum(px,axis=0),axis=0)/(Nk1*Nk2)
+    Py = np.sum(np.sum(py,axis=0),axis=0)/(Nk1*Nk2)
 
     # Sum over k points, take real-part
     return np.real(Px), np.real(Py)
@@ -446,6 +457,7 @@ def current(paths,fv,fc):
 
     Nk1 = np.size(fc,axis=0)
     Nk2 = np.size(fc,axis=1)
+    Nt  = np.size(fc,axis=2)
     
     Jx, Jy = [], []
     jex,jey,jhx,jhy = [],[],[],[]
@@ -458,18 +470,21 @@ def current(paths,fv,fc):
             jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
             jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
             jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
+            # 1d band structure gradients
+            #jex.append(-(20.0/27.211)*kx*np.exp(-10.0*(kx**2+ky**2)))
+            #jey.append(-(20.0/27.211)*ky*np.exp(-10.0*(kx**2+ky**2)))
+            #jhx.append(-(10.0/27.211)*kx*np.exp(-5.0*(kx**2+ky**2)))
+            #jhy.append(-(10.0/27.211)*ky*np.exp(-5.0*(kx**2+ky**2)))
+            
             
     jex = np.reshape(jex, (Nk1,Nk2))
     jhx = np.reshape(jhx, (Nk1,Nk2))
     jey = np.reshape(jey, (Nk1,Nk2))
     jhy = np.reshape(jhy, (Nk1,Nk2))
-
-    jx = np.dot(jex,fc) + np.dot(jhx,fv)
-    jy = np.dot(jey,fc) + np.dot(jhy,fv)
-
-    Jx = np.sum(np.sum(jx,axis=0), axis=0)
-    Jy = np.sum(np.sum(jy,axis=0), axis=0)
-    
+       
+    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
+    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
+   
     return np.real(Jx), np.real(Jy)
 
 def emission(Px, Py, Jx, Jy):

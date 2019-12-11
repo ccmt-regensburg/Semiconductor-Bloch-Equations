@@ -3,7 +3,7 @@ import numpy as np
 
 # Brillouin zone parameters
 ##########################################################################
-Nk1   = 4                     # Monkhorst-Pack mesh points in b1 direction
+Nk1   = 5                     # Monkhorst-Pack mesh points in b1 direction
 Nk2   = 1                     # "                           " b2 direction
 a = 1.0                       # Lattice spacing                                   
 b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])# Reciprocal lattice vectors         
@@ -19,7 +19,7 @@ align = 'M'   # Direction of field polarization ('M'=gamma-M, 'K'=gamma-K)
 # Time scales (all units in femtoseconds)
 ##########################################################################
 T2    = 1.0   # Phenomenological polarization damping time 
-t0    = -1000 # Start time *pulse centered @ t=0, use t0<0
+t0    = -1000 # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000  # End time
 dt    = 0.02  # Time step
 
