@@ -1,9 +1,11 @@
+import params
 import numpy as np
 import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
-import time, os
-import params
+import hfsbe.dipole as dip
+import hfsbe.example as ex
+
 
 '''
 TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,7 +28,7 @@ def main():
     THz_conv = params.THz_conv
     amp_conv = params.amp_conv
     eV_conv = params.eV_conv
-    matrix_method = params.matrix_method               # 'Vector' or 'matrix' updates in f(t,y)
+    
     # Set parameters
     Nk1 = params.Nk1                                  # Number of k_x points
     Nk2 = params.Nk2                                  # Number of k_y points
@@ -42,7 +44,8 @@ def main():
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
-    test = params.test
+    test = params.test                                # Testing flag for Travis
+    matrix_method = params.matrix_method              # 'Vector' or 'matrix' updates in f(t,y)
 
     # USER OUTPUT
     ###############################################################################################
@@ -62,16 +65,6 @@ def main():
     print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
     print("Driving field polarization      = " + "Gamma-" + str(align))
     
-    
-    # FILENAME/DIRECTORY DETAILS
-    ###############################################################################################
-    time_struct = time.localtime()
-    right_now = time.strftime('%y%m%d_%H-%M-%S', time_struct)
-    working_dir = os.path.dirname(os.path.realpath(__file__))
-    save_dir = working_dir + '/' + right_now
-    os.mkdir(save_dir)
-    
-
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
@@ -98,7 +91,6 @@ def main():
         paths = M_paths
     elif align == 'K':
         paths = K_paths
-    
 
     # SOLVING 
     ###############################################################################################
@@ -107,7 +99,6 @@ def main():
     for path in paths:
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
-        print(path)
 
         # Solution container for the current path
         path_solution = []
@@ -141,7 +132,6 @@ def main():
     
     # COMPUTE OBSERVABLES
     ###############################################################################################
-    
     # Electrons occupations
     N_elec = solution[:,:,:,3]
     N_gamma = N_elec[int(Nk1/2), int(Nk2/2),:]
@@ -224,90 +214,9 @@ def main():
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
         
 
-    # PLOTTING OF DATA FOR EACH PARAMETER
-    ###############################################################################################
-    # Real-time plot limits
-    '''
-    real_t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
-    
-    # Frequency plot limits
-    freq_lims = (0,25)
-
-    # Create figure, establish the set of requried axes
-    fig, ((band_ax, N_ax, P_ax, J_ax), (emis_ax, Efour_ax, Pfour_ax, Jfour_ax)) = pl.subplots(nrows=2, ncols=4, figsize=(18,10))
-    
-    # Plot band structure in the first set of axes
-    band_ax.scatter(kgrid, eband(2, kgrid)/eV_conv, s=5)
-    band_ax.scatter(kgrid, eband(1, kgrid)/eV_conv, s=5)
-    band_ax.scatter(kgrid, diff(kgrid, eband(2,kgrid)/eV_conv), s=5, label='Conduction vel')
-    band_ax.scatter(kgrid, diff(kgrid, eband(1,kgrid)/eV_conv), s=5, label='Valence vel')
-    band_ax.set_xlabel(r'$ka$')
-    band_ax.set_ylabel(r'$\epsilon(k)$')
-
-    # Plot particle number (with driving field)
-    N_ax, N_ax_E = double_scale_plot(N_ax, t/fs_conv, N_gamma, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$f_{e}(k=\Gamma)$', r'$E(t)\;(MV/cm)$')
-    
-    # Plot polarization (with driving field)
-    P_ax, P_ax_E = double_scale_plot(P_ax, t/fs_conv, pol, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$P(t)\;[a.u.]$', r'$E(t)\;(MV/cm)$')
-    
-    # Plot current (with driving field)
-    J_ax, J_ax_E = double_scale_plot(J_ax, t/fs_conv, curr/amp_conv, driving_field(E0, w, t, alpha)/E_conv, real_t_lims, r'$t\;(fs)$', r'$J(t)\;[Amp]$', r'$E(t)\;(MV/cm)$')
-    
-    # Plot emmision spectrum on a semi-log scale
-    emis_ax.semilogy(freq/w, emis, label='Emission spectrum')
-    emis_ax.set_xlim(freq_lims)
-    emis_ax.set_ylabel(r'$I_{rad}(\omega)$')
-    emis_ax.set_xlabel(r'$\omega/\omega_0$')
-    
-    # Plot fourier transform of driving field
-    Efour_ax.semilogy(freq/w, np.abs(fieldfourier))
-    Efour_ax.set_xlim(freq_lims)
-    Efour_ax.set_ylabel(r'$E(\omega)$')
-    Efour_ax.set_xlabel(r'$\omega/\omega_0$')
-
-    # Plot fourier transform of polarization
-    Pfour_ax.semilogy(freq/w, np.abs(polfourier), label='Polarization spectrum')
-    Pfour_ax.set_xlim(freq_lims)
-    Pfour_ax.set_ylabel(r'$P(\omega)$')
-    Pfour_ax.set_xlabel(r'$\omega/\omega_0$')
-    
-    # Plot fourier transform of current
-    Jfour_ax.semilogy(freq/w, np.abs(currfourier), label='Current spectrum')
-    Jfour_ax.set_xlim(freq_lims)
-    Jfour_ax.set_ylabel(r'$J(\omega)$')
-    Jfour_ax.set_xlabel(r'$\omega/\omega_0$')
-
-    # Countour plots of occupations and gradients of occupations
-    fig4 = pl.figure()
-    X, Y = np.meshgrid(t/fs_conv,kgrid)
-    pl.contourf(X, Y, N_elec, 100)
-    pl.colorbar().set_label(r'$f_e(k)$')
-    pl.xlim([-5*alpha/fs_conv,5*alpha/fs_conv])
-    pl.xlabel(r'$t\;(fs)$')
-    pl.ylabel(r'$k$')
-    pl.tight_layout()
-
-    # Show the plot after everything
-    pl.show()
-    '''
-    
-def eband(n, kx, ky):
-    '''
-    Returns the energy of a band n, from the k-point.
-    Band structure modeled as (e.g.)...
-    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2 (for kgrid = [-0.5,0.5])
-    '''
-    envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
-    if (n==1):   # Valence band
-        #return np.zeros(np.shape(k)) # Flat structure
-        #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope
-        return (-1.0/27.211)+(1.0/27.211)*np.exp(-0.4*kx**2 - 0.4*ky**2)#*envelope
-    elif (n==2): # Conduction band
-        #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
-        #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
-        return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
-
-
+#################################################################################################
+# FUNCTIONS
+################################################################################################
 def hex_mesh(Nk1, Nk2, a, b1, b2, test):
     # Calculate the alpha values needed based on the size of the Brillouin zone
     if Nk2 == 1: # 1d case set by Nk2 value
@@ -383,17 +292,33 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, test):
     
     return np.array(mesh), M_paths, K_paths
 
+def eband(n, kx, ky):
+    '''
+    Returns the energy of a band n, from the k-point.
+    Band structure modeled as (e.g.)...
+    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2
+    '''
+    envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
+    if (n==1):   # Valence band
+        #return np.zeros(np.shape(k)) # Flat structure
+        #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope
+        return (-1.0/27.211)+(1.0/27.211)*np.exp(-0.4*kx**2 - 0.4*ky**2)#*envelope
+    elif (n==2): # Conduction band
+        #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
+        #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
+        return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
+
 
 def dipole(kx, ky):
     '''
-    Returns the dipole matrix element for making the transition from band n to band m at the current k-point
+    Returns the dipole matrix element for making the transition from band n to band m at k = kx*e_kx + ky*e_ky
     '''
     return 1.0 #Eventually inputting some data from other calculations
 
 
 def driving_field(E0, w, t, alpha):
     '''
-    Returns the instantaneous driving electric field
+    Returns the instantaneous driving pulse field
     '''
     #return E0*np.sin(2.0*np.pi*w*t)
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
@@ -422,12 +347,14 @@ def diff(x,y):
     
 def polarization(paths,pvc,pcv):
     '''
-    Calculates the polarization by summing the contribtion from all kpoints.
+    Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
+    Dipole term currently a crude model to get a vector polarization
     '''
     # Determine number of k-points in b2 direction
     Nk1 = np.size(pvc, axis=0)
     Nk2 = np.size(pvc, axis=1)
 
+    # Create dipole matrix elements (as a crude model)
     d_x, d_y = [],[]
     for path in paths:
         for k in path:
@@ -435,30 +362,38 @@ def polarization(paths,pvc,pcv):
             ky = k[1]
             d_x.append(ky/np.sqrt(kx**2.0 + ky**2.0))
             d_y.append(-kx/np.sqrt(kx**2.0 + ky**2.0))
-    
+
+    # Reshape for dot product
     d_x = np.reshape(d_x, (Nk1,Nk2))
     d_y = np.reshape(d_y, (Nk1,Nk2))
 
+    # To compare with first 1d case
     if (Nk2 == 1):
         d_x = 1.0
         d_y = 1.0
 
+    # Element wise (for each k) multiplication d_nm(k)*p_nm(k)
     px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
     py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
-    
+
+    # Sum over the k contirubtions
     Px = np.sum(np.sum(px,axis=0),axis=0)/(Nk1*Nk2)
     Py = np.sum(np.sum(py,axis=0),axis=0)/(Nk1*Nk2)
 
-    # Sum over k points, take real-part
+    # Return the real part of each component
     return np.real(Px), np.real(Py)
 
 
 def current(paths,fv,fc):
+    '''
+    Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
+    where j_n(k) != (d/dk) E_n(k)
+    '''
 
     Nk1 = np.size(fc,axis=0)
     Nk2 = np.size(fc,axis=1)
-    Nt  = np.size(fc,axis=2)
-    
+
+    # Calculate the gradient analytically at each k-point
     Jx, Jy = [], []
     jex,jey,jhx,jhy = [],[],[],[]
     for path in paths:
@@ -470,46 +405,34 @@ def current(paths,fv,fc):
             jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
             jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
             jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
-            # 1d band structure gradients
-            #jex.append(-(20.0/27.211)*kx*np.exp(-10.0*(kx**2+ky**2)))
-            #jey.append(-(20.0/27.211)*ky*np.exp(-10.0*(kx**2+ky**2)))
-            #jhx.append(-(10.0/27.211)*kx*np.exp(-5.0*(kx**2+ky**2)))
-            #jhy.append(-(10.0/27.211)*ky*np.exp(-5.0*(kx**2+ky**2)))
-            
-            
+
+    # Reshape for dot product
     jex = np.reshape(jex, (Nk1,Nk2))
     jhx = np.reshape(jhx, (Nk1,Nk2))
     jey = np.reshape(jey, (Nk1,Nk2))
     jhy = np.reshape(jhy, (Nk1,Nk2))
-       
+
+    # Element wise (for each k) multiplication j_n(k)*f_n(k,t))
+    jx = np.dot(jex,fc) + np.dot(jhx,fv)
+    jy = np.dot(jey,fc) + np.dot(jhy,fv)
+
+    # Sum over the k contributions
     Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
     Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
-   
-    return np.real(Jx), np.real(Jy)
 
-def emission(Px, Py, Jx, Jy):
-    '''
-    Input: The vector components of the time-dependent polarization and current
-    Output: Vector components of the time-dependent emission
-    '''      
-    Ix = np.abs(1j*Jx + Px)**2.0
-    Iy = np.abs(1j*Jy + Py)**2.0
-      
-    return np.array(Ix), np.array(Iy)
+    # Return the real part of each component
+    return np.real(Jx), np.real(Jy)
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha):
 
+    # x != y(t+dt)
     x = np.empty(np.shape(y),dtype='complex')
     
-    '''
-    Gradient term coefficient
-    '''
+    # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
 
-    '''
-    Update the solution vector
-    '''
+    # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
     for k in range(Nk_path):
         kx = kpath[k,0]
@@ -526,23 +449,17 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
             m = 4*(k+1)
             n = 4*(k-1)
 
-        '''
-        Energy term eband(i,k) the energy of band i at point k
-        '''
+        #Energy term eband(i,k) the energy of band i at point k
         ecv = eband(2, kx, ky) - eband(1, kx, ky)
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 
-        '''
-        Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
-        Rabi frequency conjugate
-        '''
+        # Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
+        # Rabi frequency conjugate
         wr = rabi(1, 2, kx, ky, E0, w, t, alpha)
         wr_c = np.conjugate(wr)
 
-        '''
-        Update each component of the solution vector
-        '''
+        # Update each component of the solution vector
         x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
         x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c
         x[i+2] = -1j*wr*y[i] + 1j*ep_p*y[i+2] - 1j*wr_c*y[i+3] + D*(y[m+2] - y[n+2]) + 1j*wr
