@@ -292,7 +292,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, test):
     
     return np.array(mesh), M_paths, K_paths
 
-def eband(n, kx, ky):
+def eband(n, bandstruc, kx, ky):
     '''
     Returns the energy of a band n, from the k-point.
     Band structure modeled as (e.g.)...
@@ -307,9 +307,9 @@ def eband(n, kx, ky):
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
-        return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
-#        h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
-
+        #return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
+    #JAN'S COMMENT: HERE WE NEED TO ACCESS THE BANDSTRUCTURE AND I DON'T KNOW HOW TO DO IT
+       return bandstruc[]
 
 
 def dipole(kx, ky):
@@ -457,7 +457,7 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
             n = 4*(k-1)
 
         #Energy term eband(i,k) the energy of band i at point k
-        ecv = eband(2, kx, ky) - eband(1, kx, ky)
+        ecv = eband(2, ef, kx, ky) - eband(1, ef, kx, ky)
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 
@@ -483,6 +483,10 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     # Constant vector container
     b = []
 
+    # Get band structure, its derivative and the dipole
+    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
+    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
+
     # Create propogation matrix for this time step
     for k1 in range(Nk): # Iterate down all the rows
 
@@ -490,7 +494,7 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
         '''
         Energy term eband(i,k) the energy of band i at point k
         '''
-        ecv = eband(2, kgrid[k1]) - eband(1, kgrid[k1])
+        ecv = eband(2, ef, kgrid[k1]) - eband(1, ef, kgrid[k1])
 
         '''
         Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
