@@ -404,6 +404,8 @@ def current(paths,fv,fc):
             kx = k[0]
             ky = k[1]
             # Band gradient at this k-point (for simplified band structure model)
+            # JAN'S COMMENT: PLEASE INCLUDE THE GRADIENT OF THE BANDSTRUCTURE HERE SIMILAR TO THE 
+            #                BANDSTRUCTURE ABOVE
             jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
             jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
             jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
