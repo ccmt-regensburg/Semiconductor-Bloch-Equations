@@ -92,10 +92,6 @@ def main():
     elif align == 'K':
         paths = K_paths
 
-    # Get band structure, its derivative and the dipole
-    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
-    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-
     # SOLVING 
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
@@ -438,6 +434,10 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
     
     # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
+
+    # Get band structure, its derivative and the dipole
+    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
+    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
     # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
