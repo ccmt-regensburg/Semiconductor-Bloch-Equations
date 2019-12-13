@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
-import hfsbe.dipole as dip
-import hfsbe.example as ex
+import hfsbe.dipole
+import hfsbe.example
 
 
 '''
@@ -91,6 +91,10 @@ def main():
         paths = M_paths
     elif align == 'K':
         paths = K_paths
+
+    # Get band structure, its derivative and the dipole
+    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
+    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
     # SOLVING 
     ###############################################################################################
@@ -303,10 +307,13 @@ def eband(n, kx, ky):
         #return np.zeros(np.shape(k)) # Flat structure
         #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope
         return (-1.0/27.211)+(1.0/27.211)*np.exp(-0.4*kx**2 - 0.4*ky**2)#*envelope
+
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
         return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
+#        h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
+
 
 
 def dipole(kx, ky):
