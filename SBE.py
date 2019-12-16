@@ -5,7 +5,7 @@ from matplotlib import patches
 from scipy.integrate import ode
 import hfsbe.dipole
 import hfsbe.example
-
+import hfsbe.utility
 
 '''
 TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -307,10 +307,7 @@ def eband(n, bandstruc, kx, ky):
     elif (n==2): # Conduction band
         #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
         #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
-        #return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
-    #JAN'S COMMENT: HERE WE NEED TO ACCESS THE BANDSTRUCTURE AND I DON'T KNOW HOW TO DO IT
-       return bandstruc[]
-
+        return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
 
 def dipole(kx, ky):
     '''
@@ -438,15 +435,25 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
     D = driving_field(E0, w, t, alpha)/(2*dk)
 
     # Get band structure, its derivative and the dipole
-    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
+    R = 11.06
+    A = 0.1974
+    C0 = -0.008269
+    C2 = 6.5242
+    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
+    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
+
+
+    print("ef =", ef[0].free_symbols)
 
     # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
     for k in range(Nk_path):
         kx = kpath[k,0]
         ky = kpath[k,1]
-        
+
+        print("kx =", kx, "ky =", ky)
+
         i = 4*k
         if k == 0:
             m = 4*(k+1)
@@ -459,7 +466,8 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
             n = 4*(k-1)
 
         #Energy term eband(i,k) the energy of band i at point k
-        ecv = eband(2, ef, kx, ky) - eband(1, ef, kx, ky)
+#        ecv = eband(2, ef, kx, ky) - eband(1, ef, kx, ky)
+        ecv = bandstruc[0](kx=kx,ky=ky)
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 
