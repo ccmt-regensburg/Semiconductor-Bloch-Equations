@@ -32,6 +32,7 @@ def main():
     # Set parameters
     Nk1 = params.Nk1                                  # Number of k_x points
     Nk2 = params.Nk2                                  # Number of k_y points
+    a = params.a                                      # Lattice spacing
     b1 = params.b1                                    # Reciprocal lattice vector 
     b2 = params.b2                                    # Reciprocal lattice vector
     Nk = Nk1*Nk2                                      # Total number of k points
@@ -68,7 +69,7 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    a = 1
+#    a = 1
     kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2, test)
     dk1 = 1/Nk1
     dk2 = 1/Nk2
@@ -124,8 +125,14 @@ def main():
         for k in path:
             y0.extend([0.0,0.0,0.0,0.0])
 
+        kx_in_path = path[:,0]
+        ky_in_path = path[:,1]
+
+        bandstruc_in_path = bandstruc[1](kx_in_path,ky_in_path) - bandstruc[0](kx_in_path,ky_in_path) 
+        dipole_in_path    = dipole.evaluate(kx_in_path, ky_in_path, )
+
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc_in_path, dipole_in_path)
 
         # Propagate through time
         ti = 0
@@ -308,7 +315,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, test):
     
     return np.array(mesh), M_paths, K_paths
 
-def eband(n, bandstruc, kx, ky):
+def eband(n, kx, ky):
     '''
     Returns the energy of a band n, from the k-point.
     Band structure modeled as (e.g.)...
@@ -446,7 +453,7 @@ def current(paths,fv,fc,bandstruc_deriv):
     return np.real(Jx), np.real(Jy)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha):
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y),dtype='complex')
@@ -454,22 +461,20 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
     # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
 
-    R = 11.06
-    A = 0.1974
-    C0 = -0.008269
-    C2 = 6.5242
-    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
-    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
-    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
+#    R = 11.06
+#    A = 0.1974
+#    C0 = -0.008269
+#    C2 = 6.5242
+#    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
+#    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
+#    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
+#    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
 
     # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
     for k in range(Nk_path):
         kx = kpath[k,0]
         ky = kpath[k,1]
-
-        print("kx =", kx, "ky =", ky)
 
         i = 4*k
         if k == 0:
@@ -484,7 +489,7 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
 
         #Energy term eband(i,k) the energy of band i at point k
 #        ecv = eband(2, ef, kx, ky) - eband(1, ef, kx, ky)
-        ecv = bandstruc[1](kx=kx,ky=ky) - bandstruc[0](kx=kx,ky=ky)
+        ecv = bandstruc_in_path[k]
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 

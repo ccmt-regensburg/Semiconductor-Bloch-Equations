@@ -5,9 +5,11 @@ import numpy as np
 ##########################################################################
 Nk1   = 4                     # Monkhorst-Pack mesh points in b1 direction
 Nk2   = 4                     # "                           " b2 direction
-a = 1.0                       # Lattice spacing                                   
-b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])# Reciprocal lattice vectors         
-b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
+a     = 8.308                 # Lattice spacing in atomic units!! (4.395 A)
+#b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])# Reciprocal lattice vectors         
+#b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
+b1 = 2.0*(np.pi/a)*np.array([0,2.0/np.sqrt(3)])
+b2 = 2.0*(np.pi/a)*np.array([1.0/np.sqrt(3),-1]) 
 
 # Driving field parameters
 ##########################################################################
