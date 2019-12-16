@@ -92,6 +92,15 @@ def main():
     elif align == 'K':
         paths = K_paths
 
+    # Get band structure, its derivative and the dipole
+    R = 11.06
+    A = 0.1974
+    C0 = -0.008269
+    C2 = 6.5242
+    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
+    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
+    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
+
     # SOLVING 
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
@@ -109,7 +118,7 @@ def main():
             y0.extend([0.0,0.0,0.0,0.0])
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc,dipole)
 
         # Propagate through time
         ti = 0
@@ -426,25 +435,13 @@ def current(paths,fv,fc):
     return np.real(Jx), np.real(Jy)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha):
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc, dipole):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y),dtype='complex')
     
     # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
-
-    # Get band structure, its derivative and the dipole
-    R = 11.06
-    A = 0.1974
-    C0 = -0.008269
-    C2 = 6.5242
-    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
-    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
-
-
-    print("ef =", ef[0].free_symbols)
 
     # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
@@ -467,7 +464,7 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha):
 
         #Energy term eband(i,k) the energy of band i at point k
 #        ecv = eband(2, ef, kx, ky) - eband(1, ef, kx, ky)
-        ecv = bandstruc[0](kx=kx,ky=ky)
+        ecv = bandstruc[1](kx=kx,ky=ky) - bandstruc[0](kx=kx,ky=ky)
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 
