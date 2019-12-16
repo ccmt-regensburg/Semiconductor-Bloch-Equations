@@ -129,7 +129,7 @@ def main():
         ky_in_path = path[:,1]
 
         bandstruc_in_path = bandstruc[1](kx_in_path,ky_in_path) - bandstruc[0](kx_in_path,ky_in_path) 
-        dipole_in_path    = dipole.evaluate(kx_in_path, ky_in_path, )
+        dipole_in_path    = dipole.evaluate(kx_in_path, ky_in_path, b1=b1, b2=b2)
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc_in_path, dipole_in_path)
