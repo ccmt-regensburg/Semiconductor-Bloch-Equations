@@ -100,12 +100,19 @@ def main():
     h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
     bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
+    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
 
     # SOLVING 
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
     ki = 1
+
+#    i_path = 0
     for path in paths:
+
+#        i_path = i_path + 1
+#        if (modulo(i_path, N_path) =/ mpi_rank) cycle
+
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
 
@@ -118,7 +125,7 @@ def main():
             y0.extend([0.0,0.0,0.0,0.0])
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc,dipole)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha)
 
         # Propagate through time
         ti = 0
@@ -148,7 +155,7 @@ def main():
     # Current decay start time (fraction of final time)
     decay_start = 0.4
 
-    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3])
+    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bandstruc_deriv)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
     Ix, Iy = (diff(t,Px) + Jx)**2.0, (diff(t,Py) + Jy)**2.0
 
@@ -393,7 +400,7 @@ def polarization(paths,pvc,pcv):
     return np.real(Px), np.real(Py)
 
 
-def current(paths,fv,fc):
+def current(paths,fv,fc,bandstruc_deriv):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -412,10 +419,14 @@ def current(paths,fv,fc):
             # Band gradient at this k-point (for simplified band structure model)
             # JAN'S COMMENT: PLEASE INCLUDE THE GRADIENT OF THE BANDSTRUCTURE HERE SIMILAR TO THE 
             #                BANDSTRUCTURE ABOVE
-            jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
-            jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
-            jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
-            jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
+            #jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
+            #jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
+            #jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
+            #jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
+            jex.append(bandstruc_deriv[2](kx=kx,ky=ky))
+            jey.append(bandstruc_deriv[3](kx=kx,ky=ky))
+            jhx.append(bandstruc_deriv[0](kx=kx,ky=ky))
+            jhy.append(bandstruc_deriv[1](kx=kx,ky=ky))
 
     # Reshape for dot product
     jex = np.reshape(jex, (Nk1,Nk2))
@@ -435,13 +446,22 @@ def current(paths,fv,fc):
     return np.real(Jx), np.real(Jy)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc, dipole):
+def f(t, y, kpath, dk, gamma2, E0, w, alpha):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y),dtype='complex')
     
     # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
+
+    R = 11.06
+    A = 0.1974
+    C0 = -0.008269
+    C2 = 6.5242
+    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
+    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
+    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
+    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
 
     # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
