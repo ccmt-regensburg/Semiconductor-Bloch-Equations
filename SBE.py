@@ -112,6 +112,10 @@ def main():
     # Iterate through each path in the Brillouin zone
     ki = 1
 
+    print ("ENTER HERE")
+    BZ_plot(kpnts,a,b1,b2)
+    pl.show()
+
 #    i_path = 0
     for path in paths:
 
@@ -213,7 +217,7 @@ def main():
         pax2 = fig2.add_subplot(133,projection='polar')
         pax2.plot(angles,Iw_r[:,f_15])
 
-        BZ_plot(kpnts,a)
+        BZ_plot(kpnts,a,b1,b2)
         path_plot(paths)
 
         pl.show()
@@ -363,6 +367,7 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     if(kx**2+ky**2 < k_cut**2):
 #      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
       return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
+#      return np.abs(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
     else:
       return 0.0
 
@@ -621,12 +626,14 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     ax2.set_ylabel(label2)                                   # Set the second y-axis label
     return ax1, ax2                                          # Returns these two axes with the data plotted
 
-def BZ_plot(kpnts,a):
+def BZ_plot(kpnts,a,b1,b2):
     
-    R  = 4.0*np.pi/3*a
+#    R = 4.0*np.pi/3*a
+    R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
-    b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
-    b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
+#    b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
+#    b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
+    print ("")
 
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
@@ -646,8 +653,8 @@ def BZ_plot(kpnts,a):
     pl.scatter(r*np.cos(np.pi/6),-r*np.sin(np.pi/6),s=15,c='black')
     pl.text(r*np.cos(np.pi/6),-r*np.sin(np.pi/6)-0.2,r'$M$')
     pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
-    pl.xlim(-4.5,4.5)
-    pl.ylim(-4.5,4.5)
+    pl.xlim(-4.5/a,4.5/a)
+    pl.ylim(-4.5/a,4.5/a)
     
     return
 
