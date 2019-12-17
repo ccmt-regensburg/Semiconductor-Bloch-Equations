@@ -90,8 +90,10 @@ def main():
     # Determine the Brillouin zone paths to use
     if align == 'M':
         paths = M_paths
+        E_dir = np.array([np.sqrt(3)/2.0,-0.5])
     elif align == 'K':
         paths = K_paths
+        E_dir = np.array([1.0,0.0])
 
     # Get band structure, its derivative and the dipole
     R = 11.06
@@ -424,8 +426,6 @@ def current(paths,fv,fc,bandstruc_deriv):
             kx = k[0]
             ky = k[1]
             # Band gradient at this k-point (for simplified band structure model)
-            # JAN'S COMMENT: PLEASE INCLUDE THE GRADIENT OF THE BANDSTRUCTURE HERE SIMILAR TO THE 
-            #                BANDSTRUCTURE ABOVE
             #jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
             #jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
             #jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
@@ -460,15 +460,6 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
     
     # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
-
-#    R = 11.06
-#    A = 0.1974
-#    C0 = -0.008269
-#    C2 = 6.5242
-#    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
-#    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-#    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
-#    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
 
     # Update the solution vector
     Nk_path = np.size(kpath, axis=0)
@@ -514,10 +505,6 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     '''
     # Constant vector container
     b = []
-
-    # Get band structure, its derivative and the dipole
-    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite()
-    dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
     # Create propogation matrix for this time step
     for k1 in range(Nk): # Iterate down all the rows
