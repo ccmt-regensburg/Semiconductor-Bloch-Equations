@@ -9,7 +9,8 @@ a     = 8.308                 # Lattice spacing in atomic units!! (4.395 A)
 #b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])# Reciprocal lattice vectors         
 #b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
 b1 = 2.0*(np.pi/a)*np.array([0,2.0/np.sqrt(3)])
-b2 = 2.0*(np.pi/a)*np.array([1.0/np.sqrt(3),-1]) 
+#b2 = 2.0*(np.pi/a)*np.array([1.0/np.sqrt(3),-1]) 
+b2 = 2.0*(np.pi/a)*np.array([1.0,-1/np.sqrt(3)]) 
 
 # Driving field parameters
 ##########################################################################

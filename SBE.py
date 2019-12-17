@@ -251,6 +251,7 @@ def main():
 # FUNCTIONS
 ################################################################################################
 def hex_mesh(Nk1, Nk2, a, b1, b2, test):
+    print ("b1 =", b1, "b2 =", b2)
     # Calculate the alpha values needed based on the size of the Brillouin zone
     if Nk2 == 1: # 1d case set by Nk2 value
         # alpha1 zero to ensure 1d lane running through gamma-point
@@ -639,12 +640,15 @@ def BZ_plot(kpnts,a,b1,b2):
     ax = BZ_fig.add_subplot(111,aspect='equal')
     
     ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
+
+    print("kpnts[:,0] =", kpnts[:,0])
+    print("kpnts[:,1] =", kpnts[:,1])
 
     pl.scatter(0,0,s=15,c='black')
     pl.text(0.05,0.05,r'$\Gamma$')
