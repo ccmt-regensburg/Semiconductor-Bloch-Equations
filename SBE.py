@@ -359,9 +359,10 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     '''
 #    return dipole(kx,ky)*driving_field(E0, w, t, alpha)
 #   Jan: Hack, we set all dipole elements to zero if they exceed the cutoff region
-    print ("kx, ky, dipole =", kx, ky, dipole_in_path[1,0,k])
+#    print ("kx, ky, dipole =", kx, ky, dipole_in_path[1,0,k])
     if(kx**2+ky**2 < k_cut**2):
-      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
+#      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
+      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
     else:
       return 0.0
 
