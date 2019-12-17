@@ -130,11 +130,19 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
+        print ("path.shape =", path.shape)
+
         bandstruc_in_path = bandstruc[1](kx_in_path,ky_in_path) - bandstruc[0](kx_in_path,ky_in_path) 
-        dipole_in_path    = dipole.evaluate(kx_in_path, ky_in_path, b1=b1, b2=b2)
+#        d1,d2,Ax,Ay         = dipole.evaluate(kx_in_path, ky_in_path, b1=b1, b2=b2)
+        d1,d2,Ax,Ay         = dipole.evaluate(kx_in_path, ky_in_path)
+        dipole_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
+
+        print ("d1.shape =", d1.shape)
+
+        print ("dipole.shape =", dipole_in_path.shape)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc_in_path, dipole_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path)
 
         # Propagate through time
         ti = 0
@@ -349,12 +357,12 @@ def driving_field(E0, w, t, alpha):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 
-def rabi(n,m,kx,ky,E0,w,t,alpha):
+def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole(kx,ky)*driving_field(E0, w, t, alpha)
-
+#    return dipole(kx,ky)*driving_field(E0, w, t, alpha)
+    return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
 
 def diff(x,y):
     '''
@@ -486,7 +494,7 @@ def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
 
         # Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
         # Rabi frequency conjugate
-        wr = rabi(1, 2, kx, ky, E0, w, t, alpha)
+        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path)
         wr_c = np.conjugate(wr)
 
         # Update each component of the solution vector
