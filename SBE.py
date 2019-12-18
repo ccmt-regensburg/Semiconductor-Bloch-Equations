@@ -100,10 +100,12 @@ def main():
     A = 0.1974
     C0 = -0.008269
     C2 = 6.5242
-    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
+#    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
+    bite = hfsbe.example.Bite(R=R, A=A, C0=C0, C2=C2)
+    h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
-    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
+#    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
+#    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
     # cutoff for k for setting dipole to zero if |k| exceeds k_cut (in paper: 0.04 A^-1 = 0.02 a.u.^-1)
     k_cut = 0.2
 
@@ -136,10 +138,14 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        bandstruc_in_path = bandstruc[1](kx_in_path,ky_in_path)-bandstruc[0](kx_in_path,ky_in_path) 
+#        bandstruc_in_path = bandstruc[1](kx_in_path,ky_in_path)-bandstruc[0](kx_in_path,ky_in_path) 
 #        d1,d2,Ax,Ay         = dipole.evaluate(kx_in_path, ky_in_path, b1=b1, b2=b2)
-        d1,d2,Ax,Ay       = dipole.evaluate(kx_in_path, ky_in_path)
+        Ax,Ay             = dipole.evaluate(kx_in_path, ky_in_path)
         dipole_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
+        # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
+        bandstruc         = bite.evaluate(kx_in_path, ky_in_path)
+        bandstruc_in_path = bandstruc[1] - bandstruc[0]
+
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,k_cut)
