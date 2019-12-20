@@ -96,12 +96,14 @@ def main():
         E_dir = np.array([1.0,0.0])
 
     # Get band structure, its derivative and the dipole
-    R = 11.06
-    A = 0.1974
-    C0 = -0.008269
-    C2 = 6.5242
-#    h, ef, wf, ef_deriv = hfsbe.example.TwoBandSystems(e_deriv=True).bite(R=R, A=A, C0=C0, C2=C2)
-    bite = hfsbe.example.Bite(R=R, A=A, C0=C0, C2=C2)
+#    R = 11.06
+#    A = 0.1974
+#    C0 = -0.008269
+#    C2 = 6.5242
+#    bite = hfsbe.example.Bite(R=R, A=A, C0=C0, C2=C2)
+#    bite = hfsbe.example.BiTe(b1=b1, b2=b2, default_params=True)
+    bite = hfsbe.example.BiTe(default_params=True)
+
     h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 #    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
@@ -143,7 +145,7 @@ def main():
         Ax,Ay             = dipole.evaluate(kx_in_path, ky_in_path)
         dipole_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
-        bandstruc         = bite.evaluate(kx_in_path, ky_in_path)
+        bandstruc         = bite.evaluate_energy(kx_in_path, ky_in_path)
         bandstruc_in_path = bandstruc[1] - bandstruc[0]
 
 
@@ -178,7 +180,7 @@ def main():
     # Current decay start time (fraction of final time)
     decay_start = 0.4
 
-    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bandstruc_deriv)
+    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
     Ix, Iy = (diff(t,Px) + Jx)**2.0, (diff(t,Py) + Jy)**2.0
 
@@ -431,7 +433,7 @@ def polarization(paths,pvc,pcv):
     return np.real(Px), np.real(Py)
 
 
-def current(paths,fv,fc,bandstruc_deriv):
+def current(paths,fv,fc,bite,path):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -444,18 +446,23 @@ def current(paths,fv,fc,bandstruc_deriv):
     Jx, Jy = [], []
     jex,jey,jhx,jhy = [],[],[],[]
     for path in paths:
-        for k in path:
-            kx = k[0]
-            ky = k[1]
+        path = np.array(path)
+        kx_in_path = path[:,0]
+        ky_in_path = path[:,1]
+        bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+        for i_k, k in enumerate(path):
+            #kx = k[0]
+            #ky = k[1]
             # Band gradient at this k-point (for simplified band structure model)
             #jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
             #jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
             #jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
             #jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
-            jex.append(bandstruc_deriv[2](kx=kx,ky=ky))
-            jey.append(bandstruc_deriv[3](kx=kx,ky=ky))
-            jhx.append(bandstruc_deriv[0](kx=kx,ky=ky))
-            jhy.append(bandstruc_deriv[1](kx=kx,ky=ky))
+            #0: v, x   1: v,y   2: c, x  3: c, y
+            jex.append(bandstruc_deriv[2][i_k])
+            jey.append(bandstruc_deriv[3][i_k])
+            jhx.append(bandstruc_deriv[0][i_k])
+            jhy.append(bandstruc_deriv[1][i_k])
 
     # Reshape for dot product
     jex = np.reshape(jex, (Nk1,Nk2))
