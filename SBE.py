@@ -1,6 +1,6 @@
 import params
 import numpy as np
-from numba import jit
+from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
@@ -359,6 +359,7 @@ def dipole(kx, ky):
     '''
     return 1.0 #Eventually inputting some data from other calculations
 
+@njit
 def driving_field(E0, w, t, alpha):
     '''
     Returns the instantaneous driving pulse field
@@ -366,6 +367,7 @@ def driving_field(E0, w, t, alpha):
     #return E0*np.sin(2.0*np.pi*w*t)
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
+@njit
 def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
@@ -483,20 +485,20 @@ def current(paths,fv,fc,bite,path):
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut):
-    fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut)
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut)
 
 
-@jit
+@njit
 def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut):
 
     # x != y(t+dt)
-    x = np.empty(np.shape(y),dtype='complex')
+    x = np.empty(np.shape(y), dtype=np.dtype('complex'))
     
     # Gradient term coefficient
     D = driving_field(E0, w, t, alpha)/(2*dk)
 
     # Update the solution vector
-    Nk_path = np.size(kpath, axis=0)
+    Nk_path = kpath.shape[0]
     for k in range(Nk_path):
         kx = kpath[k,0]
         ky = kpath[k,1]
