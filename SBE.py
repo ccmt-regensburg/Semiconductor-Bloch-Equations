@@ -1,8 +1,10 @@
 import params
 import numpy as np
+from numba import jit
 import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
+
 import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
@@ -357,14 +359,12 @@ def dipole(kx, ky):
     '''
     return 1.0 #Eventually inputting some data from other calculations
 
-
 def driving_field(E0, w, t, alpha):
     '''
     Returns the instantaneous driving pulse field
     '''
     #return E0*np.sin(2.0*np.pi*w*t)
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
-
 
 def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     '''
@@ -483,6 +483,11 @@ def current(paths,fv,fc,bite,path):
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut):
+    fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut)
+
+
+@jit
+def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y),dtype='complex')
