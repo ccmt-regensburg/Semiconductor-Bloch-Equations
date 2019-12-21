@@ -493,10 +493,10 @@ def current(paths,fv,fc,bite,path,t,alpha):
     jy = np.dot(jey,fc) + np.dot(jhy,fv)
 
     # Sum over the k contributions
-#    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*100.0*alpha)**2)
-#    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*100.0*alpha)**2)
-    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
-    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
+    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*20.0*alpha)**2)
+    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*20.0*alpha)**2)
+#    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
+#    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 
     # Return the real part of each component
     return np.real(Jx), np.real(Jy)
