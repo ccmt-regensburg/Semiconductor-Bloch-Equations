@@ -182,7 +182,7 @@ def main():
     # Current decay start time (fraction of final time)
     decay_start = 0.4
 
-    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path)
+    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
     Ix, Iy = diff(t,Px) + Jx,  diff(t,Py) + Jy
 
@@ -232,14 +232,14 @@ def main():
 
         pl.show()
 
-    occu_filename = str('occu_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    np.save(occu_filename, N_elec)
-    curr_filename = str('curr_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    np.save(curr_filename, [t/fs_conv, Jx, Jy])
-    pol_filename = str('pol_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    np.save(pol_filename, [t/fs_conv,Px,Py])
-    emis_filename = str('emis_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-    np.save(emis_filename, [freq/w, Iw_x, Iw_y])
+#    occu_filename = str('occu_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+#    np.save(occu_filename, N_elec)
+#    curr_filename = str('curr_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+#    np.save(curr_filename, [t/fs_conv, Jx, Jy])
+#    pol_filename = str('pol_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+#    np.save(pol_filename, [t/fs_conv,Px,Py])
+#    emis_filename = str('emis_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
+#    np.save(emis_filename, [freq/w, Iw_x, Iw_y])
     
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -451,7 +451,7 @@ def polarization(paths,pvc,pcv,dipole):
     return np.real(Px), np.real(Py)
 
 
-def current(paths,fv,fc,bite,path):
+def current(paths,fv,fc,bite,path,t,alpha):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -493,6 +493,8 @@ def current(paths,fv,fc,bite,path):
     jy = np.dot(jey,fc) + np.dot(jhy,fv)
 
     # Sum over the k contributions
+#    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*100.0*alpha)**2)
+#    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*100.0*alpha)**2)
     Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
     Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 
