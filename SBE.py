@@ -184,7 +184,7 @@ def main():
 
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
-    Ix, Iy = (diff(t,Px) + Jx)**2.0, (diff(t,Py) + Jy)**2.0
+    Ix, Iy = diff(t,Px) + Jx,  diff(t,Py) + Jy
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,50)
@@ -212,9 +212,9 @@ def main():
         ax3.semilogy(freq/w,np.abs(Iw_x))
         ax3.semilogy(freq/w,np.abs(Iw_y))
 
-        f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
-        f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
-        f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
+        f5 = np.argwhere(np.logical_and(freq/w > 9.9, freq/w < 10.1))
+        f125 = np.argwhere(np.logical_and(freq/w > 13.9, freq/w < 14.1))
+        f15= np.argwhere(np.logical_and(freq/w > 17.9, freq/w < 18.1))
         f_5 = f5[int(np.size(f5)/2)]
         f_125 = f125[int(np.size(f125)/2)]
         f_15 = f15[int(np.size(f15)/2)]
@@ -377,8 +377,8 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
 #    print ("kx, ky, dipole =", kx, ky, dipole_in_path[1,0,k])
     if(kx**2+ky**2 < k_cut**2):
 #      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
-      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
-#      return np.abs(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
+#      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
+      return np.maximum(np.minimum(np.real(dipole_in_path[1,0,k]),100),-100)*driving_field(E0, w, t, alpha)
     else:
       return 0.0
 
@@ -418,8 +418,11 @@ def polarization(paths,pvc,pcv,dipole):
 #        dx_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
 
         for i_k, k in enumerate(path):
-            d_x.append(np.real(Ax_in_path[1,0,i_k]))
-            d_y.append(np.real(Ay_in_path[1,0,i_k]))
+            d_x.append(np.maximum(np.minimum(np.real(Ax_in_path[1,0,i_k]),100),-100))
+            d_y.append(np.maximum(np.minimum(np.real(Ay_in_path[1,0,i_k]),100),-100))
+
+#            d_x.append(np.real(Ax_in_path[1,0,i_k]))
+#            d_y.append(np.real(Ay_in_path[1,0,i_k]))
 
 #        for k in path:
 #            kx = k[0]
