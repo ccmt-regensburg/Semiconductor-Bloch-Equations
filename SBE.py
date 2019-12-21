@@ -183,7 +183,7 @@ def main():
     decay_start = 0.4
 
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path)
-    Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2])
+    Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
     Ix, Iy = (diff(t,Px) + Jx)**2.0, (diff(t,Py) + Jy)**2.0
 
     Ir = []
@@ -396,7 +396,7 @@ def diff(x,y):
         return dy/dx
 
     
-def polarization(paths,pvc,pcv):
+def polarization(paths,pvc,pcv,dipole):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -408,11 +408,24 @@ def polarization(paths,pvc,pcv):
     # Create dipole matrix elements (as a crude model)
     d_x, d_y = [],[]
     for path in paths:
-        for k in path:
-            kx = k[0]
-            ky = k[1]
-            d_x.append(ky/np.sqrt(kx**2.0 + ky**2.0))
-            d_y.append(-kx/np.sqrt(kx**2.0 + ky**2.0))
+
+        path = np.array(path)
+
+        kx_in_path = path[:,0]
+        ky_in_path = path[:,1]
+
+        Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+#        dx_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
+
+        for i_k, k in enumerate(path):
+            d_x.append(np.real(Ax_in_path[1,0,i_k]))
+            d_y.append(np.real(Ay_in_path[1,0,i_k]))
+
+#        for k in path:
+#            kx = k[0]
+#            ky = k[1]
+#            d_x.append(ky/np.sqrt(kx**2.0 + ky**2.0))
+#            d_y.append(-kx/np.sqrt(kx**2.0 + ky**2.0))
 
     # Reshape for dot product
     d_x = np.reshape(d_x, (Nk1,Nk2))
