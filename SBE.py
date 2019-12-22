@@ -73,8 +73,8 @@ def main():
     # Form the Brillouin zone in consideration
 #    a = 1
     kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2, test)
-    dk1 = 1/Nk1
-    dk2 = 1/Nk2
+#    dk1 = 1/Nk1
+#    dk2 = 1/Nk2
     
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
@@ -93,9 +93,11 @@ def main():
     if align == 'M':
         paths = M_paths
         E_dir = np.array([np.sqrt(3)/2.0,-0.5])
+        dk1   = 4.0*np.pi/a/np.sqrt(3)
     elif align == 'K':
         paths = K_paths
         E_dir = np.array([1.0,0.0])
+        dk1   = 4.0*np.pi/a
 
     # Get band structure, its derivative and the dipole
 #    R = 11.06
@@ -375,7 +377,7 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     if(kx**2+ky**2 < k_cut**2):
 #      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
 #      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
-      return np.maximum(np.minimum(np.real(dipole_in_path[1,0,k]),100),-100)*driving_field(E0, w, t, alpha)
+      return np.maximum(np.minimum(np.real(dipole_in_path[1,0,k]),10.0),-10.0)*driving_field(E0, w, t, alpha)
     else:
       return 0.0
 
@@ -392,7 +394,13 @@ def diff(x,y):
         dy = np.gradient(y)
         return dy/dx
 
-    
+def Gaussian_envelope(t,alpha):
+    '''
+    Function to multiply a Function f(t) before Fourier transform 
+    to ensure no step in time between t_final and t_final + delta
+    '''
+    return np.exp(-t**2.0/(2.0*3.0*alpha)**2)  
+
 def polarization(paths,pvc,pcv,dipole):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
@@ -415,8 +423,8 @@ def polarization(paths,pvc,pcv,dipole):
 #        dx_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
 
         for i_k, k in enumerate(path):
-            d_x.append(np.maximum(np.minimum(np.real(Ax_in_path[1,0,i_k]),100),-100))
-            d_y.append(np.maximum(np.minimum(np.real(Ay_in_path[1,0,i_k]),100),-100))
+            d_x.append(np.maximum(np.minimum(np.real(Ax_in_path[1,0,i_k]),10.0),-10.0))
+            d_y.append(np.maximum(np.minimum(np.real(Ay_in_path[1,0,i_k]),10.0),-10.0))
 
 #            d_x.append(np.real(Ax_in_path[1,0,i_k]))
 #            d_y.append(np.real(Ay_in_path[1,0,i_k]))
@@ -490,8 +498,8 @@ def current(paths,fv,fc,bite,path,t,alpha):
     jy = np.dot(jey,fc) + np.dot(jhy,fv)
 
     # Sum over the k contributions
-    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*3.0*alpha)**2)
-    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)*np.exp(-t**2.0/(2.0*3.0*alpha)**2)
+    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)*Gaussian_envelope(t,alpha)
+    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)*Gaussian_envelope(t,alpha)
 #    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
 #    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 
