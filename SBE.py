@@ -179,9 +179,6 @@ def main():
     N_elec = solution[:,:,:,3]
     N_gamma = N_elec[int(Nk1/2), int(Nk2/2),:]
     
-    # Current decay start time (fraction of final time)
-    decay_start = 0.4
-
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
     Ix, Iy = diff(t,Px) + Jx,  diff(t,Py) + Jy
