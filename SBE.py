@@ -183,7 +183,7 @@ def main():
     
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
-    Ix, Iy = diff(t,Px) + Jx,  diff(t,Py) + Jy
+    Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,50)
@@ -498,8 +498,8 @@ def current(paths,fv,fc,bite,path,t,alpha):
     jy = np.dot(jey,fc) + np.dot(jhy,fv)
 
     # Sum over the k contributions
-    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)*Gaussian_envelope(t,alpha)
-    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)*Gaussian_envelope(t,alpha)
+    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
+    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 #    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
 #    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 
