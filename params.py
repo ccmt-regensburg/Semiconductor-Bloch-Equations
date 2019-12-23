@@ -3,14 +3,11 @@ import numpy as np
 
 # Brillouin zone parameters
 ##########################################################################
-Nk1   = 4                     # Monkhorst-Pack mesh points in b1 direction
-Nk2   = 4                     # "                           " b2 direction
-a     = 8.308                 # Lattice spacing in atomic units!! (4.395 A)
-#b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])# Reciprocal lattice vectors         
-#b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
-b1 = 2.0*(np.pi/a)*np.array([0,2.0/np.sqrt(3)])
-#b2 = 2.0*(np.pi/a)*np.array([1.0/np.sqrt(3),-1]) 
-b2 = 2.0*(np.pi/a)*np.array([1.0,-1/np.sqrt(3)]) 
+Nk_in_path          = 200         # Number of kpoints in each of the two paths
+rel_dist_to_Gamma   = 0.01        # relative distance (in units of 2pi/a) of both paths to Gamma
+a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
+length_path_in_BZ   = 1.0/a       # 
+E_dir               = np.array([0.0, 1.0])   # direction of the E-field and therefore, direction of the path
 
 # Driving field parameters
 ##########################################################################
@@ -21,10 +18,10 @@ align = 'M'   # Direction of field polarization ('M'=gamma-M, 'K'=gamma-K)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 1.0   # Phenomenological polarization damping time 
-t0    = -1000 # Start time *pulse centered @ t=0, use t0 << 0
-tf    = 1000  # End time
-dt    = 0.02  # Time step
+T2    = 1000.0   # Phenomenological polarization damping time 
+t0    = -1000    # Start time *pulse centered @ t=0, use t0 << 0
+tf    = 1000     # End time
+dt    = 0.02     # Time step
 
 # Unit conversion factors
 ##########################################################################

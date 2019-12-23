@@ -32,12 +32,12 @@ def main():
     eV_conv = params.eV_conv
     
     # Set parameters
-    Nk1 = params.Nk1                                  # Number of k_x points
-    Nk2 = params.Nk2                                  # Number of k_y points
+    Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
+    rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a = params.a                                      # Lattice spacing
-    b1 = params.b1                                    # Reciprocal lattice vector 
-    b2 = params.b2                                    # Reciprocal lattice vector
-    Nk = Nk1*Nk2                                      # Total number of k points
+    length_path_in_BZ = params.length_path_in_BZ      # 
+    E_dir = params.E_dir                              # Reciprocal lattice vector
+    Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
