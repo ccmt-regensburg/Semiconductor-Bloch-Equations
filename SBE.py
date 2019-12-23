@@ -71,10 +71,7 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-#    a = 1
     kpnts, paths = mesh(params)
-#    dk1 = 1/Nk1
-#    dk2 = 1/Nk2
     
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
@@ -274,39 +271,21 @@ def mesh(params):
     mesh = []
     paths = []
 
-    # Create the Monkhorst-Pack mesh
-    for upper_lower_path in [-1,1]:
-        # Container for a single gamma-M path
+    # Create the kpoint mesh and the paths
+    for path_index in [-1,1]:
+        # Container for a single path
         path = []
         for alpha in alpha_array:
             # Create a k-point
-            kpoint = a1*b1 + a2*b2
-            # If the current point is in the BZ, append it to the mesh and path_M
-            if (is_in_hex(kpoint,a)):
-                mesh.append(kpoint)
-                path_M.append(kpoint)
-            # If the current point is NOT in the BZ, reflect is along the appropriate axis to get it in the BZ, then append.
-            else:
-                while (is_in_hex(kpoint,a) != True):
-                    if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):
-                        kpoint += b1
-                    elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)):
-                        kpoint -= b1
-                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
-                        kpoint -= b1 + b2
-                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
-                        kpoint -= b2
-                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
-                        kpoint += b1 + b2
-                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
-                        kpoint += b2
-                mesh.append(kpoint)
-                path_M.append(kpoint) 
+            kpoint = path_index*vec_k_ortho + alpha*vec_k_path
+
+            mesh.append(kpoint)
+            path.append(kpoint)
 
         # Append the a1'th path to the paths array
         paths.append(path)
 
-    return np.array(mesh), M_paths, K_paths
+    return np.array(mesh), paths
 
 def eband(n, kx, ky):
     '''
