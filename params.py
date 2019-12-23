@@ -7,7 +7,7 @@ Nk_in_path          = 200         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.01        # relative distance (in units of 2pi/a) of both paths to Gamma
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
 length_path_in_BZ   = 1.0/a       # 
-E_dir               = np.array([0.0, 1.0])   # direction of the E-field and therefore, direction of the path
+E_dir               = np.array([0.0, 1.0])   # normalized direction of the E-field and therefore, direction of the path
 
 # Driving field parameters
 ##########################################################################

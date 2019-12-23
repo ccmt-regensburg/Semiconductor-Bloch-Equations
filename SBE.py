@@ -72,7 +72,7 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
 #    a = 1
-    kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2, test)
+    kpnts, paths = mesh(params)
 #    dk1 = 1/Nk1
 #    dk2 = 1/Nk2
     
@@ -256,36 +256,29 @@ def main():
 #################################################################################################
 # FUNCTIONS
 ################################################################################################
-def hex_mesh(Nk1, Nk2, a, b1, b2, test):
-    print ("b1 =", b1, "b2 =", b2)
-    # Calculate the alpha values needed based on the size of the Brillouin zone
-    if Nk2 == 1: # 1d case set by Nk2 value
-        # alpha1 zero to ensure 1d lane running through gamma-point
-        alpha1 = [0.0]
-        alpha2 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        # Rescale reciprocal lattice vector to original 1d case
-        #b2 = np.array([0,1]) 
-    else: 
-        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
-    
-    def is_in_hex(p,a):
-        # Returns true if the point is in the hexagonal BZ.
-        # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
-        x = np.abs(p[0])
-        y = np.abs(p[1])
-        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+def mesh(params):
+    Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
+    rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
+    a = params.a                                      # Lattice spacing
+    length_path_in_BZ = params.length_path_in_BZ      # 
+    E_dir = params.E_dir                              # Reciprocal lattice vector
+
+    alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+    vec_k_path = E_dir*length_path_in_BZ
+    print ("vec_k_path =", vec_k_path)
+
+    vec_k_ortho = 2.0*np.pi/a*rel_dist_to_Gamma*np.array([E_dir[1],-E_dir[0]])
+    print ("vec_k_ortho =", vec_k_ortho)
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
-    M_paths = []
-    K_paths = []
+    paths = []
 
     # Create the Monkhorst-Pack mesh
-    for a1 in alpha1:
+    for upper_lower_path in [-1,1]:
         # Container for a single gamma-M path
-        path_M = []
-        for a2 in alpha2:
+        path = []
+        for alpha in alpha_array:
             # Create a k-point
             kpoint = a1*b1 + a2*b2
             # If the current point is in the BZ, append it to the mesh and path_M
@@ -311,25 +304,8 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, test):
                 path_M.append(kpoint) 
 
         # Append the a1'th path to the paths array
-        M_paths.append(path_M)
+        paths.append(path)
 
-    # Temp mesh array that gets progressively deleted
-    path_K_mesh = np.array(mesh)
-
-    while np.size(path_K_mesh) != 0:
-        path_K = []
-        # Determine the top horizontal points in the current path_K_mesh (a gamma-K path) and their arguments.
-        y_top = np.amax(path_K_mesh[:,1])
-        y_top_args = np.argwhere(np.logical_and(path_K_mesh[:,1] <= y_top+1/(4*Nk1), path_K_mesh[:,1] >= y_top-1/(4*Nk1)))
-
-        # Iterate through the arguments of the top most path, adding each point to the path. Delete these points as they are added.
-        for arg in y_top_args:
-            path_K.append(path_K_mesh[arg,:])
-
-        path_K_mesh = np.delete(path_K_mesh, y_top_args, 0)
-
-        K_paths.append(path_K)
-    
     return np.array(mesh), M_paths, K_paths
 
 def eband(n, kx, ky):
