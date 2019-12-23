@@ -120,10 +120,6 @@ def main():
     # Iterate through each path in the Brillouin zone
     ki = 1
 
-    print ("ENTER HERE")
-    BZ_plot(kpnts,a,b1,b2)
-    pl.show()
-
 #    i_path = 0
     for path in paths:
 
@@ -158,7 +154,6 @@ def main():
 
         # Propagate through time
         ti = 0
-        print('k path: ' + str(ki))
         while solver.successful() and ti < Nt:
             if (ti%10000) == 0:
                 print('{:5.2f}%'.format(ti/Nt*100))
@@ -183,7 +178,9 @@ def main():
     
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
-    Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
+#    Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
+    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
+
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,50)
