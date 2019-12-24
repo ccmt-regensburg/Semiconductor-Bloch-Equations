@@ -71,7 +71,7 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    kpnts, paths = mesh(params)
+    dk, kpnts, paths = mesh(params)
     
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
@@ -86,29 +86,13 @@ def main():
     else:
         solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
-    # Determine the Brillouin zone paths to use
-    if align == 'M':
-        paths = M_paths
-        E_dir = np.array([np.sqrt(3)/2.0,-0.5])
-        dk1   = 4.0*np.pi/a/np.sqrt(3)
-    elif align == 'K':
-        paths = K_paths
-        E_dir = np.array([1.0,0.0])
-        dk1   = 4.0*np.pi/a
-
     # Get band structure, its derivative and the dipole
-#    R = 11.06
-#    A = 0.1974
-#    C0 = -0.008269
-#    C2 = 6.5242
-#    bite = hfsbe.example.Bite(R=R, A=A, C0=C0, C2=C2)
 #    bite = hfsbe.example.BiTe(b1=b1, b2=b2, default_params=True)
     bite = hfsbe.example.BiTe(default_params=True)
 
     h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-#    bandstruc = hfsbe.utility.list_to_numpy_functions(ef)
-#    bandstruc_deriv = hfsbe.utility.list_to_numpy_functions(ef_deriv)
+
     # cutoff for k for setting dipole to zero if |k| exceeds k_cut (in paper: 0.04 A^-1 = 0.02 a.u.^-1)
     k_cut = 0.2
 
@@ -117,11 +101,7 @@ def main():
     # Iterate through each path in the Brillouin zone
     ki = 1
 
-#    i_path = 0
     for path in paths:
-
-#        i_path = i_path + 1
-#        if (modulo(i_path, N_path) =/ mpi_rank) cycle
 
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
@@ -137,17 +117,15 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-#        bandstruc_in_path = bandstruc[1](kx_in_path,ky_in_path)-bandstruc[0](kx_in_path,ky_in_path) 
-#        d1,d2,Ax,Ay         = dipole.evaluate(kx_in_path, ky_in_path, b1=b1, b2=b2)
         Ax,Ay             = dipole.evaluate(kx_in_path, ky_in_path)
         dipole_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
+
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruc         = bite.evaluate_energy(kx_in_path, ky_in_path)
         bandstruc_in_path = bandstruc[1] - bandstruc[0]
 
-
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk1,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,k_cut)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,k_cut)
 
         # Propagate through time
         ti = 0
@@ -163,7 +141,7 @@ def main():
         
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
-    solution = np.array_split(solution,Nk1,axis=2)
+    solution = np.array_split(solution,Nk_in_path,axis=2)
     solution = np.array(solution)
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
@@ -285,7 +263,9 @@ def mesh(params):
         # Append the a1'th path to the paths array
         paths.append(path)
 
-    return np.array(mesh), paths
+    dk = 1.0/Nk_in_path*length_path_in_BZ
+
+    return dk, np.array(mesh), paths
 
 def eband(n, kx, ky):
     '''
