@@ -173,7 +173,7 @@ def main():
         t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
         freq_lims = (0,30)
         ax0.set_xlim(t_lims)
-        ax0.plot(t/fs_conv,N_gamma_in_path_1)
+        ax0.plot(t/fs_conv,N_gamma_path_1)
         ax1.set_xlim(t_lims)
         ax1.plot(t/fs_conv,Px)
         ax1.plot(t/fs_conv,Py)
@@ -199,7 +199,7 @@ def main():
         pax2 = fig2.add_subplot(133,projection='polar')
         pax2.plot(angles,Iw_r[:,f_15])
 
-        BZ_plot(kpnts,a,b1,b2)
+        BZ_plot(kpnts,a)
         path_plot(paths)
 
         pl.show()
@@ -609,25 +609,16 @@ def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
     ax2.set_ylabel(label2)                                   # Set the second y-axis label
     return ax1, ax2                                          # Returns these two axes with the data plotted
 
-def BZ_plot(kpnts,a,b1,b2):
+def BZ_plot(kpnts,a):
     
-#    R = 4.0*np.pi/3*a
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
-#    b1 = 4.0*np.pi/(np.sqrt(3)*a)*np.array([0,1])
-#    b2 = 2.0*np.pi/(np.sqrt(3)*a)*np.array([np.sqrt(3),-1])
     print ("")
 
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
     
     ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
-#    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
-#    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
-#    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
-#    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
-#    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
-#    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
 
     print("kpnts[:,0] =", kpnts[:,0])
     print("kpnts[:,1] =", kpnts[:,1])
