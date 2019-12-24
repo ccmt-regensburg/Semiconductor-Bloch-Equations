@@ -377,13 +377,16 @@ def polarization(paths,pvc,pcv,dipole):
         d_x = 1.0
         d_y = 1.0
 
-    # Element wise (for each k) multiplication d_nm(k)*p_nm(k)
-    px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
-    py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
+#    # Element wise (for each k) multiplication d_nm(k)*p_nm(k)
+#    px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
+#    py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
+#
+#    # Sum over the k contirubtions
+#    Px = np.sum(np.sum(px,axis=0),axis=0)/(Nk1*Nk2)
+#    Py = np.sum(np.sum(py,axis=0),axis=0)/(Nk1*Nk2)
 
-    # Sum over the k contirubtions
-    Px = np.sum(np.sum(px,axis=0),axis=0)/(Nk1*Nk2)
-    Py = np.sum(np.sum(py,axis=0),axis=0)/(Nk1*Nk2)
+    Px = np.tensordot(d_x,pvc,2) + np.tensordot(d_x,pcv,2)
+    Py = np.tensordot(d_y,pvc,2) + np.tensordot(d_y,pcv,2)
 
     # Return the real part of each component
     return np.real(Px), np.real(Py)
