@@ -149,7 +149,8 @@ def main():
     ###############################################################################################
     # Electrons occupations
     N_elec = solution[:,:,:,3]
-    N_gamma = N_elec[int(Nk1/2), int(Nk2/2),:]
+    N_gamma_path_1 = N_elec[int(Nk_in_path/2), 0,:]
+    N_gamma_path_2 = N_elec[int(Nk_in_path/2), 1,:]
     
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
@@ -172,7 +173,7 @@ def main():
         t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
         freq_lims = (0,30)
         ax0.set_xlim(t_lims)
-        ax0.plot(t/fs_conv,N_gamma)
+        ax0.plot(t/fs_conv,N_gamma_in_path_1)
         ax1.set_xlim(t_lims)
         ax1.plot(t/fs_conv,Px)
         ax1.plot(t/fs_conv,Py)
@@ -426,14 +427,17 @@ def current(paths,fv,fc,bite,path,t,alpha):
     jhy = np.reshape(jhy, (Nk1,Nk2))
 
     # Element wise (for each k) multiplication j_n(k)*f_n(k,t))
-    jx = np.dot(jex,fc) + np.dot(jhx,fv)
-    jy = np.dot(jey,fc) + np.dot(jhy,fv)
-
-    # Sum over the k contributions
-    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
-    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
+    print("shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
+#    jx = np.dot(jex,fc) + np.dot(jhx,fv)
+#    jy = np.dot(jey,fc) + np.dot(jhy,fv)
+#
+#    # Sum over the k contributions
 #    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
 #    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
+
+    # we need tensordot for contracting the first two indices (2 kpoint directions)
+    Jx = np.tensordot(jex,fc,2) + np.tensordot(jhx,fv,2)
+    Jy = np.tensordot(jey,fc,2) + np.tensordot(jhy,fv,2)
 
     # Return the real part of each component
     return np.real(Jx), np.real(Jy)
