@@ -13,8 +13,8 @@ scale_dipole        = 0.1         # phenomenological rescaling of the dipole mom
 # Driving field parameters
 ##########################################################################
 E0    = 6.0  # Pulse amplitude (MV/cm)
-w     = 30.0  # Pulse frequency (THz)
-alpha = 48.0  # Gaussian pulse width (femtoseconds)
+w     = 26.0  # Pulse frequency (THz)
+alpha = 20.0  # Gaussian pulse width (femtoseconds)
 align = 'M'   # Direction of field polarization ('M'=gamma-M, 'K'=gamma-K)
 
 # Time scales (all units in femtoseconds)

@@ -188,9 +188,13 @@ def main():
     print ("eV_conv =", 1.0/eV_conv)
 
     if not test:
-        fig1, (ax0,ax1,ax2,ax3) = pl.subplots(1,4)
-        t_lims = (-6*alpha/fs_conv, 6*alpha/fs_conv)
+        fig1, (axE,ax0,ax1,ax2,ax3) = pl.subplots(1,5)
+        t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
+        axE.set_xlim(t_lims)
+        axE.plot(t/fs_conv,driving_field(E0,w,t,alpha)/E_conv)
+        axE.set_xlabel(r'$t$ in fs')
+        axE.set_ylabel(r'$E$-field in MV/cm')
         ax0.set_xlim(t_lims)
         ax0.plot(t/fs_conv,N_gamma_path_1)
         ax0.plot(t/fs_conv,N_gamma_path_2)
