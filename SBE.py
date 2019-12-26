@@ -95,7 +95,10 @@ def main():
 
     # Get band structure, its derivative and the dipole
 #    bite = hfsbe.example.BiTe(b1=b1, b2=b2, default_params=True)
-    bite = hfsbe.example.BiTe(default_params=True)
+#    bite = hfsbe.example.BiTe(default_params=True)
+#    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974,default_params=True)
+    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974)
+
 
     h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
@@ -211,9 +214,23 @@ def main():
         pax2.plot(angles,Iw_r[:,f_15])
 
 #        fig3, (ax3_0,ax3_1,ax3_2,ax3_3,ax3_4) = pl.subplots(1,5)
-        fig3, (ax3_0) = pl.subplots(1,1)
+        fig3, (ax3_0,ax3_1,ax3_2) = pl.subplots(1,3)
+#        fig3, (ax3_0,ax3_1) = pl.subplots(1,2)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,dip_dot_E_for_print[0])
+        ax3_0.plot(kp_array,dip_dot_E_for_print[1])
+        ax3_0.set_xlabel(r'$k$-point in path')
+        ax3_0.set_ylabel(r'Dipole $d(k)$ (a.u.)')
+        ax3_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
+        ax3_1.plot(kp_array,1.0/eV_conv*cond_band_for_print[0])
+        ax3_2.plot(kp_array,1.0/eV_conv*val_band_for_print[1])
+        ax3_2.plot(kp_array,1.0/eV_conv*cond_band_for_print[1])
+        ax3_1.set_xlabel(r'$k$-point in path')
+        ax3_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
+        ax3_2.set_xlabel(r'$k$-point in path')
+        ax3_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
+
+        print ("eV_conv =", 1/eV_conv)
 
         BZ_plot(kpnts,a)
         path_plot(paths)
