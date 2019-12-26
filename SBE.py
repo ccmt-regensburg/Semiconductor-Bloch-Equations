@@ -37,6 +37,7 @@ def main():
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
     E_dir = params.E_dir                              # Reciprocal lattice vector
+    scale_dipole = params.scale_dipole                # phenomenological rescaling of the dipole moments to match the experiments
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
@@ -104,7 +105,7 @@ def main():
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
     # cutoff for k for setting dipole to zero if |k| exceeds k_cut (in paper: 0.04 A^-1 = 0.02 a.u.^-1)
-    k_cut = 0.2
+    k_cut = 2.0
 
     # SOLVING 
     ###############################################################################################
@@ -134,7 +135,7 @@ def main():
         bandstruc_in_path = bandstruc[1] - bandstruc[0]
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,k_cut)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,k_cut,scale_dipole)
 
         # Propagate through time
         ti = 0
@@ -217,10 +218,10 @@ def main():
 #        fig3, (ax3_0,ax3_1,ax3_2) = pl.subplots(1,3)
 #        fig3, (ax3_0,ax3_1) = pl.subplots(1,2)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-        ax3_0.plot(kp_array,dip_dot_E_for_print[0])
-        ax3_0.plot(kp_array,dip_dot_E_for_print[1])
+        ax3_0.plot(kp_array,scale_dipole*dip_dot_E_for_print[0])
+        ax3_0.plot(kp_array,scale_dipole*dip_dot_E_for_print[1])
         ax3_0.set_xlabel(r'$k$-point in path')
-        ax3_0.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
+        ax3_0.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
         ax3_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
         ax3_1.plot(kp_array,1.0/eV_conv*cond_band_for_print[0])
         ax3_2.plot(kp_array,1.0/eV_conv*val_band_for_print[1])
@@ -229,12 +230,12 @@ def main():
         ax3_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
         ax3_2.set_xlabel(r'$k$-point in path 1')
         ax3_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
-        ax3_3.plot(kp_array,dipole_x_for_print[0])
-        ax3_3.plot(kp_array,dipole_x_for_print[1])
-        ax3_3.set_ylabel(r'Dipole $d_x(k)$ (a.u.) in path 0/1')
-        ax3_4.plot(kp_array,dipole_y_for_print[0])
-        ax3_4.plot(kp_array,dipole_y_for_print[1])
-        ax3_4.set_ylabel(r'Dipole $d_y(k)$ (a.u.) in path 0/1')
+        ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
+        ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[1])
+        ax3_3.set_ylabel(r'Scaled dipole $d_x(k)$ (a.u.) in path 0/1')
+        ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[0])
+        ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[1])
+        ax3_4.set_ylabel(r'Scaled dipole $d_y(k)$ (a.u.) in path 0/1')
 
         print ("eV_conv =", 1/eV_conv)
 
@@ -339,7 +340,7 @@ def driving_field(E0, w, t, alpha):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 @njit
-def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
+def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut,scale_dipole):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
@@ -349,7 +350,7 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     if(kx**2+ky**2 < k_cut**2):
 #      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
 #      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
-      return np.maximum(np.minimum(np.real(dipole_in_path[k]),10.0),-10.0)*driving_field(E0, w, t, alpha)
+      return np.real(dipole_in_path[k])*scale_dipole*driving_field(E0, w, t, alpha)
     else:
       return 0.0
 
@@ -485,12 +486,12 @@ def current(paths,fv,fc,bite,path,t,alpha):
     return np.real(Jx), np.real(Jy)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut)
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -523,7 +524,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
         # Rabi frequency conjugate
-        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path, k_cut)
+        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path, k_cut, scale_dipole)
         wr_c = np.conjugate(wr)
 
         # Update each component of the solution vector
