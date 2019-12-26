@@ -79,8 +79,13 @@ def main():
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
 
-    # Solution container
-    solution = []    
+    # containers
+    solution            = []    
+    dip_dot_E_for_print = []
+    dipole_x_for_print  = []
+    dipole_y_for_print  = []
+    val_band_for_print  = []
+    cond_band_for_print = []
 
     # Initialize ode solver according to chosen method
     if matrix_method:
@@ -118,7 +123,8 @@ def main():
         ky_in_path = path[:,1]
 
         Ax,Ay             = dipole.evaluate(kx_in_path, ky_in_path)
-        dipole_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
+        # A[0,1,:] means 0-1 offdiagonal element
+        dipole_in_path    = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruc         = bite.evaluate_energy(kx_in_path, ky_in_path)
@@ -137,7 +143,12 @@ def main():
             ti += 1
 
         solution.append(path_solution)
-        
+        dip_dot_E_for_print.append(dipole_in_path)
+        dipole_x_for_print.append(Ax)
+        dipole_y_for_print.append(Ay)
+        val_band_for_print.append(bandstruc[0])
+        cond_band_for_print.append(bandstruc[1])
+
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
     solution = np.array_split(solution,Nk_in_path,axis=2)
@@ -198,6 +209,11 @@ def main():
         pax1.plot(angles,Iw_r[:,f_125])
         pax2 = fig2.add_subplot(133,projection='polar')
         pax2.plot(angles,Iw_r[:,f_15])
+
+#        fig3, (ax3_0,ax3_1,ax3_2,ax3_3,ax3_4) = pl.subplots(1,5)
+        fig3, (ax3_0) = pl.subplots(1,1)
+        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+        ax3_0.plot(kp_array,dip_dot_E_for_print[0])
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -310,7 +326,7 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut):
     if(kx**2+ky**2 < k_cut**2):
 #      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
 #      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
-      return np.maximum(np.minimum(np.real(dipole_in_path[1,0,k]),10.0),-10.0)*driving_field(E0, w, t, alpha)
+      return np.maximum(np.minimum(np.real(dipole_in_path[k]),10.0),-10.0)*driving_field(E0, w, t, alpha)
     else:
       return 0.0
 
