@@ -72,7 +72,9 @@ def main():
     ###############################################################################################
     # Form the Brillouin zone in consideration
     dk, kpnts, paths = mesh(params)
-    
+
+    print("dk =", dk)
+
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
@@ -99,8 +101,6 @@ def main():
     # SOLVING 
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
-    ki = 1
-
     for path in paths:
 
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
@@ -137,7 +137,6 @@ def main():
             ti += 1
 
         solution.append(path_solution)
-        ki += 1
         
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
@@ -154,8 +153,8 @@ def main():
     
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
-#    Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
-    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
+    Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
+#    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
 
 
     Ir = []
@@ -174,6 +173,7 @@ def main():
         freq_lims = (0,30)
         ax0.set_xlim(t_lims)
         ax0.plot(t/fs_conv,N_gamma_path_1)
+        ax0.plot(t/fs_conv,N_gamma_path_2)
         ax1.set_xlim(t_lims)
         ax1.plot(t/fs_conv,Px)
         ax1.plot(t/fs_conv,Py)
