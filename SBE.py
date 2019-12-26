@@ -165,8 +165,10 @@ def main():
     N_elec = solution[:,:,:,3]
     N_gamma_path_1 = N_elec[int(Nk_in_path/2), 0,:]
     N_gamma_path_2 = N_elec[int(Nk_in_path/2), 1,:]
-    
-    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha)
+   
+    bandstruc_deriv_for_print = []
+
+    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, bandstruc_deriv_for_print)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
     Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
 #    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
@@ -181,6 +183,9 @@ def main():
     Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
     Iw_y = np.fft.fftshift(np.fft.fft(Iy, norm='ortho'))
     Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
+
+    print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
+    print ("eV_conv =", 1.0/eV_conv)
 
     if not test:
         fig1, (ax0,ax1,ax2,ax3) = pl.subplots(1,4)
@@ -214,22 +219,12 @@ def main():
         pax2 = fig2.add_subplot(133,projection='polar')
         pax2.plot(angles,Iw_r[:,f_15])
 
-        fig3, (ax3_0,ax3_1,ax3_2,ax3_3,ax3_4) = pl.subplots(1,5)
-#        fig3, (ax3_0,ax3_1,ax3_2) = pl.subplots(1,3)
-#        fig3, (ax3_0,ax3_1) = pl.subplots(1,2)
+        fig3, (ax3_0,ax3_3,ax3_4) = pl.subplots(1,3)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,scale_dipole*dip_dot_E_for_print[0])
         ax3_0.plot(kp_array,scale_dipole*dip_dot_E_for_print[1])
-        ax3_0.set_xlabel(r'$k$-point in path')
+        ax3_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_0.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
-        ax3_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
-        ax3_1.plot(kp_array,1.0/eV_conv*cond_band_for_print[0])
-        ax3_2.plot(kp_array,1.0/eV_conv*val_band_for_print[1])
-        ax3_2.plot(kp_array,1.0/eV_conv*cond_band_for_print[1])
-        ax3_1.set_xlabel(r'$k$-point in path 0')
-        ax3_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
-        ax3_2.set_xlabel(r'$k$-point in path 1')
-        ax3_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[1])
         ax3_3.set_ylabel(r'Scaled dipole $d_x(k)$ (a.u.) in path 0/1')
@@ -237,7 +232,33 @@ def main():
         ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[1])
         ax3_4.set_ylabel(r'Scaled dipole $d_y(k)$ (a.u.) in path 0/1')
 
-        print ("eV_conv =", 1/eV_conv)
+        print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
+
+        fig4, (ax4_1,ax4_2,ax4_3,ax4_4,ax4_5,ax4_6) = pl.subplots(1,6)
+        ax4_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
+        ax4_1.plot(kp_array,1.0/eV_conv*cond_band_for_print[0])
+        ax4_2.plot(kp_array,1.0/eV_conv*val_band_for_print[1])
+        ax4_2.plot(kp_array,1.0/eV_conv*cond_band_for_print[1])
+        ax4_1.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
+        ax4_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
+        ax4_2.set_xlabel(r'$k$-point in path 1 ($1/a_0$)')
+        ax4_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
+        ax4_3.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[0][0])
+        ax4_3.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[0][2])
+        ax4_3.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
+        ax4_3.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_x$ (eV*$a_0$) in path 0')
+        ax4_4.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[1][0])
+        ax4_4.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[1][2])
+        ax4_4.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
+        ax4_4.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_x$ (eV*$a_0$) in path 1')
+        ax4_5.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[0][1])
+        ax4_5.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[0][3])
+        ax4_5.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
+        ax4_5.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_y$ (eV*$a_0$) in path 0')
+        ax4_6.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[1][1])
+        ax4_6.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[1][3])
+        ax4_6.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
+        ax4_6.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_y$ (eV*$a_0$) in path 1')
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -432,7 +453,7 @@ def polarization(paths,pvc,pcv,dipole):
     return np.real(Px), np.real(Py)
 
 
-def current(paths,fv,fc,bite,path,t,alpha):
+def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -449,6 +470,7 @@ def current(paths,fv,fc,bite,path,t,alpha):
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
         bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+        bandstruc_deriv_for_print.append(bandstruc_deriv)
         for i_k, k in enumerate(path):
             #kx = k[0]
             #ky = k[1]

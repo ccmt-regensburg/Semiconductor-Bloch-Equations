@@ -21,7 +21,7 @@ align = 'M'   # Direction of field polarization ('M'=gamma-M, 'K'=gamma-K)
 ##########################################################################
 T2    = 500.0   # Phenomenological polarization damping time 
 t0    = -1000    # Start time *pulse centered @ t=0, use t0 << 0
-tf    = 2500     # End time
+tf    = 1000     # End time
 dt    = 0.02     # Time step
 
 # Unit conversion factors
