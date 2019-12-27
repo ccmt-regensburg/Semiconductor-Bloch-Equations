@@ -168,9 +168,6 @@ def main():
     # COMPUTE OBSERVABLES
     ###############################################################################################
     # Electrons occupations
-    N_elec = solution[:,:,:,3]
-    N_gamma_path_1 = N_elec[int(Nk_in_path/2), 0,:]
-    N_gamma_path_2 = N_elec[int(Nk_in_path/2), 1,:]
 
     bandstruc_deriv_for_print = []
 
@@ -180,7 +177,7 @@ def main():
 #    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
 
     Ir = []
-    angles = np.linspace(0,2.0*np.pi,50)
+    angles = np.linspace(0,2.0*np.pi,72)
     for angle in angles:
         Ir.append((Ix*np.cos(angle))**2.0 + (Iy*np.sin(angle))**2.0)
         
@@ -192,21 +189,19 @@ def main():
     Pw_y = np.fft.fftshift(np.fft.fft(diff(t,Py)*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_x = np.absolute(np.fft.fftshift(np.fft.fft(Jx*Gaussian_envelope(t,alpha), norm='ortho')))
     Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(Jy*Gaussian_envelope(t,alpha), norm='ortho')))
+#    fw_0 = np.log(np.absolute(np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'))))
 
     print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
     print ("eV_conv =", 1.0/eV_conv)
 
     if not test:
-        fig1, (axE,ax0,ax1,ax2,ax3a,ax3b,ax3) = pl.subplots(1,7)
+        fig1, (axE,ax1,ax2,ax3a,ax3b,ax3) = pl.subplots(1,6)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv,driving_field(E0,w,t,alpha)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
-        ax0.set_xlim(t_lims)
-        ax0.plot(t/fs_conv,N_gamma_path_1)
-        ax0.plot(t/fs_conv,N_gamma_path_2)
         ax1.set_xlim(t_lims)
         ax1.plot(t/fs_conv,Px)
         ax1.plot(t/fs_conv,Py)
@@ -296,32 +291,41 @@ def main():
         pl.ylabel(r'$k$')
         pl.tight_layout()
 
-        fig6 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
-        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        fig6 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
+#        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig7 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_e(k)$ in path 1')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig8 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,1,:,0]), 100)
+#        pl.colorbar().set_label(r'$f_h(k)$ in path 1')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 
-        fig7 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 1')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig8 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,1,:,0]), 100)
-        pl.colorbar().set_label(r'$f_h(k)$ in path 1')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        fig9 = pl.figure()
+#        X, Y = np.meshgrid(freq/w,kp_array)
+#        pl.contourf(X, Y, fw_0, 100)
+#        pl.colorbar().set_label(r'log $f_h(k)$ in path 0')
+#        pl.xlim(freq_lims)
+#        pl.xlabel(r'$\omega/\omega_0$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 
         BZ_plot(kpnts,a)
         path_plot(paths)
