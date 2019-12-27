@@ -559,23 +559,6 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
         jhx.append(bandstruc_deriv[0])
         jhy.append(bandstruc_deriv[1])
 
-
-#        for i_k, k in enumerate(path):
-            #kx = k[0]
-            #ky = k[1]
-            # Band gradient at this k-point (for simplified band structure model)
-            #jex.append(-(0.8/27.211)*kx*np.exp(-0.4*(kx**2+ky**2)))
-            #jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
-            #jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
-            #jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
-
-            #0: v, x   1: v,y   2: c, x  3: c, y
-#            jex.append(bandstruc_deriv[2][i_k])
-#            jey.append(bandstruc_deriv[3][i_k])
-#            jhx.append(bandstruc_deriv[0][i_k])
-#            jhy.append(bandstruc_deriv[1][i_k])
-
-
     print("before reshape: shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
 
     jex_swapped = np.swapaxes(jex,0,1)
@@ -590,32 +573,10 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
     print("jex[0,41]  =", jex[0][41], "jex_swapped[41,0]  =",  jex_swapped[41 ][0])
     print("jex[1,41]  =", jex[1][41], "jex_swapped[41,1]  =",  jex_swapped[41 ][1])
 
-    # Reshape for dot product
-#    jex = np.reshape(jex, (Nk1,Nk2))
-#    jhx = np.reshape(jhx, (Nk1,Nk2))
-#    jey = np.reshape(jey, (Nk1,Nk2))
-#    jhy = np.reshape(jhy, (Nk1,Nk2))
-#
-#    # Element wise (for each k) multiplication j_n(k)*f_n(k,t))
-#    print("shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
-#    jx = np.dot(jex,fc) + np.dot(jhx,fv)
-#    jy = np.dot(jey,fc) + np.dot(jhy,fv)
-#
-#    # Sum over the k contributions
-#    Jx = np.sum(np.sum(jx,axis=0), axis=0)/(Nk1*Nk2)
-#    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
-
     # we need tensordot for contracting the first two indices (2 kpoint directions)
     Jx = np.tensordot(jex_swapped,fc,2) - np.tensordot(jhx_swapped,fv,2)
     Jy = np.tensordot(jey_swapped,fc,2) - np.tensordot(jhy_swapped,fv,2)
 
-    print("jex =", jex)
-    print("fc =", fc)
-#    print("tensordot 1 =", np.tensordot(jex,fc,2))
-#    print("tensordot 2 =", np.tensordot(jhx,fv,2))
-    print ("Jx =", Jx)
-    print ("Jy =", Jy)
-    
     # Return the real part of each component
     return np.real(Jx), np.real(Jy)
 
