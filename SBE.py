@@ -327,20 +327,20 @@ def main():
 #        pl.ylabel(r'$k$')
 #        pl.tight_layout()
 
-        print("freq =", freq)
-        print("size freq =", np.size(freq))
-
-        print("omega(100,1000,10000,100000) =", freq[100], freq[1000], freq[10000], freq[100000])
-        print("omega 1 2 3 =", freq[75100]/w, freq[75200]/w, freq[75300]/w, freq[75400]/w)
-
-
-        fig10, (ax10_0) = pl.subplots(1,1)
-        ax10_0.plot(kp_array,fw_0[:,75100])
-        ax10_0.plot(kp_array,fw_0[:,75200])
-        ax10_0.plot(kp_array,fw_0[:,75300])
-        ax10_0.plot(kp_array,fw_0[:,75400])
-        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
+#        print("freq =", freq)
+#        print("size freq =", np.size(freq))
+#
+#        print("omega(100,1000,10000,100000) =", freq[100], freq[1000], freq[10000], freq[100000])
+#        print("omega 1 2 3 =", freq[75100]/w, freq[75200]/w, freq[75300]/w, freq[75400]/w)
+#
+#
+#        fig10, (ax10_0) = pl.subplots(1,1)
+#        ax10_0.plot(kp_array,fw_0[:,75100])
+#        ax10_0.plot(kp_array,fw_0[:,75200])
+#        ax10_0.plot(kp_array,fw_0[:,75300])
+#        ax10_0.plot(kp_array,fw_0[:,75400])
+#        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
+#        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
 
         BZ_plot(kpnts,a)
         path_plot(paths)
