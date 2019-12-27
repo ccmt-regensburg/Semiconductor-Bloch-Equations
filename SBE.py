@@ -189,7 +189,7 @@ def main():
     Pw_y = np.fft.fftshift(np.fft.fft(diff(t,Py)*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_x = np.absolute(np.fft.fftshift(np.fft.fft(Jx*Gaussian_envelope(t,alpha), norm='ortho')))
     Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(Jy*Gaussian_envelope(t,alpha), norm='ortho')))
-#    fw_0 = np.log(np.absolute(np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'))))
+    fw_0 = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
     print ("eV_conv =", 1.0/eV_conv)
@@ -326,6 +326,21 @@ def main():
 #        pl.xlabel(r'$\omega/\omega_0$')
 #        pl.ylabel(r'$k$')
 #        pl.tight_layout()
+
+        print("freq =", freq)
+        print("size freq =", np.size(freq))
+
+        print("omega(100,1000,10000,100000) =", freq[100], freq[1000], freq[10000], freq[100000])
+        print("omega 1 2 3 =", freq[75100]/w, freq[75200]/w, freq[75300]/w, freq[75400]/w)
+
+
+        fig10, (ax10_0) = pl.subplots(1,1)
+        ax10_0.plot(kp_array,fw_0[:,75100])
+        ax10_0.plot(kp_array,fw_0[:,75200])
+        ax10_0.plot(kp_array,fw_0[:,75300])
+        ax10_0.plot(kp_array,fw_0[:,75400])
+        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -538,7 +553,14 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
         ky_in_path = path[:,1]
         bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
         bandstruc_deriv_for_print.append(bandstruc_deriv)
-        for i_k, k in enumerate(path):
+        #0: v, x   1: v,y   2: c, x  3: c, y
+        jex.append(bandstruc_deriv[2])
+        jey.append(bandstruc_deriv[3])
+        jhx.append(bandstruc_deriv[0])
+        jhy.append(bandstruc_deriv[1])
+
+
+#        for i_k, k in enumerate(path):
             #kx = k[0]
             #ky = k[1]
             # Band gradient at this k-point (for simplified band structure model)
@@ -546,20 +568,36 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
             #jey.append(-(0.8/27.211)*ky*np.exp(-0.4*(kx**2+ky**2)))
             #jhx.append(-(0.4/27.211)*kx*np.exp(-0.2*(kx**2+ky**2)))
             #jhy.append(-(0.4/27.211)*ky*np.exp(-0.2*(kx**2+ky**2)))
+
             #0: v, x   1: v,y   2: c, x  3: c, y
-            jex.append(bandstruc_deriv[2][i_k])
-            jey.append(bandstruc_deriv[3][i_k])
-            jhx.append(bandstruc_deriv[0][i_k])
-            jhy.append(bandstruc_deriv[1][i_k])
+#            jex.append(bandstruc_deriv[2][i_k])
+#            jey.append(bandstruc_deriv[3][i_k])
+#            jhx.append(bandstruc_deriv[0][i_k])
+#            jhy.append(bandstruc_deriv[1][i_k])
+
+
+    print("before reshape: shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
+
+    jex_swapped = np.swapaxes(jex,0,1)
+    jey_swapped = np.swapaxes(jey,0,1)
+    jhx_swapped = np.swapaxes(jhx,0,1)
+    jhy_swapped = np.swapaxes(jhy,0,1)
+
+    print("shape jex_swapped =", np.shape(jex_swapped), "shape fc =", np.shape(fc))
+
+    print("jex[0,101] =", jex[0][101], "jex_swapped[101,0] =", jex_swapped[101][0])
+    print("jex[1,101] =", jex[1][101], "jex_swapped[101,1] =", jex_swapped[101][1])
+    print("jex[0,41]  =", jex[0][41], "jex_swapped[41,0]  =",  jex_swapped[41 ][0])
+    print("jex[1,41]  =", jex[1][41], "jex_swapped[41,1]  =",  jex_swapped[41 ][1])
 
     # Reshape for dot product
-    jex = np.reshape(jex, (Nk1,Nk2))
-    jhx = np.reshape(jhx, (Nk1,Nk2))
-    jey = np.reshape(jey, (Nk1,Nk2))
-    jhy = np.reshape(jhy, (Nk1,Nk2))
-
-    # Element wise (for each k) multiplication j_n(k)*f_n(k,t))
-    print("shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
+#    jex = np.reshape(jex, (Nk1,Nk2))
+#    jhx = np.reshape(jhx, (Nk1,Nk2))
+#    jey = np.reshape(jey, (Nk1,Nk2))
+#    jhy = np.reshape(jhy, (Nk1,Nk2))
+#
+#    # Element wise (for each k) multiplication j_n(k)*f_n(k,t))
+#    print("shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
 #    jx = np.dot(jex,fc) + np.dot(jhx,fv)
 #    jy = np.dot(jey,fc) + np.dot(jhy,fv)
 #
@@ -568,14 +606,15 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
 #    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
-    Jx = np.tensordot(jex,fc,2) - np.tensordot(jhx,fv,2)
-    Jy = np.tensordot(jey,fc,2) - np.tensordot(jhy,fv,2)
+    Jx = np.tensordot(jex_swapped,fc,2) - np.tensordot(jhx_swapped,fv,2)
+    Jy = np.tensordot(jey_swapped,fc,2) - np.tensordot(jhy_swapped,fv,2)
 
     print("jex =", jex)
     print("fc =", fc)
-    print("tensordot 1 =", np.tensordot(jex,fc,2))
-    print("tensordot 2 =", np.tensordot(jhx,fv,2))
+#    print("tensordot 1 =", np.tensordot(jex,fc,2))
+#    print("tensordot 2 =", np.tensordot(jhx,fv,2))
     print ("Jx =", Jx)
+    print ("Jy =", Jy)
     
     # Return the real part of each component
     return np.real(Jx), np.real(Jy)
