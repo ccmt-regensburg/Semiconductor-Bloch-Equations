@@ -564,8 +564,8 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
 #    Jy = np.sum(np.sum(jy,axis=0), axis=0)/(Nk1*Nk2)
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
-    Jx = np.tensordot(jex,fc,2) + np.tensordot(jhx,fv,2)
-    Jy = np.tensordot(jey,fc,2) + np.tensordot(jhy,fv,2)
+    Jx = np.tensordot(jex,fc,2) - np.tensordot(jhx,fv,2)
+    Jy = np.tensordot(jey,fc,2) - np.tensordot(jhy,fv,2)
 
     print("jex =", jex)
     print("fc =", fc)
