@@ -369,7 +369,7 @@ def main():
         pl.ylabel(r'$k$')
         pl.tight_layout()
 
-        fig12 = pl.figure()
+        fig14 = pl.figure()
         X, Y = np.meshgrid(t/fs_conv,kp_array)
         pl.contourf(X, Y, np.real(solution[:,1,:,2]), 100)
         pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 1')
