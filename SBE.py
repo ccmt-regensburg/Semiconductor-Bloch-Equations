@@ -171,10 +171,10 @@ def main():
 
     bandstruc_deriv_for_print = []
 
-    Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, bandstruc_deriv_for_print)
+    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
     Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
-    Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
-#    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
+    Ix, Iy = (diff(t,Px) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,Py) + J_ortho)*Gaussian_envelope(t,alpha)
+#    Ix, Iy = diff(t,Px) + J_E_dir, diff(t,Py) + J_ortho
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
@@ -187,8 +187,8 @@ def main():
     Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_x = np.fft.fftshift(np.fft.fft(diff(t,Px)*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_y = np.fft.fftshift(np.fft.fft(diff(t,Py)*Gaussian_envelope(t,alpha), norm='ortho'))
-    Jw_x = np.absolute(np.fft.fftshift(np.fft.fft(Jx*Gaussian_envelope(t,alpha), norm='ortho')))
-    Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(Jy*Gaussian_envelope(t,alpha), norm='ortho')))
+    Jw_x = np.absolute(np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho')))
+    Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho')))
     fw_0 = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
@@ -206,8 +206,8 @@ def main():
         ax1.plot(t/fs_conv,Px)
         ax1.plot(t/fs_conv,Py)
         ax2.set_xlim(t_lims)
-        ax2.plot(t/fs_conv,Jx/amp_conv)
-        ax2.plot(t/fs_conv,Jy/amp_conv)
+        ax2.plot(t/fs_conv,J_E_dir/amp_conv)
+        ax2.plot(t/fs_conv,J_ortho/amp_conv)
         ax3a.set_xlim(freq_lims)
         ax3a.semilogy(freq/w,np.abs(Pw_x))
         ax3a.semilogy(freq/w,np.abs(Pw_y))
@@ -386,7 +386,7 @@ def main():
 #    occu_filename = str('occu_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
 #    np.save(occu_filename, N_elec)
 #    curr_filename = str('curr_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-#    np.save(curr_filename, [t/fs_conv, Jx, Jy])
+#    np.save(curr_filename, [t/fs_conv, J_E_dir, J_ortho])
 #    pol_filename = str('pol_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
 #    np.save(pol_filename, [t/fs_conv,Px,Py])
 #    emis_filename = str('emis_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
@@ -518,9 +518,6 @@ def polarization(paths,pvc,pcv,dipole):
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
     '''
-    # Determine number of k-points in b2 direction
-    Nk1 = np.size(pvc, axis=0)
-    Nk2 = np.size(pvc, axis=1)
 
     # Create dipole matrix elements (as a crude model)
     d_x, d_y = [],[]
@@ -536,13 +533,6 @@ def polarization(paths,pvc,pcv,dipole):
         d_x.append(Ax_in_path[1,0,:])
         d_y.append(Ay_in_path[1,0,:])
 
-#        for i_k, k in enumerate(path):
-#            d_x.append(np.maximum(np.minimum(np.real(Ax_in_path[1,0,i_k]),10.0),-10.0))
-#            d_y.append(np.maximum(np.minimum(np.real(Ay_in_path[1,0,i_k]),10.0),-10.0))
-
-    # Reshape for dot product
-#    d_x = np.reshape(d_x, (Nk1,Nk2))
-#    d_y = np.reshape(d_y, (Nk1,Nk2))
     d_x_swapped = np.swapaxes(d_x,0,1)
     d_y_swapped = np.swapaxes(d_y,0,1)
 
@@ -553,18 +543,17 @@ def polarization(paths,pvc,pcv,dipole):
     return np.real(Px), np.real(Py)
 
 
-def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
+def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
     '''
 
-    Nk1 = np.size(fc,axis=0)
-    Nk2 = np.size(fc,axis=1)
+    E_ort = np.array([E_dir[1], -E_dir[0]])
 
     # Calculate the gradient analytically at each k-point
-    Jx, Jy = [], []
-    jex,jey,jhx,jhy = [],[],[],[]
+    J_E_dir, J_ortho = [], []
+    je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
     for path in paths:
         path = np.array(path)
         kx_in_path = path[:,0]
@@ -572,31 +561,31 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
         bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
         bandstruc_deriv_for_print.append(bandstruc_deriv)
         #0: v, x   1: v,y   2: c, x  3: c, y
-        jex.append(bandstruc_deriv[2])
-        jey.append(bandstruc_deriv[3])
-        jhx.append(bandstruc_deriv[0])
-        jhy.append(bandstruc_deriv[1])
+        je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
+        je_ortho.append(bandstruc_deriv[2]*E_ort[0] + bandstruc_deriv[3]*E_ort[1])
+        jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
+        jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1])
 
-    print("before reshape: shape jex =", np.shape(jex), "shape fc =", np.shape(fc))
+    print("before reshape: shape je_E_dir =", np.shape(je_E_dir), "shape fc =", np.shape(fc))
 
-    jex_swapped = np.swapaxes(jex,0,1)
-    jey_swapped = np.swapaxes(jey,0,1)
-    jhx_swapped = np.swapaxes(jhx,0,1)
-    jhy_swapped = np.swapaxes(jhy,0,1)
+    je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
+    je_ortho_swapped = np.swapaxes(je_ortho,0,1)
+    jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
+    jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
 
-    print("shape jex_swapped =", np.shape(jex_swapped), "shape fc =", np.shape(fc))
+    print("shape je_E_dir_swapped =", np.shape(je_E_dir_swapped), "shape fc =", np.shape(fc))
 
-    print("jex[0,101] =", jex[0][101], "jex_swapped[101,0] =", jex_swapped[101][0])
-    print("jex[1,101] =", jex[1][101], "jex_swapped[101,1] =", jex_swapped[101][1])
-    print("jex[0,41]  =", jex[0][41], "jex_swapped[41,0]  =",  jex_swapped[41 ][0])
-    print("jex[1,41]  =", jex[1][41], "jex_swapped[41,1]  =",  jex_swapped[41 ][1])
+    print("je_E_dir[0,101] =", je_E_dir[0][101], "je_E_dir_swapped[101,0] =", je_E_dir_swapped[101][0])
+    print("je_E_dir[1,101] =", je_E_dir[1][101], "je_E_dir_swapped[101,1] =", je_E_dir_swapped[101][1])
+    print("je_E_dir[0,41]  =", je_E_dir[0][41], "je_E_dir_swapped[41,0]  =",  je_E_dir_swapped[41 ][0])
+    print("je_E_dir[1,41]  =", je_E_dir[1][41], "je_E_dir_swapped[41,1]  =",  je_E_dir_swapped[41 ][1])
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
-    Jx = np.tensordot(jex_swapped,fc,2) - np.tensordot(jhx_swapped,fv,2)
-    Jy = np.tensordot(jey_swapped,fc,2) - np.tensordot(jhy_swapped,fv,2)
+    J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) - np.tensordot(jh_E_dir_swapped,fv,2)
+    J_ortho = np.tensordot(je_ortho_swapped,fc,2) - np.tensordot(jh_ortho_swapped,fv,2)
 
     # Return the real part of each component
-    return np.real(Jx), np.real(Jy)
+    return np.real(J_E_dir), np.real(J_ortho)
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole):
