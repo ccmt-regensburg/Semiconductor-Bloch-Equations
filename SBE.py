@@ -155,8 +155,14 @@ def main():
 
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
+
+    print("shape of solution before reshaping =", np.shape(solution))
+
     solution = np.array_split(solution,Nk_in_path,axis=2)
     solution = np.array(solution)
+
+    print("shape of solution =", np.shape(solution))
+
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
     # COMPUTE OBSERVABLES
@@ -165,7 +171,7 @@ def main():
     N_elec = solution[:,:,:,3]
     N_gamma_path_1 = N_elec[int(Nk_in_path/2), 0,:]
     N_gamma_path_2 = N_elec[int(Nk_in_path/2), 1,:]
-   
+
     bandstruc_deriv_for_print = []
 
     Jx, Jy = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, bandstruc_deriv_for_print)
@@ -173,11 +179,10 @@ def main():
     Ix, Iy = (diff(t,Px) + Jx)*Gaussian_envelope(t,alpha), (diff(t,Py) + Jy)*Gaussian_envelope(t,alpha)
 #    Ix, Iy = diff(t,Px) + Jx, diff(t,Py) + Jy
 
-
     Ir = []
     angles = np.linspace(0,2.0*np.pi,50)
     for angle in angles:
-        Ir.append(np.sqrt((Ix*np.cos(angle))**2.0 + (Iy*np.sin(angle))**2.0))
+        Ir.append((Ix*np.cos(angle))**2.0 + (Iy*np.sin(angle))**2.0)
         
     freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
@@ -185,8 +190,8 @@ def main():
     Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_x = np.fft.fftshift(np.fft.fft(diff(t,Px)*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_y = np.fft.fftshift(np.fft.fft(diff(t,Py)*Gaussian_envelope(t,alpha), norm='ortho'))
-    Jw_x = np.fft.fftshift(np.fft.fft(Jx*Gaussian_envelope(t,alpha), norm='ortho'))
-    Jw_y = np.fft.fftshift(np.fft.fft(Jy*Gaussian_envelope(t,alpha), norm='ortho'))
+    Jw_x = np.absolute(np.fft.fftshift(np.fft.fft(Jx*Gaussian_envelope(t,alpha), norm='ortho')))
+    Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(Jy*Gaussian_envelope(t,alpha), norm='ortho')))
 
     print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
     print ("eV_conv =", 1.0/eV_conv)
@@ -280,6 +285,43 @@ def main():
         ax4_6.plot(kp_array,1.0/eV_conv*bandstruc_deriv_for_print[1][3])
         ax4_6.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_6.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_y$ (eV*$a_0$) in path 1')
+
+        # Countour plots of occupations and gradients of occupations
+        fig5 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig6 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
+        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig7 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
+        pl.colorbar().set_label(r'$f_e(k)$ in path 1')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig8 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,1,:,0]), 100)
+        pl.colorbar().set_label(r'$f_h(k)$ in path 1')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -525,6 +567,12 @@ def current(paths,fv,fc,bite,path,t,alpha,bandstruc_deriv_for_print):
     Jx = np.tensordot(jex,fc,2) + np.tensordot(jhx,fv,2)
     Jy = np.tensordot(jey,fc,2) + np.tensordot(jhy,fv,2)
 
+    print("jex =", jex)
+    print("fc =", fc)
+    print("tensordot 1 =", np.tensordot(jex,fc,2))
+    print("tensordot 2 =", np.tensordot(jhx,fv,2))
+    print ("Jx =", Jx)
+    
     # Return the real part of each component
     return np.real(Jx), np.real(Jy)
 
@@ -702,9 +750,6 @@ def BZ_plot(kpnts,a):
     ax = BZ_fig.add_subplot(111,aspect='equal')
     
     ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
-
-    print("kpnts[:,0] =", kpnts[:,0])
-    print("kpnts[:,1] =", kpnts[:,1])
 
     pl.scatter(0,0,s=15,c='black')
     pl.text(0.05,0.05,r'$\Gamma$')
