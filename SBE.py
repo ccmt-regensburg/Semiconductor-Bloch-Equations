@@ -496,40 +496,22 @@ def polarization(paths,pvc,pcv,dipole):
         ky_in_path = path[:,1]
 
         Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-#        dx_in_path    = E_dir[0]*Ax + E_dir[1]*Ay
 
-        for i_k, k in enumerate(path):
-            d_x.append(np.maximum(np.minimum(np.real(Ax_in_path[1,0,i_k]),10.0),-10.0))
-            d_y.append(np.maximum(np.minimum(np.real(Ay_in_path[1,0,i_k]),10.0),-10.0))
+        d_x.append(Ax_in_path[1,0,:])
+        d_y.append(Ay_in_path[1,0,:])
 
-#            d_x.append(np.real(Ax_in_path[1,0,i_k]))
-#            d_y.append(np.real(Ay_in_path[1,0,i_k]))
-
-#        for k in path:
-#            kx = k[0]
-#            ky = k[1]
-#            d_x.append(ky/np.sqrt(kx**2.0 + ky**2.0))
-#            d_y.append(-kx/np.sqrt(kx**2.0 + ky**2.0))
+#        for i_k, k in enumerate(path):
+#            d_x.append(np.maximum(np.minimum(np.real(Ax_in_path[1,0,i_k]),10.0),-10.0))
+#            d_y.append(np.maximum(np.minimum(np.real(Ay_in_path[1,0,i_k]),10.0),-10.0))
 
     # Reshape for dot product
-    d_x = np.reshape(d_x, (Nk1,Nk2))
-    d_y = np.reshape(d_y, (Nk1,Nk2))
+#    d_x = np.reshape(d_x, (Nk1,Nk2))
+#    d_y = np.reshape(d_y, (Nk1,Nk2))
+    d_x_swapped = np.swapaxes(d_x,0,1)
+    d_y_swapped = np.swapaxes(d_y,0,1)
 
-    # To compare with first 1d case
-    if (Nk2 == 1):
-        d_x = 1.0
-        d_y = 1.0
-
-#    # Element wise (for each k) multiplication d_nm(k)*p_nm(k)
-#    px = np.dot(d_x,pvc) + np.dot(d_x,pcv)
-#    py = np.dot(d_y,pvc) + np.dot(d_y,pcv)
-#
-#    # Sum over the k contirubtions
-#    Px = np.sum(np.sum(px,axis=0),axis=0)/(Nk1*Nk2)
-#    Py = np.sum(np.sum(py,axis=0),axis=0)/(Nk1*Nk2)
-
-    Px = np.tensordot(d_x,pvc,2) + np.tensordot(d_x,pcv,2)
-    Py = np.tensordot(d_y,pvc,2) + np.tensordot(d_y,pcv,2)
+    Px = np.tensordot(d_x_swapped,pvc,2) + np.tensordot(d_x_swapped,pcv,2)
+    Py = np.tensordot(d_y_swapped,pvc,2) + np.tensordot(d_y_swapped,pcv,2)
 
     # Return the real part of each component
     return np.real(Px), np.real(Py)
