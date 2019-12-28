@@ -169,9 +169,14 @@ def main():
     # Electrons occupations
 
     bandstruc_deriv_for_print = []
+    dipole_ortho_for_print    = []
+
+    print("shape dipole_ortho before routine =", np.shape(dipole_ortho_for_print))
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole, E_dir)
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole, E_dir, dipole_ortho_for_print)
+    print("shape dipole_ortho after routine =", np.shape(dipole_ortho_for_print))
+
     Ix, Iy = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
 #    Ix, Iy = diff(t,P_E_dir) + J_E_dir, diff(t,P_ortho) + J_ortho
 
@@ -239,20 +244,23 @@ def main():
         pax2 = fig2.add_subplot(133,projection='polar')
         pax2.plot(angles,Iw_r[:,f_15])
 
-        fig3, (ax3_0,ax3_3,ax3_4) = pl.subplots(1,3)
+        fig3, (ax3_0,ax3_1,ax3_3,ax3_4) = pl.subplots(1,4)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[0])
         ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[1])
         ax3_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_0.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
+        # we have a strange additional first index 0 here due to an append
+        ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][0])
+        ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][1])
+        ax3_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3_1.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[1])
         ax3_3.set_ylabel(r'Scaled dipole $d_x(k)$ (a.u.) in path 0/1')
         ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[0])
         ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[1])
         ax3_4.set_ylabel(r'Scaled dipole $d_y(k)$ (a.u.) in path 0/1')
-
-        print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
 
         fig4, (ax4_1,ax4_2,ax4_3,ax4_4,ax4_5,ax4_6) = pl.subplots(1,6)
         ax4_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
@@ -350,32 +358,32 @@ def main():
         pl.ylabel(r'$k$')
         pl.tight_layout()
 
-        fig12 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,2]), 100)
-        pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig13 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,1,:,1]), 100)
-        pl.colorbar().set_label(r'$Re(p_cv(k))$ in path 1')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig14 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,1,:,2]), 100)
-        pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 1')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        fig12 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,2]), 100)
+#        pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig13 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,1,:,1]), 100)
+#        pl.colorbar().set_label(r'$Re(p_cv(k))$ in path 1')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig14 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,1,:,2]), 100)
+#        pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 1')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -489,7 +497,7 @@ def Gaussian_envelope(t,alpha):
     '''
     return np.exp(-t**2.0/(2.0*3.0*alpha)**2)  
 
-def polarization(paths,pvc,pcv,dipole,E_dir):
+def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -509,6 +517,8 @@ def polarization(paths,pvc,pcv,dipole,E_dir):
 
         d_E_dir.append(Ax_in_path[1,0,:]*E_dir[0] + Ay_in_path[1,0,:]*E_dir[1])
         d_ortho.append(Ax_in_path[1,0,:]*E_ort[0] + Ay_in_path[1,0,:]*E_ort[1])
+
+    dipole_ortho_for_print.append(d_ortho)
 
     d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
     d_ortho_swapped = np.swapaxes(d_ortho,0,1)
@@ -543,19 +553,19 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
         jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
         jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1])
 
-    print("before reshape: shape je_E_dir =", np.shape(je_E_dir), "shape fc =", np.shape(fc))
+#    print("before reshape: shape je_E_dir =", np.shape(je_E_dir), "shape fc =", np.shape(fc))
 
     je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
     je_ortho_swapped = np.swapaxes(je_ortho,0,1)
     jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
     jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
 
-    print("shape je_E_dir_swapped =", np.shape(je_E_dir_swapped), "shape fc =", np.shape(fc))
-
-    print("je_E_dir[0,101] =", je_E_dir[0][101], "je_E_dir_swapped[101,0] =", je_E_dir_swapped[101][0])
-    print("je_E_dir[1,101] =", je_E_dir[1][101], "je_E_dir_swapped[101,1] =", je_E_dir_swapped[101][1])
-    print("je_E_dir[0,41]  =", je_E_dir[0][41], "je_E_dir_swapped[41,0]  =",  je_E_dir_swapped[41 ][0])
-    print("je_E_dir[1,41]  =", je_E_dir[1][41], "je_E_dir_swapped[41,1]  =",  je_E_dir_swapped[41 ][1])
+#    print("shape je_E_dir_swapped =", np.shape(je_E_dir_swapped), "shape fc =", np.shape(fc))
+#
+#    print("je_E_dir[0,101] =", je_E_dir[0][101], "je_E_dir_swapped[101,0] =", je_E_dir_swapped[101][0])
+#    print("je_E_dir[1,101] =", je_E_dir[1][101], "je_E_dir_swapped[101,1] =", je_E_dir_swapped[101][1])
+#    print("je_E_dir[0,41]  =", je_E_dir[0][41], "je_E_dir_swapped[41,0]  =",  je_E_dir_swapped[41 ][0])
+#    print("je_E_dir[1,41]  =", je_E_dir[1][41], "je_E_dir_swapped[41,1]  =",  je_E_dir_swapped[41 ][1])
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
     J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) - np.tensordot(jh_E_dir_swapped,fv,2)
