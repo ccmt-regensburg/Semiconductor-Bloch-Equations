@@ -225,21 +225,23 @@ def main():
         print("f_5 =", f_5, "f_125 =", f_125, "f_15 =", f_15)
         print("freq_5 =", freq[f_5]/w, "freq_125 =", freq[f_125]/w, "freq_15 =", freq[f_15]/w)
 
-        fig2 = pl.figure()
-        pax0 = fig2.add_subplot(131,projection='polar')
-        pax0.plot(angles,np.abs(Iw_r[:,f_5]))
-        pax1 = fig2.add_subplot(132,projection='polar')
-        pax1.plot(angles,np.abs(Iw_r[:,f_125]))
-        pax2 = fig2.add_subplot(133,projection='polar')
-        pax2.plot(angles,np.abs(Iw_r[:,f_15]))
+#        fig2 = pl.figure()
+#        pax  = fig2.add_subplot(131,projection='polar')
+#        pax.plot(angles,np.abs(Iw_r[:,f_5]))
+#        pax  = fig2.add_subplot(132,projection='polar')
+#        pax.plot(angles,np.abs(Iw_r[:,f_125]))
+#        pax  = fig2.add_subplot(133,projection='polar')
+#        pax.plot(angles,np.abs(Iw_r[:,f_15]))
 
-#        fig2a = pl.figure()
-#        i_loop = 1
-#        while i_loop <= 20:
-#            freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
-#            freq_index   = freq_indices[int(np.size(freq_indices)/2)]
-#
-#            i_loop += 1
+        fig2a = pl.figure()
+        i_loop = 1
+        i_max  = 20
+        while i_loop <= i_max:
+            freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
+            freq_index   = freq_indices[int(np.size(freq_indices)/2)]
+            pax          = fig2a.add_subplot(1,i_max,i_loop,projection='polar')
+            pax.plot(angles,np.abs(Iw_r[:,freq_index]))
+            i_loop += 1
 
         fig3, (ax3_0,ax3_1,ax3_3,ax3_4) = pl.subplots(1,4)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
