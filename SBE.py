@@ -171,8 +171,8 @@ def main():
         Ir.append((I_E_dir*np.cos(angle))**2.0 + (I_ortho*np.sin(angle))**2.0)
         
     freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
-    Iw_x = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
-    Iw_y = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
+    Iw_x = np.fft.fftshift(np.fft.fft(I_E_dir**2, norm='ortho'))
+    Iw_y = np.fft.fftshift(np.fft.fft(I_ortho**2, norm='ortho'))
     Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_x = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir)*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_y = np.fft.fftshift(np.fft.fft(diff(t,P_ortho)*Gaussian_envelope(t,alpha), norm='ortho'))
