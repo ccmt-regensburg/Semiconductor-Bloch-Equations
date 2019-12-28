@@ -81,12 +81,12 @@ def main():
     t = np.linspace(t0,tf,Nt)
 
     # containers
-    solution            = []    
-    dip_dot_E_for_print = []
-    dipole_x_for_print  = []
-    dipole_y_for_print  = []
-    val_band_for_print  = []
-    cond_band_for_print = []
+    solution               = []    
+    dipole_E_dir_for_print = []
+    dipole_x_for_print     = []
+    dipole_y_for_print     = []
+    val_band_for_print     = []
+    cond_band_for_print    = []
 
     # Initialize ode solver according to chosen method
     if matrix_method:
@@ -99,7 +99,6 @@ def main():
 #    bite = hfsbe.example.BiTe(default_params=True)
 #    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974,default_params=True)
     bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974)
-
 
     h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
@@ -147,7 +146,7 @@ def main():
             ti += 1
 
         solution.append(path_solution)
-        dip_dot_E_for_print.append(dipole_in_path)
+        dipole_E_dir_for_print.append(dipole_in_path)
         dipole_x_for_print.append(Ax[0,1,:])
         dipole_y_for_print.append(Ay[0,1,:])
         val_band_for_print.append(bandstruc[0])
@@ -172,9 +171,9 @@ def main():
     bandstruc_deriv_for_print = []
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    Px, Py = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole)
-    Ix, Iy = (diff(t,Px) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,Py) + J_ortho)*Gaussian_envelope(t,alpha)
-#    Ix, Iy = diff(t,Px) + J_E_dir, diff(t,Py) + J_ortho
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole, E_dir)
+    Ix, Iy = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
+#    Ix, Iy = diff(t,P_E_dir) + J_E_dir, diff(t,P_ortho) + J_ortho
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
@@ -185,8 +184,8 @@ def main():
     Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
     Iw_y = np.fft.fftshift(np.fft.fft(Iy, norm='ortho'))
     Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
-    Pw_x = np.fft.fftshift(np.fft.fft(diff(t,Px)*Gaussian_envelope(t,alpha), norm='ortho'))
-    Pw_y = np.fft.fftshift(np.fft.fft(diff(t,Py)*Gaussian_envelope(t,alpha), norm='ortho'))
+    Pw_x = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir)*Gaussian_envelope(t,alpha), norm='ortho'))
+    Pw_y = np.fft.fftshift(np.fft.fft(diff(t,P_ortho)*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_x = np.absolute(np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho')))
     Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho')))
     fw_0 = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
@@ -203,8 +202,8 @@ def main():
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
         ax1.set_xlim(t_lims)
-        ax1.plot(t/fs_conv,Px)
-        ax1.plot(t/fs_conv,Py)
+        ax1.plot(t/fs_conv,P_E_dir)
+        ax1.plot(t/fs_conv,P_ortho)
         ax2.set_xlim(t_lims)
         ax2.plot(t/fs_conv,J_E_dir/amp_conv)
         ax2.plot(t/fs_conv,J_ortho/amp_conv)
@@ -242,8 +241,8 @@ def main():
 
         fig3, (ax3_0,ax3_3,ax3_4) = pl.subplots(1,3)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-        ax3_0.plot(kp_array,scale_dipole*dip_dot_E_for_print[0])
-        ax3_0.plot(kp_array,scale_dipole*dip_dot_E_for_print[1])
+        ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[0])
+        ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[1])
         ax3_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_0.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
@@ -388,7 +387,7 @@ def main():
 #    curr_filename = str('curr_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
 #    np.save(curr_filename, [t/fs_conv, J_E_dir, J_ortho])
 #    pol_filename = str('pol_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-#    np.save(pol_filename, [t/fs_conv,Px,Py])
+#    np.save(pol_filename, [t/fs_conv,P_E_dir,P_ortho])
 #    emis_filename = str('emis_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
 #    np.save(emis_filename, [freq/w, Iw_x, Iw_y])
     
@@ -447,29 +446,6 @@ def mesh(params):
 
     return dk, np.array(mesh), paths
 
-def eband(n, kx, ky):
-    '''
-    Returns the energy of a band n, from the k-point.
-    Band structure modeled as (e.g.)...
-    E1(k) = (-1eV) + (1eV)exp(-10*k^2)*(4k^2-1)^2(4k^2+1)^2
-    '''
-    envelope = ((2.0*kx**2 + 2.0*ky**2 - 1.0)**2.0)*((2.0*kx**2 +  2.0*ky**2 + 1.0)**2.0)
-    if (n==1):   # Valence band
-        #return np.zeros(np.shape(k)) # Flat structure
-        #return (-1.0/27.211)+(1.0/27.211)*np.exp(-10.0*kx**2 - 10.0*ky**2)*envelope
-        return (-1.0/27.211)+(1.0/27.211)*np.exp(-0.4*kx**2 - 0.4*ky**2)#*envelope
-
-    elif (n==2): # Conduction band
-        #return (2.0/27.211)*np.ones(np.shape(k)) # Flat structure
-        #return (3.0/27.211)-(1.0/27.211)*np.exp(-5.0*kx**2 - 5.0*ky**2)*envelope
-        return (3.0/27.211)-(1.0/27.211)*np.exp(-0.2*kx**2 - 0.2*ky**2)#*envelope
-
-def dipole(kx, ky):
-    '''
-    Returns the dipole matrix element for making the transition from band n to band m at k = kx*e_kx + ky*e_ky
-    '''
-    return 1.0 #Eventually inputting some data from other calculations
-
 @njit
 def driving_field(E0, w, t, alpha):
     '''
@@ -513,14 +489,15 @@ def Gaussian_envelope(t,alpha):
     '''
     return np.exp(-t**2.0/(2.0*3.0*alpha)**2)  
 
-def polarization(paths,pvc,pcv,dipole):
+def polarization(paths,pvc,pcv,dipole,E_dir):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
     '''
+    E_ort = np.array([E_dir[1], -E_dir[0]])
 
     # Create dipole matrix elements (as a crude model)
-    d_x, d_y = [],[]
+    d_E_dir, d_ortho = [],[]
     for path in paths:
 
         path = np.array(path)
@@ -530,17 +507,17 @@ def polarization(paths,pvc,pcv,dipole):
 
         Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
 
-        d_x.append(Ax_in_path[1,0,:])
-        d_y.append(Ay_in_path[1,0,:])
+        d_E_dir.append(Ax_in_path[1,0,:]*E_dir[0] + Ay_in_path[1,0,:]*E_dir[1])
+        d_ortho.append(Ax_in_path[1,0,:]*E_ort[0] + Ay_in_path[1,0,:]*E_ort[1])
 
-    d_x_swapped = np.swapaxes(d_x,0,1)
-    d_y_swapped = np.swapaxes(d_y,0,1)
+    d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
+    d_ortho_swapped = np.swapaxes(d_ortho,0,1)
 
-    Px = np.tensordot(d_x_swapped,pvc,2) + np.tensordot(d_x_swapped,pcv,2)
-    Py = np.tensordot(d_y_swapped,pvc,2) + np.tensordot(d_y_swapped,pcv,2)
+    P_E_dir = np.tensordot(d_E_dir_swapped,pvc,2) + np.tensordot(d_E_dir_swapped,pcv,2)
+    P_ortho = np.tensordot(d_ortho_swapped,pvc,2) + np.tensordot(d_ortho_swapped,pcv,2)
 
     # Return the real part of each component
-    return np.real(Px), np.real(Py)
+    return np.real(P_E_dir), np.real(P_ortho)
 
 
 def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
