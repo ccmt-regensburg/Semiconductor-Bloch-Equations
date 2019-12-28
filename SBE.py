@@ -168,17 +168,17 @@ def main():
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
     for angle in angles:
-        Ir.append((I_E_dir*np.cos(angle))**2.0 + (I_ortho*np.sin(angle))**2.0)
+        Ir.append(I_E_dir*np.cos(angle) + I_ortho*np.sin(angle))
         
-    freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
-    Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir**2, norm='ortho'))
-    Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho**2, norm='ortho'))
-    Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
+    freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
+    Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
+    Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
+    Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_E_dir = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir)*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho)*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_E_dir = np.absolute(np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho')))
     Jw_ortho = np.absolute(np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho')))
-    fw_0 = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
+    fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     if not test:
         fig1, (axE,ax1,ax2,ax3a,ax3b,ax3) = pl.subplots(1,6)
@@ -211,9 +211,8 @@ def main():
         ax3.set_ylim(log_limits)
         ax3.semilogy(freq/w,np.abs(Iw_E_dir))
         ax3.semilogy(freq/w,np.abs(Iw_ortho))
-#        ax3.semilogy(freq/w,np.abs(Iw_total))
         ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3.set_ylabel(r'Emission spectrum $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
+        ax3.set_ylabel(r'Emitted electric field $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
 
 
         f5 = np.argwhere(np.logical_and(freq/w > 9.9, freq/w < 10.1))
