@@ -168,7 +168,7 @@ def main():
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
     for angle in angles:
-        Ir.append(I_E_dir*np.cos(angle) + I_ortho*np.sin(angle))
+        Ir.append(I_E_dir*np.cos(angle)**2 + I_ortho*np.sin(angle)**2)
         
     freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
@@ -211,9 +211,9 @@ def main():
         ax3.set_ylim(log_limits)
         ax3.semilogy(freq/w,np.abs(Iw_E_dir))
         ax3.semilogy(freq/w,np.abs(Iw_ortho))
+        print("shape(Iw_r) =", np.shape(Iw_r))
         ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax3.set_ylabel(r'Emitted electric field $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
-
 
         f5 = np.argwhere(np.logical_and(freq/w > 9.9, freq/w < 10.1))
         f125 = np.argwhere(np.logical_and(freq/w > 13.9, freq/w < 14.1))
@@ -222,13 +222,24 @@ def main():
         f_125 = f125[int(np.size(f125)/2)]
         f_15 = f15[int(np.size(f15)/2)]
 
+        print("f_5 =", f_5, "f_125 =", f_125, "f_15 =", f_15)
+        print("freq_5 =", freq[f_5]/w, "freq_125 =", freq[f_125]/w, "freq_15 =", freq[f_15]/w)
+
         fig2 = pl.figure()
         pax0 = fig2.add_subplot(131,projection='polar')
-        pax0.plot(angles,Iw_r[:,f_5])
+        pax0.plot(angles,np.abs(Iw_r[:,f_5]))
         pax1 = fig2.add_subplot(132,projection='polar')
-        pax1.plot(angles,Iw_r[:,f_125])
+        pax1.plot(angles,np.abs(Iw_r[:,f_125]))
         pax2 = fig2.add_subplot(133,projection='polar')
-        pax2.plot(angles,Iw_r[:,f_15])
+        pax2.plot(angles,np.abs(Iw_r[:,f_15]))
+
+#        fig2a = pl.figure()
+#        i_loop = 1
+#        while i_loop <= 20:
+#            freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
+#            freq_index   = freq_indices[int(np.size(freq_indices)/2)]
+#
+#            i_loop += 1
 
         fig3, (ax3_0,ax3_1,ax3_3,ax3_4) = pl.subplots(1,4)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
