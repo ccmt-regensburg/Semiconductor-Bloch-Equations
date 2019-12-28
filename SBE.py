@@ -42,14 +42,12 @@ def main():
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
-    align = params.align                              # Pulse polarization direction
     T2 = params.T2*fs_conv                            # Damping time
     gamma2 = 1/T2                                     # Gamma parameter
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
     test = params.test                                # Testing flag for Travis
-    matrix_method = params.matrix_method              # 'Vector' or 'matrix' updates in f(t,y)
 
     # USER OUTPUT
     ###############################################################################################
@@ -58,8 +56,6 @@ def main():
         print("***WARNING***: Convergence issues may result from Nk < 20")
     if params.dt > 1.0:
         print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
-    if matrix_method:
-        print("*** USING MATRIX METHOD SOLVER ***")
     print("Number of k-points              = " + str(Nk))
     print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
@@ -67,7 +63,6 @@ def main():
     print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
     print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
     print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
-    print("Driving field polarization      = " + "Gamma-" + str(align))
     
     # INITIALIZATIONS
     ###############################################################################################
@@ -88,11 +83,7 @@ def main():
     val_band_for_print     = []
     cond_band_for_print    = []
 
-    # Initialize ode solver according to chosen method
-    if matrix_method:
-        solver = ode(f_matrix, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
-    else:
-        solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
+    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
     # Get band structure, its derivative and the dipole
 #    bite = hfsbe.example.BiTe(b1=b1, b2=b2, default_params=True)
@@ -102,9 +93,6 @@ def main():
 
     h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
-
-    # cutoff for k for setting dipole to zero if |k| exceeds k_cut (in paper: 0.04 A^-1 = 0.02 a.u.^-1)
-    k_cut = 2.0
 
     # SOLVING 
     ###############################################################################################
@@ -134,7 +122,7 @@ def main():
         bandstruc_in_path = bandstruc[1] - bandstruc[0]
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,k_cut,scale_dipole)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path,scale_dipole)
 
         # Propagate through time
         ti = 0
@@ -224,7 +212,7 @@ def main():
         ax3.semilogy(freq/w,np.abs(Iw_x))
         ax3.semilogy(freq/w,np.abs(Iw_y))
         ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3.set_ylabel(r'Normalized emission spectrum $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
+        ax3.set_ylabel(r'Emission spectrum $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
 
 
         f5 = np.argwhere(np.logical_and(freq/w > 9.9, freq/w < 10.1))
@@ -286,15 +274,15 @@ def main():
         ax4_6.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_6.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_y$ (eV*$a_0$) in path 1')
 
-        # Countour plots of occupations and gradients of occupations
-        fig5 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        # Countour plots of occupations and gradients of occupations
+#        fig5 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 
 #        fig6 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
@@ -347,14 +335,14 @@ def main():
 #        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
 #        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
 
-        fig11 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
-        pl.colorbar().set_label(r'$Re(p_cv(k))$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        fig11 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
+#        pl.colorbar().set_label(r'$Re(p_cv(k))$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 
 #        fig12 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
@@ -388,15 +376,6 @@ def main():
 
         pl.show()
 
-#    occu_filename = str('occu_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-#    np.save(occu_filename, N_elec)
-#    curr_filename = str('curr_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-#    np.save(curr_filename, [t/fs_conv, J_E_dir, J_ortho])
-#    pol_filename = str('pol_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-#    np.save(pol_filename, [t/fs_conv,P_E_dir,P_ortho])
-#    emis_filename = str('emis_Nk1{}_Nk2{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_dt{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,dt)
-#    np.save(emis_filename, [freq/w, Iw_x, Iw_y])
-    
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
     if test:
@@ -461,19 +440,11 @@ def driving_field(E0, w, t, alpha):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 @njit
-def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,k_cut,scale_dipole):
+def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,scale_dipole):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-#    return dipole(kx,ky)*driving_field(E0, w, t, alpha)
-#   Jan: Hack, we set all dipole elements to zero if they exceed the cutoff region
-#    print ("kx, ky, dipole =", kx, ky, dipole_in_path[1,0,k])
-    if(kx**2+ky**2 < k_cut**2):
-#      return dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha)
-#      return np.real(dipole_in_path[1,0,k]*driving_field(E0, w, t, alpha))
-      return np.real(dipole_in_path[k])*scale_dipole*driving_field(E0, w, t, alpha)
-    else:
-      return 0.0
+    return np.real(dipole_in_path[k])*scale_dipole*driving_field(E0, w, t, alpha)
 
 def diff(x,y):
     '''
@@ -551,19 +522,10 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
         jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
         jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1])
 
-#    print("before reshape: shape je_E_dir =", np.shape(je_E_dir), "shape fc =", np.shape(fc))
-
     je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
     je_ortho_swapped = np.swapaxes(je_ortho,0,1)
     jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
     jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
-
-#    print("shape je_E_dir_swapped =", np.shape(je_E_dir_swapped), "shape fc =", np.shape(fc))
-#
-#    print("je_E_dir[0,101] =", je_E_dir[0][101], "je_E_dir_swapped[101,0] =", je_E_dir_swapped[101][0])
-#    print("je_E_dir[1,101] =", je_E_dir[1][101], "je_E_dir_swapped[101,1] =", je_E_dir_swapped[101][1])
-#    print("je_E_dir[0,41]  =", je_E_dir[0][41], "je_E_dir_swapped[41,0]  =",  je_E_dir_swapped[41 ][0])
-#    print("je_E_dir[1,41]  =", je_E_dir[1][41], "je_E_dir_swapped[41,1]  =",  je_E_dir_swapped[41 ][1])
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
     J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) - np.tensordot(jh_E_dir_swapped,fv,2)
@@ -573,12 +535,12 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
     return np.real(J_E_dir), np.real(J_ortho)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole)
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, scale_dipole):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, scale_dipole)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, k_cut, scale_dipole):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, scale_dipole):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -611,7 +573,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
         # Rabi frequency conjugate
-        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path, k_cut, scale_dipole)
+        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path, scale_dipole)
         wr_c = np.conjugate(wr)
 
         # Update each component of the solution vector
@@ -621,120 +583,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
         x[i+3] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m+3] - y[n+3])
 
     return x
-
-
-def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
-    '''
-    Function driving the dynamics of the system.
-    This is required as input parameter to the ode solver
-    '''
-    # Constant vector container
-    b = []
-
-    # Create propogation matrix for this time step
-    for k1 in range(Nk): # Iterate down all the rows
-
-        # Construct each block of the matrix
-        '''
-        Energy term eband(i,k) the energy of band i at point k
-        '''
-        ecv = eband(2, ef, kgrid[k1]) - eband(1, ef, kgrid[k1])
-
-        '''
-        Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
-        Rabi frequency conjugate
-        '''
-        wr = rabi(1, 2, kgrid[k1], E0, w, t, alpha)
-        wr_c = np.conjugate(wr)
-
-        '''
-        Brillouin zone drift term coefficient: E(t)*grad_k
-        Coefficient for finite difference derivative. 
-        '''
-        drift_coef = driving_field(E0, w, t, alpha)/(2.0*dk)
-
-        '''
-        Diagonal block of the propagation matrix M. Contains all terms not related to drift term. Case for electron-hole picture. 
-        '''
-        diag_block = 1j*np.array([[0.0,wr,-wr_c,0.0],\
-                                  [wr_c,-(ecv-1j*gamma2),0.0,wr_c],\
-                                  [-wr,0.0,(ecv+1j*gamma2),-wr],\
-                                  [0.0,wr,-wr_c,0.0]])
-
-        '''
-        Blocks for the forward and backwards portion of the finite difference derivative
-        '''
-        for_deriv = np.array([[drift_coef,0.0,0.0,0.0],\
-                              [0.0,drift_coef,0.0,0.0],\
-                              [0.0,0.0,drift_coef,0.0],\
-                              [0.0,0.0,0.0,drift_coef]])
-        back_deriv = np.array([[-drift_coef,0.0,0.0,0.0],\
-                               [0.0,-drift_coef,0.0,0.0],\
-                               [0.0,0.0,-drift_coef,0.0],\
-                               [0.0,0.0,0.0,-drift_coef]])
-
-        '''
-        4x4 block of zeros. M is a very sparse matrix
-        '''
-        zero_block = np.zeros((4,4),dtype='float') 
-
-        '''
-        Constructs the matrix M one block at a time. See notes for details
-        '''   
-        # Put each block in their proper columns
-        if (k1 == 0): # Construction of the first row
-            M = np.concatenate((diag_block,for_deriv),axis=1) # Create first two columns
-            for k2 in range(2,Nk-1): # From k3 to Nk-1
-                M = np.concatenate((M,zero_block),axis=1) # Concatenate zero blocks
-            M = np.concatenate((M,back_deriv),axis=1) # Concatenate final column
-        elif (k1 == Nk-1): # Construction of the last row
-            row = for_deriv # Create first column
-            for k2 in range(1,Nk-2): # From k2 to Nk-2
-                row = np.concatenate((row,zero_block),axis=1) # Concatenate zero blocks
-            row = np.concatenate((row,back_deriv,diag_block),axis=1) # Concatenate final two columns
-            M = np.concatenate((M,row),axis=0) # Concatenate this row to the matrix
-        else: # Construction of all other rows
-            # Initiate row variable
-            if k1 == 1:
-                row = back_deriv
-            else:
-                row = zero_block
-            for k2 in range(1,Nk): # Scan across each column skipping the first
-                if k2 == k1: # On the diagonal
-                    row = np.concatenate((row,diag_block),axis=1) # Concatenate diagonal block
-                elif k2 == k1-1: # If one behind the diagonal
-                    row = np.concatenate((row,back_deriv),axis=1) # Concatenate back_deriv
-                elif k2 == k1+1: # If one in front of diagonal
-                    row = np.concatenate((row,for_deriv),axis=1)  # Concatenate for_deriv
-                else: # If anywhere else
-                    row = np.concatenate((row,zero_block),axis=1) # Concatenate zero_block
-            M = np.concatenate((M,row),axis=0)
-        '''
-        'Constant' vector with leftover terms
-        '''
-        b.extend([0.0,-wr_c,wr,0.0])
-
-    # Convert to numpy array
-    b = 1j*np.array(b)
-
-    # Calculate the timestep
-    svec = np.dot(M, y) + b 
-    return svec
-
-
-def double_scale_plot(ax1, xdata, data1, data2, xlims, xlabel, label1, label2):
-    '''
-    Plots the two input sets: data1, data2 on the same x-scale, but with a secondary y-scale (twin of ax1).
-    '''
-    ax2 = ax1.twinx()                                        # Create secondary y-axis with shared x scale
-    ax1.set_xlim(xlims)                                      # Set x limits
-    ax2.set_xlim(xlims)                                      # Set x limits for secondary axis
-    ax1.plot(xdata, data1, color='r', zorder=1)              # Plot data1 on the first y-axis
-    ax1.set_xlabel(xlabel)                                   # Set the label for the x-axis
-    ax1.set_ylabel(label1)                                   # Set the first y-axis label
-    ax2.plot(xdata, data2, color='b', zorder=2, alpha=0.5)   # Plot data2 on the second y-axis
-    ax2.set_ylabel(label2)                                   # Set the second y-axis label
-    return ax1, ax2                                          # Returns these two axes with the data plotted
 
 def BZ_plot(kpnts,a):
     

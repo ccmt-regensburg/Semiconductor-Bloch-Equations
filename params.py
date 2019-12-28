@@ -3,10 +3,10 @@ import numpy as np
 
 # Brillouin zone parameters
 ##########################################################################
-Nk_in_path          = 200         # Number of kpoints in each of the two paths
-rel_dist_to_Gamma   = 0.15        # relative distance (in units of 2pi/a) of both paths to Gamma
+Nk_in_path          = 400         # Number of kpoints in each of the two paths
+rel_dist_to_Gamma   = 0.1         # relative distance (in units of 2pi/a) of both paths to Gamma
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
-length_path_in_BZ   = 2.0*np.pi/a       # 
+length_path_in_BZ   = 3.0*np.pi/a       # 
 E_dir               = np.array([0.5, 0.5])/np.sqrt(2)   # normalized direction of the E-field and therefore, direction of the path
 scale_dipole        = 1.0         # phenomenological rescaling of the dipole moments to match the experiments
 
@@ -19,7 +19,7 @@ align = 'M'   # Direction of field polarization ('M'=gamma-M, 'K'=gamma-K)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 10.0     # Phenomenological polarization damping time 
+T2    = 1000.0     # Phenomenological polarization damping time 
 t0    = -1000    # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 2000     # End time
 dt    = 0.02     # Time step
