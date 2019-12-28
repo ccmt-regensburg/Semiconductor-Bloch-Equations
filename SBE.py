@@ -171,23 +171,20 @@ def main():
     bandstruc_deriv_for_print = []
     dipole_ortho_for_print    = []
 
-    print("shape dipole_ortho before routine =", np.shape(dipole_ortho_for_print))
-
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole, E_dir, dipole_ortho_for_print)
-    print("shape dipole_ortho after routine =", np.shape(dipole_ortho_for_print))
 
-    Ix, Iy = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
-#    Ix, Iy = diff(t,P_E_dir) + J_E_dir, diff(t,P_ortho) + J_ortho
+    I_E_dir, I_ortho = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
+#    I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir, diff(t,P_ortho) + J_ortho
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
     for angle in angles:
-        Ir.append((Ix*np.cos(angle))**2.0 + (Iy*np.sin(angle))**2.0)
+        Ir.append((I_E_dir*np.cos(angle))**2.0 + (I_ortho*np.sin(angle))**2.0)
         
     freq = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
-    Iw_x = np.fft.fftshift(np.fft.fft(Ix, norm='ortho'))
-    Iw_y = np.fft.fftshift(np.fft.fft(Iy, norm='ortho'))
+    Iw_x = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
+    Iw_y = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
     Iw_r = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_x = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir)*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_y = np.fft.fftshift(np.fft.fft(diff(t,P_ortho)*Gaussian_envelope(t,alpha), norm='ortho'))
@@ -195,13 +192,11 @@ def main():
     Jw_y = np.absolute(np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho')))
     fw_0 = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
-    print("shape bs_deriv =", np.shape(bandstruc_deriv_for_print))
-    print ("eV_conv =", 1.0/eV_conv)
-
     if not test:
         fig1, (axE,ax1,ax2,ax3a,ax3b,ax3) = pl.subplots(1,6)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
-        freq_lims = (0,30)
+        freq_lims = (0,25)
+        log_limits = (10e-7,10)
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv,driving_field(E0,w,t,alpha)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
@@ -213,20 +208,23 @@ def main():
         ax2.plot(t/fs_conv,J_E_dir/amp_conv)
         ax2.plot(t/fs_conv,J_ortho/amp_conv)
         ax3a.set_xlim(freq_lims)
+        ax3a.set_ylim(log_limits)
         ax3a.semilogy(freq/w,np.abs(Pw_x))
         ax3a.semilogy(freq/w,np.abs(Pw_y))
         ax3a.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3a.set_ylabel(r'$[\dot P](\omega)$ x (blue), y (yellow)')
+        ax3a.set_ylabel(r'$[\dot P](\omega)$ (= interband) in a.u. $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
         ax3b.set_xlim(freq_lims)
+        ax3b.set_ylim(log_limits)
         ax3b.semilogy(freq/w,np.abs(Jw_x))
         ax3b.semilogy(freq/w,np.abs(Jw_y))
         ax3b.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3b.set_ylabel(r'$J(\omega)$ x (blue), y (yellow)')
+        ax3b.set_ylabel(r'$J(\omega)$ (= intraband) in a.u. $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
         ax3.set_xlim(freq_lims)
+        ax3.set_ylim(log_limits)
         ax3.semilogy(freq/w,np.abs(Iw_x))
         ax3.semilogy(freq/w,np.abs(Iw_y))
         ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3.set_ylabel(r'Normalized emission spectrum')
+        ax3.set_ylabel(r'Normalized emission spectrum $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
 
 
         f5 = np.argwhere(np.logical_and(freq/w > 9.9, freq/w < 10.1))
