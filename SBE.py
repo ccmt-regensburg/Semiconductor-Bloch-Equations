@@ -165,7 +165,7 @@ def main():
     I_E_dir, I_ortho = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
 
     Ir = []
-    angles = np.linspace(0,2.0*np.pi,72)
+    angles = np.linspace(0,2.0*np.pi,360)
     for angle in angles:
         Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(-angle)))
         
