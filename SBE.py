@@ -475,7 +475,7 @@ def Gaussian_envelope(t,alpha):
     Function to multiply a Function f(t) before Fourier transform 
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*3.0*alpha)**2)  
+    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)  
 
 def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print):
     '''
