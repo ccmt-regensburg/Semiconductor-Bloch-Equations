@@ -204,6 +204,7 @@ def main():
         ax3b.set_ylim(log_limits)
         ax3b.semilogy(freq/w,np.abs(Jw_E_dir))
         ax3b.semilogy(freq/w,np.abs(Jw_ortho))
+        w
         ax3b.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax3b.set_ylabel(r'$J(\omega)$ (= intraband) in a.u. $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
         ax3.set_xlim(freq_lims)
@@ -248,7 +249,7 @@ def main():
         # we have a strange additional first index 0 here due to an append
         ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][0])
         ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][1])
-        ax3_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3_1.set_xlabel(r'$k$-point in path ($1/a_u0$)')
         ax3_1.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[1])
@@ -599,22 +600,24 @@ def BZ_plot(kpnts,a):
     
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
-    print ("")
+    print ("kpoints =", kpnts)
 
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
     
-    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
+#    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
 
     pl.scatter(0,0,s=15,c='black')
     pl.text(0.05,0.05,r'$\Gamma$')
-    pl.scatter(R,0,s=15,c='black')
-    pl.text(R,0.05,r'$K$')
-    pl.scatter(r*np.cos(np.pi/6),-r*np.sin(np.pi/6),s=15,c='black')
-    pl.text(r*np.cos(np.pi/6),-r*np.sin(np.pi/6)-0.2,r'$M$')
+#    pl.scatter(R,0,s=15,c='black')
+#    pl.text(R,0.05,r'$K$')
+#    pl.scatter(r*np.cos(np.pi/6),-r*np.sin(np.pi/6),s=15,c='black')
+#    pl.text(r*np.cos(np.pi/6),-r*np.sin(np.pi/6)-0.2,r'$M$')
     pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
-    pl.xlim(-4.5/a,4.5/a)
-    pl.ylim(-4.5/a,4.5/a)
+    pl.xlim(-8.0/a,8.0/a)
+    pl.ylim(-8.0/a,8.0/a)
+    pl.xlabel(r'$k_x$ ($1/a_0$)')
+    pl.ylabel(r'$k_y$ ($1/a_0$)')
     
     return
 
