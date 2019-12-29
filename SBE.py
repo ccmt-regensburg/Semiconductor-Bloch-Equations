@@ -224,13 +224,18 @@ def main():
             pax          = fig2a.add_subplot(1,i_max,i_loop,projection='polar')
             pax.plot(angles,np.abs(Iw_r[:,freq_index]))
             rmax = pax.get_rmax()
+            pax.set_rmax(1.1*rmax)
             print("i_loop =", i_loop, "rmax =", rmax)
-            pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax],labels=None, angle=None, fmt=None)
+#            pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax],labels=None, angle=None, fmt=None)
             pax.set_yticklabels([""])
-            pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
+#            pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
             if i_loop == 1:
+                pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax,1.0*rmax],labels=None, angle=None, fmt=None)
                 pax.set_title('HH'+str(i_loop), va='top', pad=30)
+                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
             else:
+                pax.set_rgrids([0.0],labels=None, angle=None, fmt=None)
+                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/2.0))
                 pax.set_xticklabels([""])
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
