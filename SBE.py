@@ -167,7 +167,7 @@ def main():
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
     for angle in angles:
-        Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(angle)))
+        Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(-angle)))
         
     freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
