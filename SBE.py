@@ -37,7 +37,6 @@ def main():
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
     E_dir = params.E_dir/np.sqrt(params.E_dir[0]**2+params.E_dir[1]**2)                              # Reciprocal lattice vector
-    scale_dipole = params.scale_dipole                # phenomenological rescaling of the dipole moments to match the experiments
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
@@ -243,20 +242,20 @@ def main():
         fig3, (ax3_0,ax3_1,ax3_3,ax3_4) = pl.subplots(1,4)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[0])
-        ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[1])
+        ax3_0.plot(kp_array,scale_dipole*dipole_E_dir_for_print[1], linestyle='dashed')
         ax3_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3_0.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
+        ax3_0.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
         # we have a strange additional first index 0 here due to an append
         ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][0])
         ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][1])
         ax3_1.set_xlabel(r'$k$-point in path ($1/a_u0$)')
-        ax3_1.set_ylabel(r'Scaled dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
+        ax3_1.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[1])
-        ax3_3.set_ylabel(r'Scaled dipole $d_x(k)$ (a.u.) in path 0/1')
+        ax3_3.set_ylabel(r'Dipole $d_x(k)$ (a.u.) in path 0/1')
         ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[0])
         ax3_4.plot(kp_array,scale_dipole*dipole_y_for_print[1])
-        ax3_4.set_ylabel(r'Scaled dipole $d_y(k)$ (a.u.) in path 0/1')
+        ax3_4.set_ylabel(r'Dipole $d_y(k)$ (a.u.) in path 0/1')
 
         E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -451,11 +450,11 @@ def driving_field(E0, w, t, alpha):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 @njit
-def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path,scale_dipole):
+def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return np.real(dipole_in_path[k])*scale_dipole*driving_field(E0, w, t, alpha)
+    return np.real(dipole_in_path[k])*driving_field(E0, w, t, alpha)
 
 def diff(x,y):
     '''
@@ -546,12 +545,12 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
     return np.real(J_E_dir), np.real(J_ortho)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, scale_dipole):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, scale_dipole)
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, scale_dipole):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -584,7 +583,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
         # Rabi frequency conjugate
-        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path, scale_dipole)
+        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path)
         wr_c = np.conjugate(wr)
 
         # Update each component of the solution vector
