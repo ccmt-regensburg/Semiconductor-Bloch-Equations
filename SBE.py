@@ -163,12 +163,11 @@ def main():
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole, E_dir, dipole_ortho_for_print)
 
     I_E_dir, I_ortho = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
-#    I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir, diff(t,P_ortho) + J_ortho
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,72)
     for angle in angles:
-        Ir.append(I_E_dir*np.cos(angle)**2 + I_ortho*np.sin(angle)**2)
+        Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(angle)))
         
     freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
