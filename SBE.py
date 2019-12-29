@@ -36,7 +36,7 @@ def main():
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
-    E_dir = params.E_dir                              # Reciprocal lattice vector
+    E_dir = params.E_dir/np.sqrt(params.E_dir[0]**2+params.E_dir[1]**2)                              # Reciprocal lattice vector
     scale_dipole = params.scale_dipole                # phenomenological rescaling of the dipole moments to match the experiments
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
@@ -67,7 +67,7 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    dk, kpnts, paths = mesh(params)
+    dk, kpnts, paths = mesh(params, E_dir)
 
     print("dk =", dk)
 
@@ -407,12 +407,11 @@ def main():
 #################################################################################################
 # FUNCTIONS
 ################################################################################################
-def mesh(params):
+def mesh(params, E_dir):
     Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
-    E_dir = params.E_dir                              # Reciprocal lattice vector
 
     alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
