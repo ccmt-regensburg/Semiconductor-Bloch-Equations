@@ -215,24 +215,6 @@ def main():
         ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax3.set_ylabel(r'Emitted electric field $\parallel \mathbf{E}$ (blue), $\bot \mathbf{E}$ (orange)')
 
-        f5 = np.argwhere(np.logical_and(freq/w > 9.9, freq/w < 10.1))
-        f125 = np.argwhere(np.logical_and(freq/w > 13.9, freq/w < 14.1))
-        f15= np.argwhere(np.logical_and(freq/w > 17.9, freq/w < 18.1))
-        f_5 = f5[int(np.size(f5)/2)]
-        f_125 = f125[int(np.size(f125)/2)]
-        f_15 = f15[int(np.size(f15)/2)]
-
-        print("f_5 =", f_5, "f_125 =", f_125, "f_15 =", f_15)
-        print("freq_5 =", freq[f_5]/w, "freq_125 =", freq[f_125]/w, "freq_15 =", freq[f_15]/w)
-
-#        fig2 = pl.figure()
-#        pax  = fig2.add_subplot(131,projection='polar')
-#        pax.plot(angles,np.abs(Iw_r[:,f_5]))
-#        pax  = fig2.add_subplot(132,projection='polar')
-#        pax.plot(angles,np.abs(Iw_r[:,f_125]))
-#        pax  = fig2.add_subplot(133,projection='polar')
-#        pax.plot(angles,np.abs(Iw_r[:,f_15]))
-
         fig2a = pl.figure()
         i_loop = 1
         i_max  = 20
@@ -241,6 +223,16 @@ def main():
             freq_index   = freq_indices[int(np.size(freq_indices)/2)]
             pax          = fig2a.add_subplot(1,i_max,i_loop,projection='polar')
             pax.plot(angles,np.abs(Iw_r[:,freq_index]))
+            rmax = pax.get_rmax()
+            print("i_loop =", i_loop, "rmax =", rmax)
+            pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax],labels=None, angle=None, fmt=None)
+            pax.set_yticklabels([""])
+            pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
+            if i_loop == 1:
+                pax.set_title('HH'+str(i_loop), va='top', pad=30)
+            else:
+                pax.set_xticklabels([""])
+                pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
 
         fig3, (ax3_0,ax3_1,ax3_3,ax3_4) = pl.subplots(1,4)
