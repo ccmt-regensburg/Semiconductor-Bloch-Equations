@@ -6,7 +6,7 @@ import numpy as np
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.1         # relative distance (in units of 2pi/a) of both paths to Gamma
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
-length_path_in_BZ   = 4.0*np.pi/a       # 
+length_path_in_BZ   = 5.0*np.pi/a       # 
 E_dir               = np.array([1.0, 1.0])/np.sqrt(2)   # normalized direction of the E-field and therefore, direction of the path
 #E_dir               = np.array([1.0,0.0])
 scale_dipole        = 1.0         # phenomenological rescaling of the dipole moments to match the experiments
