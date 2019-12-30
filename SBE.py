@@ -248,7 +248,7 @@ def main():
         # we have a strange additional first index 0 here due to an append
         ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][0])
         ax3_1.plot(kp_array,scale_dipole*dipole_ortho_for_print[0][1])
-        ax3_1.set_xlabel(r'$k$-point in path ($1/a_u0$)')
+        ax3_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_1.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[0])
         ax3_3.plot(kp_array,scale_dipole*dipole_x_for_print[1])
