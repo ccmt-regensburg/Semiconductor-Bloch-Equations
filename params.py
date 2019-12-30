@@ -15,7 +15,6 @@ E_dir               = np.array([1.0, 1.0])/np.sqrt(2)   # normalized direction o
 E0    = 5.0   # Pulse amplitude (MV/cm)
 w     = 25.0  # Pulse frequency (THz)
 alpha = 25.0  # Gaussian pulse width (femtoseconds)
-align = 'M'   # Direction of field polarization ('M'=gamma-M, 'K'=gamma-K)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
