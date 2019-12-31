@@ -36,7 +36,7 @@ def main():
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
-    E_dir = params.E_dir/np.sqrt(params.E_dir[0]**2+params.E_dir[1]**2)                              # Reciprocal lattice vector
+    angle_inc_E_field = params.angle_inc_E_field
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
@@ -66,6 +66,8 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
+    E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])                              # Reciprocal lattice vector
+
     dk, kpnts, paths = mesh(params, E_dir)
 
     print("dk =", dk)
