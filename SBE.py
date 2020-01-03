@@ -240,12 +240,16 @@ def main():
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
 
-        fig3, (ax3_0,ax3_1,ax3_3,ax3_4) = pl.subplots(1,4)
+        fig3, (ax3_0,ax3_0a,ax3_1,ax3_3,ax3_4) = pl.subplots(1,5)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-        ax3_0.plot(kp_array,dipole_E_dir_for_print[0])
-        ax3_0.plot(kp_array,dipole_E_dir_for_print[1], linestyle='dashed')
+        ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]))
+        ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[1]), linestyle='dashed')
         ax3_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3_0.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_E$ (a.u.) in path 0/1')
+        ax3_0.set_ylabel(r'Dipole real part Re $(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        ax3_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[0]))
+        ax3_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[1]), linestyle='dashed')
+        ax3_0a.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3_0a.set_ylabel(r'Dipole im. part Im$(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
         # we have a strange additional first index 0 here due to an append
         ax3_1.plot(kp_array,dipole_ortho_for_print[0][0])
         ax3_1.plot(kp_array,dipole_ortho_for_print[0][1])
@@ -455,7 +459,7 @@ def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return np.real(dipole_in_path[k])*driving_field(E0, w, t, alpha)
+    return dipole_in_path[k]*driving_field(E0, w, t, alpha)
 
 def diff(x,y):
     '''
@@ -590,7 +594,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
         # Update each component of the solution vector
         x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
         x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c
-        x[i+2] = -1j*wr*y[i] + 1j*ep_p*y[i+2] - 1j*wr_c*y[i+3] + D*(y[m+2] - y[n+2]) + 1j*wr
+        x[i+2] = -1j*wr*y[i] + 1j*ep_p*y[i+2] - 1j*wr*y[i+3] + D*(y[m+2] - y[n+2]) + 1j*wr
         x[i+3] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m+3] - y[n+3])
 
     return x
