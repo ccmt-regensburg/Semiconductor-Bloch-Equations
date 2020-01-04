@@ -88,9 +88,6 @@ def main():
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
     # Get band structure, its derivative and the dipole
-#    bite = hfsbe.example.BiTe(b1=b1, b2=b2, default_params=True)
-#    bite = hfsbe.example.BiTe(default_params=True)
-#    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974,default_params=True)
     bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974)
 
     h, ef, wf, ediff = bite.eigensystem()
@@ -115,7 +112,7 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        Ax,Ay             = dipole.evaluate(kx_in_path, ky_in_path)
+        Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
         dipole_vv_minus_cc_in_path = E_dir[0]*Ax[0,0,:] + E_dir[1]*Ay[0,0,:] - (E_dir[0]*Ax[1,1,:] + E_dir[1]*Ay[1,1,:])
