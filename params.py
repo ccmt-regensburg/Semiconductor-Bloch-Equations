@@ -3,11 +3,11 @@ import numpy as np
 
 # Brillouin zone parameters
 ##########################################################################
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
+Nk_in_path          = 100         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.1         # relative distance (in units of 2pi/a) of both paths to Gamma
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
-length_path_in_BZ   = 5.0*np.pi/a       # 
-angle_inc_E_field   = 45           # incoming angle of the E-field in degree
+length_path_in_BZ   = 3.0*np.pi/a       # 
+angle_inc_E_field   = 90           # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
@@ -17,7 +17,7 @@ alpha = 25.0  # Gaussian pulse width (femtoseconds)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 1000.0     # Phenomenological polarization damping time 
+T2    = 1.0     # Phenomenological polarization damping time 
 t0    = -1000    # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 3000     # End time
 dt    = 0.02     # Time step
