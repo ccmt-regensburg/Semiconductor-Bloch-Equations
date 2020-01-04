@@ -8,8 +8,8 @@ rel_dist_to_Gamma   = 0.1         # relative distance (in units of 2pi/a) of bot
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
 length_path_in_BZ   = 3.0*np.pi/a       # 
 angle_inc_E_field   = 90           # incoming angle of the E-field in degree
-#gauge               = "real_dipole"
-gauge               = "v_x_real_c_y_real"
+gauge               = "real_dipole"
+#gauge               = "v_x_real_c_y_real"
 
 # Driving field parameters
 ##########################################################################

@@ -119,9 +119,15 @@ def main():
             # call hfsbe code to get Ax and Ay allocated
             Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
             # overwrite Ax, Ay
-            Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-            Ax[1,1,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-
+            trivial_gauge(Ax,Ay,kx_in_path,ky_in_path)
+#            Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+#            Ax[1,1,:] = Ax[0,0,:] 
+#            Ax[0,1,:] = -Ax[0,0,:] 
+#            Ax[1,0,:] = -Ax[0,0,:] 
+#            Ay[0,0,:] = -kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+#            Ay[1,1,:] = Ay[0,0,:] 
+#            Ay[0,1,:] = -Ay[0,0,:] 
+#            Ay[1,0,:] = -Ay[0,0,:] 
 
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
@@ -518,6 +524,11 @@ def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
 
         if gauge == "v_x_real_c_y_real":
            Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+        elif gauge == "real_dipole":
+           # call hfsbe code to get Ax and Ay allocated
+           Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+           # overwrite Ax, Ay
+           trivial_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
 
         d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
         d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
@@ -616,6 +627,16 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
         x[i+3] = x[i]
 
     return x
+
+def trivial_gauge(Ax,Ay,kx_in_path,ky_in_path):
+    Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+    Ax[1,1,:] = Ax[0,0,:] 
+    Ax[0,1,:] = -Ax[0,0,:] 
+    Ax[1,0,:] = -Ax[0,0,:] 
+    Ay[0,0,:] = -kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+    Ay[1,1,:] = Ay[0,0,:] 
+    Ay[0,1,:] = -Ay[0,0,:] 
+    Ay[1,0,:] = -Ay[0,0,:] 
 
 def BZ_plot(kpnts,a):
     
