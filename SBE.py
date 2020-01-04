@@ -519,8 +519,8 @@ def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
         if gauge == "v_x_real_c_y_real":
            Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
 
-        d_E_dir.append(Ax_in_path[1,0,:]*E_dir[0] + Ay_in_path[1,0,:]*E_dir[1])
-        d_ortho.append(Ax_in_path[1,0,:]*E_ort[0] + Ay_in_path[1,0,:]*E_ort[1])
+        d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
+        d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
 
     dipole_ortho_for_print.append(d_ortho)
 
