@@ -592,8 +592,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         #Energy term eband(i,k) the energy of band i at point k
         ecv = bandstruc_in_path[k]
-        ep_p = ecv + 1j*gamma2
-        ep_n = ecv - 1j*gamma2
+        ecv_damp = ecv - 1j*gamma2
 
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
@@ -605,8 +604,8 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Update each component of the solution vector
 #        x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
-        x[i] = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
-        x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c - 1j*wr_d_diag
+        x[i]   = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
+        x[i+1] = -1j*ecv_damp*y[i+1] + 1j*wr_c*y[i] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c + 1j*wr_d_diag*y[i+1]
         x[i+2] = np.conjugate(x[i+1])
         x[i+3] = x[i]
 
