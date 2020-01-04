@@ -37,6 +37,7 @@ def main():
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
     angle_inc_E_field = params.angle_inc_E_field
+    gauge = params.gauge
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
@@ -112,7 +113,9 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+        if gauge == "v_x_real_c_y_real":
+           Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
         dipole_vv_minus_cc_in_path = E_dir[0]*Ax[0,0,:] + E_dir[1]*Ay[0,0,:] - (E_dir[0]*Ax[1,1,:] + E_dir[1]*Ay[1,1,:])
@@ -162,7 +165,7 @@ def main():
     dipole_ortho_for_print    = []
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,2], solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,2], solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print, gauge)
 
     I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir*Gaussian_envelope(t,alpha), diff(t,P_ortho) + J_ortho*Gaussian_envelope(t,alpha)
 
@@ -490,7 +493,7 @@ def Gaussian_envelope(t,alpha):
     '''
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)  
 
-def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print):
+def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -506,7 +509,8 @@ def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print):
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+        if gauge == "v_x_real_c_y_real":
+           Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
 
         d_E_dir.append(Ax_in_path[1,0,:]*E_dir[0] + Ay_in_path[1,0,:]*E_dir[1])
         d_ortho.append(Ax_in_path[1,0,:]*E_ort[0] + Ay_in_path[1,0,:]*E_ort[1])
