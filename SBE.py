@@ -114,7 +114,14 @@ def main():
         ky_in_path = path[:,1]
 
         if gauge == "v_x_real_c_y_real":
-           Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+        elif gauge == "real_dipole":
+            # call hfsbe code to get Ax and Ay allocated
+            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+            # overwrite Ax, Ay
+            Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+            Ax[1,1,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+
 
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
