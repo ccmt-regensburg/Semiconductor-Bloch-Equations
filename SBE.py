@@ -77,12 +77,13 @@ def main():
     t = np.linspace(t0,tf,Nt)
 
     # containers
-    solution               = []    
-    dipole_E_dir_for_print = []
-    dipole_x_for_print     = []
-    dipole_y_for_print     = []
-    val_band_for_print     = []
-    cond_band_for_print    = []
+    solution                    = []    
+    dipole_E_dir_for_print      = []
+    dipole_diag_E_dir_for_print = []
+    dipole_x_for_print          = []
+    dipole_y_for_print          = []
+    val_band_for_print          = []
+    cond_band_for_print         = []
 
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
@@ -116,14 +117,16 @@ def main():
 
         Ax,Ay             = dipole.evaluate(kx_in_path, ky_in_path)
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path    = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
+        dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
+        dipole_vv_minus_cc_in_path = E_dir[0]*Ax[0,0,:] + E_dir[1]*Ay[0,0,:] - (E_dir[0]*Ax[1,1,:] + E_dir[1]*Ay[1,1,:])
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruc         = bite.evaluate_energy(kx_in_path, ky_in_path)
         bandstruc_in_path = bandstruc[1] - bandstruc[0]
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path,dipole_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path, \
+               dipole_in_path,dipole_vv_minus_cc_in_path)
 
         # Propagate through time
         ti = 0
@@ -136,6 +139,7 @@ def main():
 
         solution.append(path_solution)
         dipole_E_dir_for_print.append(dipole_in_path)
+        dipole_diag_E_dir_for_print.append(dipole_vv_minus_cc_in_path)
         dipole_x_for_print.append(Ax[0,1,:])
         dipole_y_for_print.append(Ay[0,1,:])
         val_band_for_print.append(bandstruc[0])
@@ -184,7 +188,7 @@ def main():
         fig1, (axE,ax1,ax2,ax3a,ax3b,ax3) = pl.subplots(1,6)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
-        log_limits = (10e-4,100)
+        log_limits = (10e-15,100)
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv,driving_field(E0,w,t,alpha)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
@@ -240,7 +244,7 @@ def main():
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
 
-        fig3, (ax3_0,ax3_0a,ax3_1,ax3_3,ax3_4) = pl.subplots(1,5)
+        fig3, (ax3_0,ax3_0a,ax3_1,ax3_3,ax3_4,ax3_5,ax3_6) = pl.subplots(1,7)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]))
         ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[1]), linestyle='dashed')
@@ -261,6 +265,14 @@ def main():
         ax3_4.plot(kp_array,dipole_y_for_print[0])
         ax3_4.plot(kp_array,dipole_y_for_print[1])
         ax3_4.set_ylabel(r'Dipole $d_y(k)$ (a.u.) in path 0/1')
+        ax3_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[0]))
+        ax3_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
+        ax3_5.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3_5.set_ylabel(r'Real part Re $([\vec{d}_vv(k)-\vec{d}_cc]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[0]))
+        ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
+        ax3_6.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3_6.set_ylabel(r'Imag part Im $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
 
         E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -455,7 +467,7 @@ def driving_field(E0, w, t, alpha):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
 
 @njit
-def rabi(n,m,kx,ky,k,E0,w,t,alpha,dipole_in_path):
+def rabi(k,E0,w,t,alpha,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
@@ -550,12 +562,12 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
     return np.real(J_E_dir), np.real(J_ortho)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path)
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, dipole_vv_minus_cc_in_path):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, dipole_vv_minus_cc_in_path)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, dipole_vv_minus_cc_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -566,8 +578,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
     # Update the solution vector
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
-        kx = kpath[k,0]
-        ky = kpath[k,1]
 
         i = 4*k
         if k == 0:
@@ -581,20 +591,22 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
             n = 4*(k-1)
 
         #Energy term eband(i,k) the energy of band i at point k
-#        ecv = eband(2, ef, kx, ky) - eband(1, ef, kx, ky)
         ecv = bandstruc_in_path[k]
         ep_p = ecv + 1j*gamma2
         ep_n = ecv - 1j*gamma2
 
-        # Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
+        # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
-        wr = rabi(1, 2, kx, ky, k, E0, w, t, alpha, dipole_in_path)
-        wr_c = np.conjugate(wr)
+        wr          = rabi(k, E0, w, t, alpha, dipole_in_path)
+        wr_c        = np.conjugate(wr)
+
+        # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
+        wr_d_diag   = rabi(k, E0, w, t, alpha, dipole_vv_minus_cc_in_path)
 
         # Update each component of the solution vector
         x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
-        x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c
-        x[i+2] = -1j*wr*y[i] + 1j*ep_p*y[i+2] - 1j*wr*y[i+3] + D*(y[m+2] - y[n+2]) + 1j*wr
+        x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c - 1j*wr_d_diag
+        x[i+2] = -1j*wr*y[i] + 1j*ep_p*y[i+2] - 1j*wr*y[i+3] + D*(y[m+2] - y[n+2]) + 1j*wr + 1j*wr_d_diag
         x[i+3] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m+3] - y[n+3])
 
     return x
