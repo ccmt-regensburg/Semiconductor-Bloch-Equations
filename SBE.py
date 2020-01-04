@@ -604,7 +604,8 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
         wr_d_diag   = rabi(k, E0, w, t, alpha, dipole_vv_minus_cc_in_path)
 
         # Update each component of the solution vector
-        x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
+#        x[i] = 1j*wr*y[i+1] - 1j*wr_c*y[i+2] + D*(y[m] - y[n])
+        x[i] = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
         x[i+1] = 1j*wr_c*y[i] - 1j*ep_n*y[i+1] + 1j*wr_c*y[i+3] + D*(y[m+1] - y[n+1]) - 1j*wr_c - 1j*wr_d_diag
         x[i+2] = np.conjugate(x[i+1])
         x[i+3] = x[i]
