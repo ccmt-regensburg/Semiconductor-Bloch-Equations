@@ -17,7 +17,7 @@ alpha = 25.0  # Gaussian pulse width (femtoseconds)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 1.0     # Phenomenological polarization damping time 
+T2    = 0.1     # Phenomenological polarization damping time 
 t0    = -1000    # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 3000     # End time
 dt    = 0.02     # Time step
