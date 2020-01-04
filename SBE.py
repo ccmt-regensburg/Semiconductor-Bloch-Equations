@@ -165,7 +165,7 @@ def main():
     dipole_ortho_for_print    = []
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], solution[:,:,:,2], dipole, E_dir, dipole_ortho_for_print)
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,2], solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
 
     I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir*Gaussian_envelope(t,alpha), diff(t,P_ortho) + J_ortho*Gaussian_envelope(t,alpha)
 
@@ -363,28 +363,28 @@ def main():
 #        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
 #        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
 #
-        fig11 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
-        pl.colorbar().set_label(r'$Re(p_cv(k))$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig12 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,2]), 100)
-        pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        fig11 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
+#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig12 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.imag(solution[:,0,:,1]), 100)
+#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 #
 #        fig13 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
 #        pl.contourf(X, Y, np.real(solution[:,1,:,1]), 100)
-#        pl.colorbar().set_label(r'$Re(p_cv(k))$ in path 1')
+#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 1')
 #        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
 #        pl.xlabel(r'$t\;(fs)$')
 #        pl.ylabel(r'$k$')
@@ -392,8 +392,8 @@ def main():
 #
 #        fig14 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,1,:,2]), 100)
-#        pl.colorbar().set_label(r'$Re(p_vc(k))$ in path 1')
+#        pl.contourf(X, Y, np.imag(solution[:,1,:,1]), 100)
+#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 1')
 #        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
 #        pl.xlabel(r'$t\;(fs)$')
 #        pl.ylabel(r'$k$')
@@ -519,11 +519,10 @@ def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print):
     d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
     d_ortho_swapped = np.swapaxes(d_ortho,0,1)
 
-    P_E_dir = np.tensordot(d_E_dir_swapped,pvc,2) + np.tensordot(d_E_dir_swapped,pcv,2)
-    P_ortho = np.tensordot(d_ortho_swapped,pvc,2) + np.tensordot(d_ortho_swapped,pcv,2)
+    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pvc,2))
+    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pvc,2))
 
-    # Return the real part of each component
-    return np.real(P_E_dir), np.real(P_ortho)
+    return P_E_dir, P_ortho
 
 
 def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
