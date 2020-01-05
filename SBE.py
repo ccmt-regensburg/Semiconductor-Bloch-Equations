@@ -113,21 +113,18 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        if gauge == "v_x_real_c_y_real":
+        if gauge == "1_v_x_real_c_y_real":
             Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
-        elif gauge == "real_dipole":
+        elif gauge == "2_real_dipole":
             # call hfsbe code to get Ax and Ay allocated
             Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
             # overwrite Ax, Ay
             trivial_gauge(Ax,Ay,kx_in_path,ky_in_path)
-#            Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-#            Ax[1,1,:] = Ax[0,0,:] 
-#            Ax[0,1,:] = -Ax[0,0,:] 
-#            Ax[1,0,:] = -Ax[0,0,:] 
-#            Ay[0,0,:] = -kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-#            Ay[1,1,:] = Ay[0,0,:] 
-#            Ay[0,1,:] = -Ay[0,0,:] 
-#            Ay[1,0,:] = -Ay[0,0,:] 
+        elif gauge == "3_as_1_by_hand":
+            # call hfsbe code to get Ax and Ay allocated
+            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+            # overwrite Ax, Ay
+            hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path)
 
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
@@ -281,7 +278,7 @@ def main():
         ax3_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[0]))
         ax3_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
         ax3_5.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3_5.set_ylabel(r'Real part Re $([\vec{d}_vv(k)-\vec{d}_cc]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        ax3_5.set_ylabel(r'Real part Re $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
         ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[0]))
         ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
         ax3_6.set_xlabel(r'$k$-point in path ($1/a_0$)')
@@ -522,13 +519,18 @@ def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        if gauge == "v_x_real_c_y_real":
+        if gauge == "1_v_x_real_c_y_real":
            Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-        elif gauge == "real_dipole":
+        elif gauge == "2_real_dipole":
            # call hfsbe code to get Ax and Ay allocated
            Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
            # overwrite Ax, Ay
            trivial_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
+        elif gauge == "3_as_1_by_hand":
+            # call hfsbe code to get Ax and Ay allocated
+            Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+            # overwrite Ax, Ay
+            hfbse_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
 
         d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
         d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
@@ -637,6 +639,16 @@ def trivial_gauge(Ax,Ay,kx_in_path,ky_in_path):
     Ay[1,1,:] = Ay[0,0,:] 
     Ay[0,1,:] = -Ay[0,0,:] 
     Ay[1,0,:] = -Ay[0,0,:] 
+
+def hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path):
+    Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+    Ax[1,1,:] = -Ax[0,0,:] 
+    Ax[0,1,:] = (-ky_in_path[:]**2-1j*kx_in_path[:]*ky_in_path[:])/2/((kx_in_path[:]**2+ky_in_path[:]**2)**1.5)
+    Ax[1,0,:] = np.conjugate(Ax[0,1,:])
+    Ay[0,0,:] = -kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+    Ay[1,1,:] = -Ay[0,0,:] 
+    Ay[0,1,:] = (kx_in_path[:]*ky_in_path[:]+1j*kx_in_path[:]**2)/2/((kx_in_path[:]**2+ky_in_path[:]**2)**1.5) 
+    Ay[1,0,:] = np.conjugate(Ay[0,1,:])
 
 def BZ_plot(kpnts,a):
     
