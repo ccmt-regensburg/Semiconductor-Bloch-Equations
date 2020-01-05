@@ -9,8 +9,8 @@ a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
 length_path_in_BZ   = 3.0*np.pi/a       # 
 angle_inc_E_field   = 90           # incoming angle of the E-field in degree
 #gauge               = "1_v_x_real_c_y_real"
-#gauge               = "2_real_dipole"
-gauge               = "3_as_1_by_hand"
+gauge               = "2_real_dipole"
+#gauge               = "3_as_1_by_hand"
 
 
 
