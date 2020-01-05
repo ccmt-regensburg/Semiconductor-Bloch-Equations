@@ -85,6 +85,8 @@ def main():
     dipole_y_for_print          = []
     val_band_for_print          = []
     cond_band_for_print         = []
+    phase_1                     = []
+    phase_2                     = []
 
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
@@ -154,6 +156,8 @@ def main():
         dipole_y_for_print.append(Ay[0,1,:])
         val_band_for_print.append(bandstruc[0])
         cond_band_for_print.append(bandstruc[1])
+        phase_1.append((ky_in_path+1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
+        phase_2.append((ky_in_path-1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
 
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
@@ -239,10 +243,7 @@ def main():
             pax.plot(angles,np.abs(Iw_r[:,freq_index]))
             rmax = pax.get_rmax()
             pax.set_rmax(1.1*rmax)
-            print("i_loop =", i_loop, "rmax =", rmax)
-#            pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax],labels=None, angle=None, fmt=None)
             pax.set_yticklabels([""])
-#            pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
             if i_loop == 1:
                 pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax,1.0*rmax],labels=None, angle=None, fmt=None)
                 pax.set_title('HH'+str(i_loop), va='top', pad=30)
@@ -283,6 +284,36 @@ def main():
         ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
         ax3_6.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_6.set_ylabel(r'Imag part Im $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+
+        fig3a, (ax3a_0,ax3a_0a,ax3a_1,ax3a_3,ax3a_4,ax3a_5,ax3a_6) = pl.subplots(1,7)
+        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+        ax3a_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]*phase_1[0]))
+        ax3a_0.plot(kp_array,np.real(dipole_E_dir_for_print[1]*phase_1[1]), linestyle='dashed')
+        ax3a_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3a_0.set_ylabel(r'WITH PHASE 1 Dipole real part Re $(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        ax3a_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[0]*phase_1[0]))
+        ax3a_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[1]*phase_1[1]), linestyle='dashed')
+        ax3a_0a.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3a_0a.set_ylabel(r'WITH PHASE 1 Dipole im. part Im$(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        # wae have a strange additional first index 0 here due to an append
+        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][0])
+        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][1])
+        ax3a_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3a_1.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
+        ax3a_3.plot(kp_array,dipole_x_for_print[0])
+        ax3a_3.plot(kp_array,dipole_x_for_print[1])
+        ax3a_3.set_ylabel(r'Dipole $d_x(k)$ (a.u.) in path 0/1')
+        ax3a_4.plot(kp_array,dipole_y_for_print[0])
+        ax3a_4.plot(kp_array,dipole_y_for_print[1])
+        ax3a_4.set_ylabel(r'Dipole $d_y(k)$ (a.u.) in path 0/1')
+        ax3a_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[0]))
+        ax3a_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
+        ax3a_5.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3a_5.set_ylabel(r'Real part Re $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        ax3a_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[0]))
+        ax3a_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
+        ax3a_6.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3a_6.set_ylabel(r'Imag part Im $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
 
         E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -330,7 +361,6 @@ def main():
         pl.xlabel(r'$t\;(fs)$')
         pl.ylabel(r'$k$')
         pl.tight_layout()
-
 
 #        fig6 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
@@ -644,7 +674,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Update each component of the solution vector
         x[i]   = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
-        x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(1-2*y[i]) + D*(y[m+1] - y[n+1])
+        x[i+1] = ( -0*1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(1-2*y[i]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
         x[i+3] = x[i]
 
