@@ -175,7 +175,7 @@ def main():
     dipole_ortho_for_print    = []
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,2], solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print, gauge)
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print, gauge)
 
     I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir*Gaussian_envelope(t,alpha), diff(t,P_ortho) + J_ortho*Gaussian_envelope(t,alpha)
 
@@ -324,30 +324,40 @@ def main():
 
         fig6 = pl.figure()
         X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
-        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
+        pl.contourf(X, Y, np.real(solution[:,0,:,3]-solution[:,1,:,3]), 100)
+        pl.colorbar().set_label(r'$f_{e,path 0}(k) - f_{e,path 1}(k)$')
         pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
         pl.xlabel(r'$t\;(fs)$')
         pl.ylabel(r'$k$')
         pl.tight_layout()
 
-        fig7 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 1')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
 
-        fig8 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,1,:,0]), 100)
-        pl.colorbar().set_label(r'$f_h(k)$ in path 1')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        fig6 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
+#        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig7 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_e(k)$ in path 1')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig8 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,1,:,0]), 100)
+#        pl.colorbar().set_label(r'$f_h(k)$ in path 1')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 #
 #        fig9 = pl.figure()
 #        X, Y = np.meshgrid(freq/w,kp_array)
@@ -373,34 +383,34 @@ def main():
 #        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
 #        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
 #
-        fig11 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
-        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig12 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.imag(solution[:,0,:,1]), 100)
-        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig12a = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.abs(solution[:,0,:,1]), 100)
-        pl.colorbar().set_label(r'$|p_{cv}(k)|$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-
+#        fig11 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
+#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig12 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.imag(solution[:,0,:,1]), 100)
+#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig12a = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.abs(solution[:,0,:,1]), 100)
+#        pl.colorbar().set_label(r'$|p_{cv}(k)|$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#
 #
 #        fig13 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
@@ -514,7 +524,7 @@ def Gaussian_envelope(t,alpha):
     '''
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)  
 
-def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
+def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -551,8 +561,8 @@ def polarization(paths,pvc,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
     d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
     d_ortho_swapped = np.swapaxes(d_ortho,0,1)
 
-    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pvc,2))
-    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pvc,2))
+    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pcv,2))
+    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pcv,2))
 
     return P_E_dir, P_ortho
 
@@ -623,7 +633,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         #Energy term eband(i,k) the energy of band i at point k
         ecv = bandstruc_in_path[k]
-        ecv_damp = ecv - 1j*gamma2
 
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
@@ -635,7 +644,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Update each component of the solution vector
         x[i]   = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
-        x[i+1] = -1j*ecv_damp*y[i+1] - 1j*wr_c*(1-2*y[i]) + 1j*wr_d_diag*y[i+1] + D*(y[m+1] - y[n+1])
+        x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(1-2*y[i]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
         x[i+3] = x[i]
 
