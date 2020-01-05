@@ -156,8 +156,8 @@ def main():
         dipole_y_for_print.append(Ay[0,1,:])
         val_band_for_print.append(bandstruc[0])
         cond_band_for_print.append(bandstruc[1])
-        phase_1.append((ky_in_path+1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
-        phase_2.append((ky_in_path-1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
+        phase_2.append((ky_in_path+1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
+        phase_1.append((ky_in_path-1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
 
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
@@ -255,7 +255,7 @@ def main():
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
 
-        fig3, (ax3_0,ax3_0a,ax3_1,ax3_3,ax3_4,ax3_5,ax3_6) = pl.subplots(1,7)
+        fig3, (ax3_0,ax3_0a,ax3_1,ax3_2,ax3_3,ax3_4,ax3_5) = pl.subplots(1,7)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]))
         ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[1]), linestyle='dashed')
@@ -269,7 +269,11 @@ def main():
         ax3_1.plot(kp_array,dipole_ortho_for_print[0][0])
         ax3_1.plot(kp_array,dipole_ortho_for_print[0][1])
         ax3_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3_1.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
+        ax3_1.set_ylabel(r'Dipole real part Re $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
+        ax3_2.plot(kp_array,np.imag(dipole_ortho_for_print[0][0]))
+        ax3_2.plot(kp_array,np.imag(dipole_ortho_for_print[0][1]))
+        ax3_2.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3_2.set_ylabel(r'Dipole imag part Im $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
         ax3_3.plot(kp_array,dipole_x_for_print[0])
         ax3_3.plot(kp_array,dipole_x_for_print[1])
         ax3_3.set_ylabel(r'Dipole $d_x(k)$ (a.u.) in path 0/1')
@@ -280,12 +284,8 @@ def main():
         ax3_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
         ax3_5.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_5.set_ylabel(r'Real part Re $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
-        ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[0]))
-        ax3_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
-        ax3_6.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3_6.set_ylabel(r'Imag part Im $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
 
-        fig3a, (ax3a_0,ax3a_0a,ax3a_1,ax3a_3,ax3a_4,ax3a_5,ax3a_6) = pl.subplots(1,7)
+        fig3a, (ax3a_0,ax3a_0a,ax3a_1,ax3a_2) = pl.subplots(1,4)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3a_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]*phase_1[0]))
         ax3a_0.plot(kp_array,np.real(dipole_E_dir_for_print[1]*phase_1[1]), linestyle='dashed')
@@ -295,25 +295,14 @@ def main():
         ax3a_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[1]*phase_1[1]), linestyle='dashed')
         ax3a_0a.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3a_0a.set_ylabel(r'WITH PHASE 1 Dipole im. part Im$(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
-        # wae have a strange additional first index 0 here due to an append
-        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][0])
-        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][1])
+        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][0]*phase_1[0])
+        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][1]*phase_1[1])
         ax3a_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3a_1.set_ylabel(r'Dipole $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
-        ax3a_3.plot(kp_array,dipole_x_for_print[0])
-        ax3a_3.plot(kp_array,dipole_x_for_print[1])
-        ax3a_3.set_ylabel(r'Dipole $d_x(k)$ (a.u.) in path 0/1')
-        ax3a_4.plot(kp_array,dipole_y_for_print[0])
-        ax3a_4.plot(kp_array,dipole_y_for_print[1])
-        ax3a_4.set_ylabel(r'Dipole $d_y(k)$ (a.u.) in path 0/1')
-        ax3a_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[0]))
-        ax3a_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
-        ax3a_5.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3a_5.set_ylabel(r'Real part Re $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
-        ax3a_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[0]))
-        ax3a_6.plot(kp_array,np.imag(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
-        ax3a_6.set_xlabel(r'$k$-point in path ($1/a_0$)')
-        ax3a_6.set_ylabel(r'Imag part Im $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
+        ax3a_1.set_ylabel(r'WITH PHASE 1 Dipole real part Re $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
+        ax3a_2.plot(kp_array,np.imag(dipole_ortho_for_print[0][0]*phase_1[0]))
+        ax3a_2.plot(kp_array,np.imag(dipole_ortho_for_print[0][1]*phase_1[1]))
+        ax3a_2.set_xlabel(r'$k$-point in path ($1/a_0$)')
+        ax3a_2.set_ylabel(r'WITH PHASE 1 Dipole imag part Im $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
 
         E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -412,53 +401,56 @@ def main():
 #        ax10_0.plot(kp_array,fw_0[:,75400])
 #        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
 #        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
-#
-#        fig11 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
-#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig12 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.imag(solution[:,0,:,1]), 100)
-#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig12a = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.abs(solution[:,0,:,1]), 100)
-#        pl.colorbar().set_label(r'$|p_{cv}(k)|$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#
-#
-#        fig13 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,1,:,1]), 100)
-#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 1')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig14 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.imag(solution[:,1,:,1]), 100)
-#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 1')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
+
+        for i_phase, phase in enumerate(phase_2[0]):
+            solution[i_phase,0,:,1] = solution[i_phase,0,:,1] * phase
+        for i_phase, phase in enumerate(phase_2[1]):
+            solution[i_phase,1,:,1] = solution[i_phase,1,:,1] * phase
+
+        fig11 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
+        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig12 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.imag(solution[:,0,:,1]), 100)
+        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig12a = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.abs(solution[:,0,:,1]), 100)
+        pl.colorbar().set_label(r'$|p_{cv}(k)|$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig13 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,1,:,1]), 100)
+        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 1')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
+        fig14 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.imag(solution[:,1,:,1]), 100)
+        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 1')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -578,10 +570,10 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
            # overwrite Ax, Ay
            trivial_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
         elif gauge == "3_as_1_by_hand":
-            # call hfsbe code to get Ax and Ay allocated
-            Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-            # overwrite Ax, Ay
-            hfbse_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
+           # call hfsbe code to get Ax and Ay allocated
+           Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+           # overwrite Ax, Ay
+           hfbse_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
 
         d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
         d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
@@ -674,7 +666,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
         # Update each component of the solution vector
         x[i]   = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
-        x[i+1] = ( -0*1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(1-2*y[i]) + D*(y[m+1] - y[n+1])
+        x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(1-2*y[i]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
         x[i+3] = x[i]
 
