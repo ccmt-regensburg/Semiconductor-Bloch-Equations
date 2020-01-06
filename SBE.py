@@ -92,6 +92,7 @@ def main():
 
     # Get band structure, its derivative and the dipole
     bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974)
+    ratio_R_v = 1/10
 
     h, ef, wf, ediff = bite.eigensystem()
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
@@ -127,6 +128,11 @@ def main():
             Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
             # overwrite Ax, Ay
             hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path)
+        elif gauge == "4_cos_3_theta":
+            # call hfsbe code to get Ax and Ay allocated
+            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+            # overwrite Ax, Ay
+            cos_3_theta(Ax,Ay,kx_in_path,ky_in_path,ratio_R_v)
 
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
@@ -179,7 +185,7 @@ def main():
     dipole_ortho_for_print    = []
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print, gauge)
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print, gauge, ratio_R_v)
 
     I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir*Gaussian_envelope(t,alpha), diff(t,P_ortho) + J_ortho*Gaussian_envelope(t,alpha)
 
@@ -544,9 +550,7 @@ def diff(x,y):
         return 0
     else:
         dx = np.gradient(x)
-#        dx[0:10000] = 1
         dy = np.gradient(y)
-#        dy[0:10000] = 0
         return dy/dx
 
 def Gaussian_envelope(t,alpha):
@@ -556,7 +560,7 @@ def Gaussian_envelope(t,alpha):
     '''
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)  
 
-def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
+def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge, ratio_R_v):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -584,6 +588,11 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge):
            Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
            # overwrite Ax, Ay
            hfbse_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
+        elif gauge == "4_cos_3_theta":
+            # call hfsbe code to get Ax and Ay allocated
+            Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+            # overwrite Ax, Ay
+            cos_3_theta(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path,ratio_R_v)
 
         d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
         d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
@@ -701,6 +710,21 @@ def hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path):
     Ay[1,1,:] = -Ay[0,0,:] 
     Ay[0,1,:] = (kx_in_path[:]*ky_in_path[:]+1j*kx_in_path[:]**2)/2/((kx_in_path[:]**2+ky_in_path[:]**2)**1.5) 
     Ay[1,0,:] = np.conjugate(Ay[0,1,:])
+
+def cos_3_theta(Ax,Ay,kx_in_path,ky_in_path,ratio_R_v):
+
+    fac_3_theta = (1 - 1j*ratio_R_v/(kx_in_path[:]**2+ky_in_path[:]**2)**1.5* \
+                       (kx_in_path[:]**2*ky_in_path[:])-ky_in_path[:]**3)
+
+    Ax[0,0,:] = -ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+    Ax[1,1,:] = Ax[0,0,:]
+    Ax[0,1,:] = Ax[0,0,:] * fac_3_theta
+    Ax[1,0,:] = np.conjugate(Ax[0,1,:]) 
+    Ay[0,0,:] = +kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
+    Ay[1,1,:] = Ay[0,0,:] 
+    Ay[0,1,:] = Ay[0,0,:] * fac_3_theta
+    Ay[1,0,:] = np.conjugate(Ay[0,1,:])
+
 
 def BZ_plot(kpnts,a):
     
