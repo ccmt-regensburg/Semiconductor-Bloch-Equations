@@ -714,7 +714,7 @@ def hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path):
 def cos_3_theta(Ax,Ay,kx_in_path,ky_in_path,ratio_R_v):
 
     fac_3_theta = (1 - 1j*ratio_R_v/(kx_in_path[:]**2+ky_in_path[:]**2)**1.5* \
-                       (kx_in_path[:]**2*ky_in_path[:])-ky_in_path[:]**3)
+                       (3*kx_in_path[:]**2*ky_in_path[:])-ky_in_path[:]**3)
 
     Ax[0,0,:] = -ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
     Ax[1,1,:] = Ax[0,0,:]
