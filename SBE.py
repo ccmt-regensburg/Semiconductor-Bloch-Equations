@@ -199,7 +199,7 @@ def main():
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     if not test:
-        fig1, (axE,ax1,ax2,ax3a,ax3b,ax3) = pl.subplots(1,6)
+        fig1, (axE,ax1,ax1a,ax2,ax3a,ax3b,ax3) = pl.subplots(1,7)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
         log_limits = (10e-15,100)
@@ -210,9 +210,18 @@ def main():
         ax1.set_xlim(t_lims)
         ax1.plot(t/fs_conv,P_E_dir)
         ax1.plot(t/fs_conv,P_ortho)
+        ax1.set_xlabel(r'$t$ in fs')
+        ax1.set_ylabel(r'$P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        ax1a.set_xlim(t_lims)
+        ax1a.plot(t/fs_conv,diff(t,P_E_dir))
+        ax1a.plot(t/fs_conv,diff(t,P_ortho))
+        ax1a.set_xlabel(r'$t$ in fs')
+        ax1a.set_ylabel(r'$\dot P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
         ax2.set_xlim(t_lims)
-        ax2.plot(t/fs_conv,J_E_dir/amp_conv)
-        ax2.plot(t/fs_conv,J_ortho/amp_conv)
+        ax2.plot(t/fs_conv,J_E_dir)
+        ax2.plot(t/fs_conv,J_ortho)
+        ax2.set_xlabel(r'$t$ in fs')
+        ax2.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
         ax3a.set_xlim(freq_lims)
         ax3a.set_ylim(log_limits)
         ax3a.semilogy(freq/w,np.abs(Pw_E_dir))
@@ -332,25 +341,25 @@ def main():
         ax4_6.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_6.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_{\bot \mathbf{E}}$ (eV*$a_0$) in path 1 (blue: v, orange: c)')
 
-        # Countour plots of occupations and gradients of occupations
-        fig5 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
-        fig6 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,3]-solution[:,1,:,3]), 100)
-        pl.colorbar().set_label(r'$f_{e,path 0}(k) - f_{e,path 1}(k)$')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-
+#        # Countour plots of occupations and gradients of occupations
+#        fig5 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+#        fig6 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,3]-solution[:,1,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_{e,path 0}(k) - f_{e,path 1}(k)$')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
 #        fig6 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
 #        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
@@ -392,7 +401,6 @@ def main():
 #
 #        print("omega(100,1000,10000,100000) =", freq[100], freq[1000], freq[10000], freq[100000])
 #        print("omega 1 2 3 =", freq[75100]/w, freq[75200]/w, freq[75300]/w, freq[75400]/w)
-#
 #
 #        fig10, (ax10_0) = pl.subplots(1,1)
 #        ax10_0.plot(kp_array,fw_0[:,75100])
@@ -536,7 +544,9 @@ def diff(x,y):
         return 0
     else:
         dx = np.gradient(x)
+#        dx[0:10000] = 1
         dy = np.gradient(y)
+#        dy[0:10000] = 0
         return dy/dx
 
 def Gaussian_envelope(t,alpha):
