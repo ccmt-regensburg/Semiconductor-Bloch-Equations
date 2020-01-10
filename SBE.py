@@ -114,7 +114,7 @@ def main():
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
         for k in path:
-            y0.extend([0.0,0.0,0.0,0.0])
+            y0.extend([1.0,0.0,0.0,0.0])
 
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
@@ -687,10 +687,10 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
         wr_d_diag   = rabi(k, E0, w, t, alpha, dipole_vv_minus_cc_in_path)
 
         # Update each component of the solution vector
-        x[i]   = -2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
-        x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(1-2*y[i]) + D*(y[m+1] - y[n+1])
+        x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
+        x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
-        x[i+3] = x[i]
+        x[i+3] = -x[i]
 
     return x
 
