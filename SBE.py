@@ -91,10 +91,13 @@ def main():
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
     # Get band structure, its derivative and the dipole
-    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0,A=0.1974)
+#    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0.2,A=0.1974)
+    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,kcut=0.1)
     ratio_R_v = 1/10
 
-    h, ef, wf, ediff = bite.eigensystem()
+#    h, ef, wf, ediff = bite.eigensystem()
+#    h, ef, wf, ediff = bite.eigensystem(gidx=None)
+    h, ef, wf, ediff = bite.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
     # SOLVING 
@@ -347,15 +350,15 @@ def main():
         ax4_6.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_6.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_{\bot \mathbf{E}}$ (eV*$a_0$) in path 1 (blue: v, orange: c)')
 
-#        # Countour plots of occupations and gradients of occupations
-#        fig5 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
+        # Countour plots of occupations and gradients of occupations
+        fig5 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
 #
 #        fig6 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
