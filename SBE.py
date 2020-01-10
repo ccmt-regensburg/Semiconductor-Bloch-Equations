@@ -144,8 +144,8 @@ def main():
 
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
-        for k in path:
-            y0.extend([1.0,0.0,0.0,0.0])
+        for i_k, k in enumerate(path):
+            initial_condition(y0,e_fermi,temperature,bandstruc[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path, \
@@ -692,7 +692,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
         x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
         x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
-        x[i+3] = -x[i]
+        x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
 
     return x
 
@@ -730,6 +730,12 @@ def cos_3_theta(Ax,Ay,kx_in_path,ky_in_path,ratio_R_v):
     Ay[0,1,:] = Ay[0,0,:] * fac_3_theta
     Ay[1,0,:] = np.conjugate(Ay[0,1,:])
 
+def initial_condition(y0,e_fermi,temperature,e_c,i_k):
+
+    if (temperature > 1e-5):
+      y0.extend([1.0,0.0,0.0,1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)])
+    else:
+      y0.extend([1.0,0.0,0.0,0.0])
 
 def BZ_plot(kpnts,a):
     

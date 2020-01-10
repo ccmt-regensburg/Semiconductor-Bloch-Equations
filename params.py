@@ -12,8 +12,8 @@ gauge               = "1_v_x_real_c_y_real"
 #gauge               = "2_real_dipole"
 #gauge               = "3_as_1_by_hand"
 #gauge               = "4_cos_3_theta"
-e_fermi             = 0.2         # Fermi energy in eV
-temperature         = 0.01        # Temperature in eV to broaden the drop of the Fermi function
+e_fermi             = 1.0         # Fermi energy in eV
+temperature         = 0.01        # Temperature in eV to broaden the drop of the Fermi function, if T > 1e-5, there will be an occupation of the conduction band
 
 # Driving field parameters
 ##########################################################################
