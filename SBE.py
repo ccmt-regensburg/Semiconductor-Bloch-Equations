@@ -640,8 +640,8 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
     jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
-    J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) - np.tensordot(jh_E_dir_swapped,fv,2)
-    J_ortho = np.tensordot(je_ortho_swapped,fc,2) - np.tensordot(jh_ortho_swapped,fv,2)
+    J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) + np.tensordot(jh_E_dir_swapped,fv,2)
+    J_ortho = np.tensordot(je_ortho_swapped,fc,2) + np.tensordot(jh_ortho_swapped,fv,2)
 
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
