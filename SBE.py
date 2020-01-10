@@ -37,7 +37,6 @@ def main():
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
     angle_inc_E_field = params.angle_inc_E_field
-    gauge = params.gauge
     e_fermi = params.e_fermi*eV_conv
     temperature = params.temperature*eV_conv
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
@@ -73,8 +72,6 @@ def main():
 
     dk, kpnts, paths = mesh(params, E_dir)
 
-    print("dk =", dk)
-
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
@@ -94,7 +91,7 @@ def main():
 
     # Get band structure, its derivative and the dipole
 #    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0.2,A=0.1974)
-    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,kcut=0.1)
+    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,kcut=0.05)
     ratio_R_v = 1/10
 
 #    h, ef, wf, ediff = bite.eigensystem()
@@ -116,23 +113,7 @@ def main():
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        if gauge == "1_v_x_real_c_y_real":
-            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
-        elif gauge == "2_real_dipole":
-            # call hfsbe code to get Ax and Ay allocated
-            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
-            # overwrite Ax, Ay
-            trivial_gauge(Ax,Ay,kx_in_path,ky_in_path)
-        elif gauge == "3_as_1_by_hand":
-            # call hfsbe code to get Ax and Ay allocated
-            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
-            # overwrite Ax, Ay
-            hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path)
-        elif gauge == "4_cos_3_theta":
-            # call hfsbe code to get Ax and Ay allocated
-            Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
-            # overwrite Ax, Ay
-            cos_3_theta(Ax,Ay,kx_in_path,ky_in_path,ratio_R_v)
+        Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
 
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
@@ -173,12 +154,8 @@ def main():
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
 
-    print("shape of solution before reshaping =", np.shape(solution))
-
     solution = np.array_split(solution,Nk_in_path,axis=2)
     solution = np.array(solution)
-
-    print("shape of solution =", np.shape(solution))
 
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
@@ -190,9 +167,10 @@ def main():
     dipole_ortho_for_print    = []
 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print, gauge, ratio_R_v)
+    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
 
-    I_E_dir, I_ortho = diff(t,P_E_dir) + J_E_dir*Gaussian_envelope(t,alpha), diff(t,P_ortho) + J_ortho*Gaussian_envelope(t,alpha)
+    I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
+                       diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -565,7 +543,7 @@ def Gaussian_envelope(t,alpha):
     '''
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)  
 
-def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge, ratio_R_v):
+def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -581,23 +559,7 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print, gauge, ratio_R_v
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        if gauge == "1_v_x_real_c_y_real":
-           Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-        elif gauge == "2_real_dipole":
-           # call hfsbe code to get Ax and Ay allocated
-           Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-           # overwrite Ax, Ay
-           trivial_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
-        elif gauge == "3_as_1_by_hand":
-           # call hfsbe code to get Ax and Ay allocated
-           Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-           # overwrite Ax, Ay
-           hfbse_gauge(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path)
-        elif gauge == "4_cos_3_theta":
-            # call hfsbe code to get Ax and Ay allocated
-            Ax_in_path,Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
-            # overwrite Ax, Ay
-            cos_3_theta(Ax_in_path,Ay_in_path,kx_in_path,ky_in_path,ratio_R_v)
+        Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
 
         d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
         d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
@@ -696,40 +658,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
 
     return x
 
-def trivial_gauge(Ax,Ay,kx_in_path,ky_in_path):
-    Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-    Ax[1,1,:] = Ax[0,0,:] 
-    Ax[0,1,:] = -Ax[0,0,:] 
-    Ax[1,0,:] = -Ax[0,0,:] 
-    Ay[0,0,:] = -kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-    Ay[1,1,:] = Ay[0,0,:] 
-    Ay[0,1,:] = -Ay[0,0,:] 
-    Ay[1,0,:] = -Ay[0,0,:] 
-
-def hfbse_gauge(Ax,Ay,kx_in_path,ky_in_path):
-    Ax[0,0,:] = ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-    Ax[1,1,:] = -Ax[0,0,:] 
-    Ax[0,1,:] = (-ky_in_path[:]**2-1j*kx_in_path[:]*ky_in_path[:])/2/((kx_in_path[:]**2+ky_in_path[:]**2)**1.5)
-    Ax[1,0,:] = np.conjugate(Ax[0,1,:])
-    Ay[0,0,:] = -kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-    Ay[1,1,:] = -Ay[0,0,:] 
-    Ay[0,1,:] = (kx_in_path[:]*ky_in_path[:]+1j*kx_in_path[:]**2)/2/((kx_in_path[:]**2+ky_in_path[:]**2)**1.5) 
-    Ay[1,0,:] = np.conjugate(Ay[0,1,:])
-
-def cos_3_theta(Ax,Ay,kx_in_path,ky_in_path,ratio_R_v):
-
-    fac_3_theta = (1 - 1j*ratio_R_v/(kx_in_path[:]**2+ky_in_path[:]**2)**1.5* \
-                       (3*kx_in_path[:]**2*ky_in_path[:])-ky_in_path[:]**3)
-
-    Ax[0,0,:] = -ky_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-    Ax[1,1,:] = Ax[0,0,:]
-    Ax[0,1,:] = Ax[0,0,:] * fac_3_theta
-    Ax[1,0,:] = np.conjugate(Ax[0,1,:]) 
-    Ay[0,0,:] = +kx_in_path[:]/2/(kx_in_path[:]**2+ky_in_path[:]**2)
-    Ay[1,1,:] = Ay[0,0,:] 
-    Ay[0,1,:] = Ay[0,0,:] * fac_3_theta
-    Ay[1,0,:] = np.conjugate(Ay[0,1,:])
-
 def initial_condition(y0,e_fermi,temperature,e_c,i_k):
 
     if (temperature > 1e-5):
@@ -741,7 +669,6 @@ def BZ_plot(kpnts,a):
     
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
-    print ("kpoints =", kpnts)
 
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
