@@ -38,6 +38,8 @@ def main():
     length_path_in_BZ = params.length_path_in_BZ      # 
     angle_inc_E_field = params.angle_inc_E_field
     gauge = params.gauge
+    e_fermi = params.e_fermi*eV_conv
+    temperature = params.temperature*eV_conv
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
@@ -111,11 +113,6 @@ def main():
         # Solution container for the current path
         path_solution = []
 
-        # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        y0 = []
-        for k in path:
-            y0.extend([1.0,0.0,0.0,0.0])
-
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
@@ -144,6 +141,11 @@ def main():
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruc         = bite.evaluate_energy(kx_in_path, ky_in_path)
         bandstruc_in_path = bandstruc[1] - bandstruc[0]
+
+        # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
+        y0 = []
+        for k in path:
+            y0.extend([1.0,0.0,0.0,0.0])
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path, \
@@ -369,14 +371,14 @@ def main():
 #        pl.ylabel(r'$k$')
 #        pl.tight_layout()
 #
-#        fig6 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
-#        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
+        fig6 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
+        pl.colorbar().set_label(r'$f_h(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
 #
 #        fig7 = pl.figure()
 #        X, Y = np.meshgrid(t/fs_conv,kp_array)
