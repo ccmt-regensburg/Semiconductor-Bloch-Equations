@@ -4,16 +4,13 @@ import numpy as np
 # Brillouin zone parameters
 ##########################################################################
 Nk_in_path          = 200         # Number of kpoints in each of the two paths
-rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
+rel_dist_to_Gamma   = 0.05         # relative distance (in units of 2pi/a) of both paths to Gamma
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
 length_path_in_BZ   = 5.0*np.pi/a       # 
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
-gauge               = "1_v_x_real_c_y_real"
-#gauge               = "2_real_dipole"
-#gauge               = "3_as_1_by_hand"
-#gauge               = "4_cos_3_theta"
-e_fermi             = 1.0         # Fermi energy in eV
+e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.01        # Temperature in eV to broaden the drop of the Fermi function, if T > 1e-5, there will be an occupation of the conduction band
+k_cut               = 0.05
 
 # Driving field parameters
 ##########################################################################
@@ -23,7 +20,7 @@ alpha = 25.0  # Gaussian pulse width (femtoseconds)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 2     # Phenomenological polarization damping time 
+T2    = 1     # Phenomenological polarization damping time 
 t0    = -1000    # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000     # End time
 dt    = 0.02     # Time step

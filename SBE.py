@@ -39,6 +39,7 @@ def main():
     angle_inc_E_field = params.angle_inc_E_field
     e_fermi = params.e_fermi*eV_conv
     temperature = params.temperature*eV_conv
+    k_cut = params.k_cut
     Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
@@ -91,7 +92,7 @@ def main():
 
     # Get band structure, its derivative and the dipole
 #    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0.2,A=0.1974)
-    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,kcut=0.05)
+    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,kcut=k_cut)
     ratio_R_v = 1/10
 
 #    h, ef, wf, ediff = bite.eigensystem()
@@ -188,7 +189,7 @@ def main():
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     if not test:
-        fig1, (axE,ax1,ax1a,ax2,ax3a,ax3b,ax3) = pl.subplots(1,7)
+        fig1, (axE,ax1,ax1a,ax2) = pl.subplots(1,4)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
         log_limits = (10e-15,100)
@@ -211,6 +212,8 @@ def main():
         ax2.plot(t/fs_conv,J_ortho)
         ax2.set_xlabel(r'$t$ in fs')
         ax2.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+
+        fig1a, (ax3a,ax3b,ax3) = pl.subplots(1,3)
         ax3a.set_xlim(freq_lims)
         ax3a.set_ylim(log_limits)
         ax3a.semilogy(freq/w,np.abs(Pw_E_dir))
