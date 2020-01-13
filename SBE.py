@@ -51,6 +51,12 @@ def main():
     dt = params.dt*fs_conv                            # Integration time step
     test = params.test                                # Testing flag for Travis
 
+    # Hamiltonian parameters
+    C0 = 0
+    C2 = 0
+    A  = 0
+    R  = 11.06
+
     # USER OUTPUT
     ###############################################################################################
     print("Solving for...")
@@ -69,14 +75,14 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])                              # Reciprocal lattice vector
+    E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
 
     dk, kpnts, paths = mesh(params, E_dir)
 
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
-
+    
     # containers
     solution                    = []    
     dipole_E_dir_for_print      = []
@@ -91,8 +97,12 @@ def main():
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
     # Get band structure, its derivative and the dipole
-#    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=0.2,A=0.1974)
-    bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,kcut=k_cut)
+    # Topological cone, k^3 term
+    #bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,vf=1,kcut=k_cut)
+
+    # Trivial cone, k^3 term
+    bite = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,vf=1,kcut=k_cut)
+
     ratio_R_v = 1/10
 
 #    h, ef, wf, ediff = bite.eigensystem()
@@ -170,6 +180,7 @@ def main():
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
 
+    tempvar = diff(t,P_ortho)
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
 
@@ -230,10 +241,10 @@ def main():
         ax3.set_ylim(log_limits)
         ax3.semilogy(freq/w,np.abs(Iw_E_dir))
         ax3.semilogy(freq/w,np.abs(Iw_ortho))
-        print("shape(Iw_r) =", np.shape(Iw_r))
         ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax3.set_ylabel(r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.')
 
+        # High-harmonic emission polar plots
         fig2a = pl.figure()
         i_loop = 1
         i_max  = 20
