@@ -54,7 +54,7 @@ def main():
     # Hamiltonian parameters
     C0 = 0
     C2 = 0
-    A  = 0
+    A  = 0.1974
     R  = 11.06
 
     # USER OUTPUT
@@ -75,15 +75,16 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the Brillouin zone in consideration
-    E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
-
     dk, kpnts, paths = mesh(params, E_dir)
+
+    # Form the E-field direction
+    E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
 
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
     t = np.linspace(t0,tf,Nt)
     
-    # containers
+    # Solution containers
     solution                    = []    
     dipole_E_dir_for_print      = []
     dipole_diag_E_dir_for_print = []
@@ -94,19 +95,11 @@ def main():
     phase_1                     = []
     phase_2                     = []
 
+    # Initialize the ode solver
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
-    # Get band structure, its derivative and the dipole
-    # Topological cone, k^3 term
-    #bite = hfsbe.example.BiTe(C0=0.0,C2=0.0,R=11.06,A=0.1974,vf=1,kcut=k_cut)
-
-    # Trivial cone, k^3 term
-    bite = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,vf=1,kcut=k_cut)
-
-    ratio_R_v = 1/10
-
-#    h, ef, wf, ediff = bite.eigensystem()
-#    h, ef, wf, ediff = bite.eigensystem(gidx=None)
+    # Get initialize sympy bandstructure, energies/derivatives, dipoles
+    bite = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,vf=0,kcut=k_cut)
     h, ef, wf, ediff = bite.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
@@ -164,7 +157,6 @@ def main():
 
     # Slice solution along each path for easier observable calculation
     solution = np.array(solution)
-
     solution = np.array_split(solution,Nk_in_path,axis=2)
     solution = np.array(solution)
 
@@ -172,15 +164,13 @@ def main():
     
     # COMPUTE OBSERVABLES
     ###############################################################################################
-    # Electrons occupations
-
     bandstruc_deriv_for_print = []
     dipole_ortho_for_print    = []
 
+    # Calculate the parallel and orthogonal components 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
 
-    tempvar = diff(t,P_ortho)
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
 
@@ -564,7 +554,6 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
     '''
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
-    # Create dipole matrix elements (as a crude model)
     d_E_dir, d_ortho = [],[]
     for path in paths:
 
