@@ -74,11 +74,11 @@ def main():
     
     # INITIALIZATIONS
     ###############################################################################################
-    # Form the Brillouin zone in consideration
-    dk, kpnts, paths = mesh(params, E_dir)
-
     # Form the E-field direction
     E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
+
+    # Form the Brillouin zone in consideration
+    dk, kpnts, paths = mesh(params, E_dir)
 
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
@@ -99,7 +99,10 @@ def main():
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
 
     # Get initialize sympy bandstructure, energies/derivatives, dipoles
-    bite = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,vf=0,kcut=k_cut)
+    # Topological cone call
+    bite = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,kcut=k_cut)
+    # Trivial cone call
+    #bite = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
     h, ef, wf, ediff = bite.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
@@ -114,27 +117,30 @@ def main():
         # Solution container for the current path
         path_solution = []
 
+        # Retrieve the set of k-points for the current path
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        Ax,Ay = dipole.evaluate(kx_in_path, ky_in_path)
+        # Calculate the dipole components along the path
+        di_x,di_y = dipole.evaluate(kx_in_path, ky_in_path)
 
+        # Calculate the dot products E_dir.d_nm(k). To be multiplied by E-field magnitude later. 
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path             = E_dir[0]*Ax[0,1,:] + E_dir[1]*Ay[0,1,:]
-        dipole_vv_minus_cc_in_path = E_dir[0]*Ax[0,0,:] + E_dir[1]*Ay[0,0,:] - (E_dir[0]*Ax[1,1,:] + E_dir[1]*Ay[1,1,:])
+        dipole_in_path             = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
+        A_in_path = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
-        bandstruc         = bite.evaluate_energy(kx_in_path, ky_in_path)
-        bandstruc_in_path = bandstruc[1] - bandstruc[0]
+        bandstruct  = bite.evaluate_energy(kx_in_path, ky_in_path)
+        ecv_in_path = bandstruct[1] - bandstruct[0]
 
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
         for i_k, k in enumerate(path):
-            initial_condition(y0,e_fermi,temperature,bandstruc[1],i_k)
+            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,bandstruc_in_path, \
-               dipole_in_path,dipole_vv_minus_cc_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,ecv_in_path, \
+               dipole_in_path,A_in_path)
 
         # Propagate through time
         ti = 0
@@ -147,11 +153,11 @@ def main():
 
         solution.append(path_solution)
         dipole_E_dir_for_print.append(dipole_in_path)
-        dipole_diag_E_dir_for_print.append(dipole_vv_minus_cc_in_path)
-        dipole_x_for_print.append(Ax[0,1,:])
-        dipole_y_for_print.append(Ay[0,1,:])
-        val_band_for_print.append(bandstruc[0])
-        cond_band_for_print.append(bandstruc[1])
+        dipole_diag_E_dir_for_print.append(A_in_path)
+        dipole_x_for_print.append(di_x[0,1,:])
+        dipole_y_for_print.append(di_y[0,1,:])
+        val_band_for_print.append(bandstruct[0])
+        cond_band_for_print.append(bandstruct[1])
 #        phase_2.append((ky_in_path+1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
 #        phase_1.append((ky_in_path-1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
 
@@ -171,8 +177,8 @@ def main():
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
 
-    I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
-                       diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
+    I_E_dir, I_ortho = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), \
+                       (diff(t,P_ortho) + J_ortho)*Gaussian_envelope(t,alpha)
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -512,6 +518,81 @@ def mesh(params, E_dir):
 
     return dk, np.array(mesh), paths
 
+def hex_mesh(Nk1, Nk2, a, b1, b2, test):
+    # Calculate the alpha values needed based on the size of the Brillouin zone
+    if Nk2 == 1: # 1d case set by Nk2 value
+        # alpha1 zero to ensure 1d lane running through gamma-point
+        alpha1 = [0.0]
+        alpha2 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+        # Rescale reciprocal lattice vector to original 1d case
+        #b2 = np.array([0,1]) 
+    else: 
+        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+        alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
+    
+    def is_in_hex(p,a):
+        # Returns true if the point is in the hexagonal BZ.
+        # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
+        x = np.abs(p[0])
+        y = np.abs(p[1])
+        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+
+    # Containers for the mesh, and BZ directional paths
+    mesh = []
+    M_paths = []
+    K_paths = []
+
+    # Create the Monkhorst-Pack mesh
+    for a1 in alpha1:
+        # Container for a single gamma-M path
+        path_M = []
+        for a2 in alpha2:
+            # Create a k-point
+            kpoint = a1*b1 + a2*b2
+            # If the current point is in the BZ, append it to the mesh and path_M
+            if (is_in_hex(kpoint,a)):
+                mesh.append(kpoint)
+                path_M.append(kpoint)
+            # If the current point is NOT in the BZ, reflect is along the appropriate axis to get it in the BZ, then append.
+            else:
+                while (is_in_hex(kpoint,a) != True):
+                    if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):
+                        kpoint += b1
+                    elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)):
+                        kpoint -= b1
+                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
+                        kpoint -= b1 + b2
+                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
+                        kpoint -= b2
+                    elif (np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
+                        kpoint += b1 + b2
+                    elif (-np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
+                        kpoint += b2
+                mesh.append(kpoint)
+                path_M.append(kpoint) 
+
+        # Append the a1'th path to the paths array
+        M_paths.append(path_M)
+
+    # Temp mesh array that gets progressively deleted
+    path_K_mesh = np.array(mesh)
+
+    while np.size(path_K_mesh) != 0:
+        path_K = []
+        # Determine the top horizontal points in the current path_K_mesh (a gamma-K path) and their arguments.
+        y_top = np.amax(path_K_mesh[:,1])
+        y_top_args = np.argwhere(np.logical_and(path_K_mesh[:,1] <= y_top+1/(4*Nk1), path_K_mesh[:,1] >= y_top-1/(4*Nk1)))
+
+        # Iterate through the arguments of the top most path, adding each point to the path. Delete these points as they are added.
+        for arg in y_top_args:
+            path_K.append(path_K_mesh[arg,:])
+
+        path_K_mesh = np.delete(path_K_mesh, y_top_args, 0)
+
+        K_paths.append(path_K)
+    
+    return np.array(mesh), M_paths, K_paths
+
 @njit
 def driving_field(E0, w, t, alpha):
     '''
@@ -562,10 +643,10 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
-        Ax_in_path, Ay_in_path = dipole.evaluate(kx_in_path, ky_in_path)
+        dipole_in_path, dipole_in_path = dipole.evaluate(kx_in_path, ky_in_path)
 
-        d_E_dir.append(Ax_in_path[0,1,:]*E_dir[0] + Ay_in_path[0,1,:]*E_dir[1])
-        d_ortho.append(Ax_in_path[0,1,:]*E_ort[0] + Ay_in_path[0,1,:]*E_ort[1])
+        d_E_dir.append(dipole_in_path[0,1,:]*E_dir[0] + dipole_in_path[0,1,:]*E_dir[1])
+        d_ortho.append(dipole_in_path[0,1,:]*E_ort[0] + dipole_in_path[0,1,:]*E_ort[1])
 
     dipole_ortho_for_print.append(d_ortho)
 
@@ -593,13 +674,13 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
         path = np.array(path)
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
-        bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
-        bandstruc_deriv_for_print.append(bandstruc_deriv)
+        bandstruct_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+        bandstruct_deriv_for_print.append(bandstruc_deriv)
         #0: v, x   1: v,y   2: c, x  3: c, y
-        je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
-        je_ortho.append(bandstruc_deriv[2]*E_ort[0] + bandstruc_deriv[3]*E_ort[1])
-        jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
-        jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1])
+        je_E_dir.append(bandstruct_deriv[2]*E_dir[0] + bandstruct_deriv[3]*E_dir[1])
+        je_ortho.append(bandstruct_deriv[2]*E_ort[0] + bandstruct_deriv[3]*E_ort[1])
+        jh_E_dir.append(bandstruct_deriv[0]*E_dir[0] + bandstruct_deriv[1]*E_dir[1])
+        jh_ortho.append(bandstruct_deriv[0]*E_ort[0] + bandstruct_deriv[1]*E_ort[1])
 
     je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
     je_ortho_swapped = np.swapaxes(je_ortho,0,1)
@@ -614,12 +695,12 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
     return np.real(J_E_dir), np.real(J_ortho)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, dipole_vv_minus_cc_in_path):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, dipole_vv_minus_cc_in_path)
+def f(t, y, kpath, dk, gamma2, E0, w, alpha, ecv_in_path, dipole_in_path, A_in_path):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, ecv_in_path, dipole_in_path, A_in_path)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_path, dipole_vv_minus_cc_in_path):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, ecv_in_path, dipole_in_path, A_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -643,15 +724,15 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, bandstruc_in_path, dipole_in_p
             n = 4*(k-1)
 
         #Energy term eband(i,k) the energy of band i at point k
-        ecv = bandstruc_in_path[k]
+        ecv = ecv_in_path[k]
 
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
-        wr          = rabi(k, E0, w, t, alpha, dipole_in_path)
+        wr          = dipole_in_path[k]*D
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        wr_d_diag   = rabi(k, E0, w, t, alpha, dipole_vv_minus_cc_in_path)
+        wr_d_diag   = A_in_path[k]*D
 
         # Update each component of the solution vector
         x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
