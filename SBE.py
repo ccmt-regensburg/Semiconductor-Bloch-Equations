@@ -11,13 +11,9 @@ import hfsbe.utility
 
 '''
 TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-- legacy matrix method not compatible with two-dimensional case.
-- current function not compatible with K-paths.
-- arbitrary (circular) polarization (big task).
-- plots for two-dimensional case
-- emission spectrum for arbitrary direction
+- arbitrary (circular) polarization (big task)
+- make hex_mesh general for arbitrary direction
 - change testing outputs for 1d case 
-- generalize energy band gradient (adaptable for 2d case)
 '''
 
 def main():
@@ -31,32 +27,52 @@ def main():
     amp_conv = params.amp_conv
     eV_conv = params.eV_conv
     
-    # Set parameters
-    Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
+    # Set BZ type independent parameters
+    # Hamiltonian parameters
+    C0 = params.C0                                    # Dirac point position
+    C2 = params.C2                                    # k^2 coefficient
+    A = params.A                                      # Fermi velocity
+    R = params.R                                      # k^3 coefficient
+    k_cut = params.k_cut                              # Model hamiltonian cutoff parameter
+
+    # System parameters
     a = params.a                                      # Lattice spacing
-    length_path_in_BZ = params.length_path_in_BZ      # 
-    angle_inc_E_field = params.angle_inc_E_field
-    e_fermi = params.e_fermi*eV_conv
-    temperature = params.temperature*eV_conv
-    k_cut = params.k_cut
-    Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
+    e_fermi = params.e_fermi*eV_conv                  # Fermi energy for initial conditions
+    temperature = params.temperature*eV_conv          # Temperature for initial conditions
+
+    # Driving field parameters
     E0 = params.E0*E_conv                             # Driving field amplitude
     w = params.w*THz_conv                             # Driving frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
+    phase = params.phase                              # Carrier-envelope phase
+
+    # Time scales
     T2 = params.T2*fs_conv                            # Damping time
     gamma2 = 1/T2                                     # Gamma parameter
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
     dt_out = 1/(2*params.dt)                          # Solution output time step
-    test = params.test                                # Testing flag for Travis
 
-    # Hamiltonian parameters
-    C0 = 0
-    C2 = 0
-    A  = 0.1974
-    R  = 11.06
+    # Brillouin zone type
+    BZ_type = params.BZ_type                          # Type of Brillouin zone to construct
+    
+    # Brillouin zone type
+    if BZ_type == 'full':
+        Nk1   = params.Nk1                              # Number of kpoints in b1 direction
+        Nk2   = params.Nk2                              # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                 # Total number of kpoints
+        align = params.align                            # E-field alignment
+        b1    = params.b1                               # Reciprocal lattice vectors
+        b2    = params.b2
+    elif BZ_type == '2line':
+        Nk2 = params.Nk2                                  # Number of kpoints in each of the two paths
+        Nk = 2*Nk2                                        # Total number of k points, we have 2 paths
+        rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
+        length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
+        angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
+
+    test = params.test                                # Testing flag for Travis
 
     # USER OUTPUT
     ###############################################################################################
@@ -76,15 +92,26 @@ def main():
     # INITIALIZATIONS
     ###############################################################################################
     # Form the E-field direction
-    E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
-
+   
     # Form the Brillouin zone in consideration
-    dk, kpnts, paths = mesh(params, E_dir)
+    if BZ_type == 'full':
+        print('hex started')
+        kpnts, M_paths, K_paths = hex_mesh(Nk1, Nk2, a, b1, b2)
+        dk = 1/Nk1
+        if align == 'K':
+            paths = K_paths
+            E_dir = np.array([1,0])
+        elif align == 'M':
+            paths = M_paths
+            E_dir = np.array([np.cos(30/360*2*np.pi),np.sin(30/360*2*np.pi)])
+    elif BZ_type == '2line':
+        E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
+        dk, kpnts, paths = mesh(params, E_dir)
 
-    # Number of time steps, time vector
+    print(np.shape(paths))
+    # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
     t_constructed = False
-    #t = np.linspace(t0,tf,Nt)
     
     # Solution containers
     t                           = []
@@ -121,6 +148,8 @@ def main():
         path_solution = []
 
         # Retrieve the set of k-points for the current path
+        print(np.shape(path))
+        print(path)
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
@@ -182,12 +211,10 @@ def main():
     # Convert solution and time array to numpy arrays
     t        = np.array(t)
     solution = np.array(solution)
+    
     # Slice solution along each path for easier observable calculation
-    solution = np.array_split(solution,Nk_in_path,axis=2)
+    solution = np.array_split(solution,Nk2,axis=2)
     solution = np.array(solution)
-
-    print(np.shape(t))
-    print(np.shape(solution))
 
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
@@ -220,7 +247,7 @@ def main():
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     if not test:
-        fig1, (axE,ax1,ax1a,ax2) = pl.subplots(1,4)
+        real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
         log_limits = (10e-15,100)
@@ -228,50 +255,50 @@ def main():
         axE.plot(t/fs_conv,driving_field(E0,w,t,alpha)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
-        ax1.set_xlim(t_lims)
-        ax1.plot(t/fs_conv,P_E_dir)
-        ax1.plot(t/fs_conv,P_ortho)
-        ax1.set_xlabel(r'$t$ in fs')
-        ax1.set_ylabel(r'$P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        ax1a.set_xlim(t_lims)
-        ax1a.plot(t/fs_conv,diff(t,P_E_dir))
-        ax1a.plot(t/fs_conv,diff(t,P_ortho))
-        ax1a.set_xlabel(r'$t$ in fs')
-        ax1a.set_ylabel(r'$\dot P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        ax2.set_xlim(t_lims)
-        ax2.plot(t/fs_conv,J_E_dir)
-        ax2.plot(t/fs_conv,J_ortho)
-        ax2.set_xlabel(r'$t$ in fs')
-        ax2.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axP.set_xlim(t_lims)
+        axP.plot(t/fs_conv,P_E_dir)
+        axP.plot(t/fs_conv,P_ortho)
+        axP.set_xlabel(r'$t$ in fs')
+        axP.set_ylabel(r'$P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axPdot.set_xlim(t_lims)
+        axPdot.plot(t/fs_conv,diff(t,P_E_dir))
+        axPdot.plot(t/fs_conv,diff(t,P_ortho))
+        axPdot.set_xlabel(r'$t$ in fs')
+        axPdot.set_ylabel(r'$\dot P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axJ.set_xlim(t_lims)
+        axJ.plot(t/fs_conv,J_E_dir)
+        axJ.plot(t/fs_conv,J_ortho)
+        axJ.set_xlabel(r'$t$ in fs')
+        axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
 
-        fig1a, (ax3a,ax3b,ax3) = pl.subplots(1,3)
-        ax3a.set_xlim(freq_lims)
-        ax3a.set_ylim(log_limits)
-        ax3a.semilogy(freq/w,np.abs(Pw_E_dir))
-        ax3a.semilogy(freq/w,np.abs(Pw_ortho))
-        ax3a.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3a.set_ylabel(r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        ax3b.set_xlim(freq_lims)
-        ax3b.set_ylim(log_limits)
-        ax3b.semilogy(freq/w,np.abs(Jw_E_dir))
-        ax3b.semilogy(freq/w,np.abs(Jw_ortho))
-        ax3b.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3b.set_ylabel(r'$[\dot P](\omega)$ (intraband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        ax3.set_xlim(freq_lims)
-        ax3.set_ylim(log_limits)
-        ax3.semilogy(freq/w,np.abs(Iw_E_dir))
-        ax3.semilogy(freq/w,np.abs(Iw_ortho))
-        ax3.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax3.set_ylabel(r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.')
+        four_fig, (axPw,axJw,axIw) = pl.subplots(1,3)
+        axPw.set_xlim(freq_lims)
+        axPw.set_ylim(log_limits)
+        axPw.semilogy(freq/w,np.abs(Pw_E_dir))
+        axPw.semilogy(freq/w,np.abs(Pw_ortho))
+        axPw.set_xlabel(r'Frequency $\omega/\omega_0$')
+        axPw.set_ylabel(r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axJw.set_xlim(freq_lims)
+        axJw.set_ylim(log_limits)
+        axJw.semilogy(freq/w,np.abs(Jw_E_dir))
+        axJw.semilogy(freq/w,np.abs(Jw_ortho))
+        axJw.set_xlabel(r'Frequency $\omega/\omega_0$')
+        axJw.set_ylabel(r'$[\dot P](\omega)$ (intraband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axIw.set_xlim(freq_lims)
+        axIw.set_ylim(log_limits)
+        axIw.semilogy(freq/w,np.abs(Iw_E_dir))
+        axIw.semilogy(freq/w,np.abs(Iw_ortho))
+        axIw.set_xlabel(r'Frequency $\omega/\omega_0$')
+        axIw.set_ylabel(r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.')
 
         # High-harmonic emission polar plots
-        fig2a = pl.figure()
+        polar_fig = pl.figure()
         i_loop = 1
         i_max  = 20
         while i_loop <= i_max:
             freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
             freq_index   = freq_indices[int(np.size(freq_indices)/2)]
-            pax          = fig2a.add_subplot(1,i_max,i_loop,projection='polar')
+            pax          = polar_fig.add_subplot(1,i_max,i_loop,projection='polar')
             pax.plot(angles,np.abs(Iw_r[:,freq_index]))
             rmax = pax.get_rmax()
             pax.set_rmax(1.1*rmax)
@@ -287,6 +314,7 @@ def main():
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
 
+        '''
         fig3, (ax3_0,ax3_0a,ax3_1,ax3_2,ax3_3,ax3_4,ax3_5) = pl.subplots(1,7)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         ax3_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]))
@@ -316,25 +344,6 @@ def main():
         ax3_5.plot(kp_array,np.real(dipole_diag_E_dir_for_print[1]), linestyle='dashed')
         ax3_5.set_xlabel(r'$k$-point in path ($1/a_0$)')
         ax3_5.set_ylabel(r'Real part Re $([\vec{d}_{vv}(k)-\vec{d}_{cc}]\cdot\vec{e}_E)$ (a.u.) in path 0/1')
-
-#        fig3a, (ax3a_0,ax3a_0a,ax3a_1,ax3a_2) = pl.subplots(1,4)
-#        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-#        ax3a_0.plot(kp_array,np.real(dipole_E_dir_for_print[0]*phase_1[0]))
-#        ax3a_0.plot(kp_array,np.real(dipole_E_dir_for_print[1]*phase_1[1]), linestyle='dashed')
-#        ax3a_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
-#        ax3a_0.set_ylabel(r'WITH PHASE 1 Dipole real part Re $(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
-#        ax3a_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[0]*phase_1[0]))
-#        ax3a_0a.plot(kp_array,np.imag(dipole_E_dir_for_print[1]*phase_1[1]), linestyle='dashed')
-#        ax3a_0a.set_xlabel(r'$k$-point in path ($1/a_0$)')
-#        ax3a_0a.set_ylabel(r'WITH PHASE 1 Dipole im. part Im$(\vec{d}(k)\cdot\vec{e}_E)$ (a.u.) in path 0/1')
-#        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][0]*phase_1[0])
-#        ax3a_1.plot(kp_array,dipole_ortho_for_print[0][1]*phase_1[1])
-#        ax3a_1.set_xlabel(r'$k$-point in path ($1/a_0$)')
-#        ax3a_1.set_ylabel(r'WITH PHASE 1 Dipole real part Re $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
-#        ax3a_2.plot(kp_array,np.imag(dipole_ortho_for_print[0][0]*phase_1[0]))
-#        ax3a_2.plot(kp_array,np.imag(dipole_ortho_for_print[0][1]*phase_1[1]))
-#        ax3a_2.set_xlabel(r'$k$-point in path ($1/a_0$)')
-#        ax3a_2.set_ylabel(r'WITH PHASE 1 Dipole imag part Im $\vec{d}(k)\cdot\vec{e}_{ortho}$ (a.u.) in path 0/1')
 
         E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -373,16 +382,7 @@ def main():
         pl.xlabel(r'$t\;(fs)$')
         pl.ylabel(r'$k$')
         pl.tight_layout()
-#
-#        fig6 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,3]-solution[:,1,:,3]), 100)
-#        pl.colorbar().set_label(r'$f_{e,path 0}(k) - f_{e,path 1}(k)$')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
+
         fig6 = pl.figure()
         X, Y = np.meshgrid(t/fs_conv,kp_array)
         pl.contourf(X, Y, np.real(solution[:,0,:,0]), 100)
@@ -391,97 +391,7 @@ def main():
         pl.xlabel(r'$t\;(fs)$')
         pl.ylabel(r'$k$')
         pl.tight_layout()
-#
-#        fig7 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
-#        pl.colorbar().set_label(r'$f_e(k)$ in path 1')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig8 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,1,:,0]), 100)
-#        pl.colorbar().set_label(r'$f_h(k)$ in path 1')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig9 = pl.figure()
-#        X, Y = np.meshgrid(freq/w,kp_array)
-#        pl.contourf(X, Y, fw_0, 100)
-#        pl.colorbar().set_label(r'log $f_h(k)$ in path 0')
-#        pl.xlim(freq_lims)
-#        pl.xlabel(r'$\omega/\omega_0$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        print("freq =", freq)
-#        print("size freq =", np.size(freq))
-#
-#        print("omega(100,1000,10000,100000) =", freq[100], freq[1000], freq[10000], freq[100000])
-#        print("omega 1 2 3 =", freq[75100]/w, freq[75200]/w, freq[75300]/w, freq[75400]/w)
-#
-#        fig10, (ax10_0) = pl.subplots(1,1)
-#        ax10_0.plot(kp_array,fw_0[:,75100])
-#        ax10_0.plot(kp_array,fw_0[:,75200])
-#        ax10_0.plot(kp_array,fw_0[:,75300])
-#        ax10_0.plot(kp_array,fw_0[:,75400])
-#        ax10_0.set_xlabel(r'$k$-point in path ($1/a_0$)')
-#        ax10_0.set_ylabel(r'$f_h(k,\omega)$ in path 0 at $\omega = $')
-#
-#        for i_phase, phase in enumerate(phase_2[0]):
-#            solution[i_phase,0,:,1] = solution[i_phase,0,:,1] * phase
-#        for i_phase, phase in enumerate(phase_2[1]):
-#            solution[i_phase,1,:,1] = solution[i_phase,1,:,1] * phase
-#
-#        fig11 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,1]), 100)
-#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig12 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.imag(solution[:,0,:,1]), 100)
-#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig12a = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.abs(solution[:,0,:,1]), 100)
-#        pl.colorbar().set_label(r'$|p_{cv}(k)|$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig13 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,1,:,1]), 100)
-#        pl.colorbar().set_label(r'$Re(p_{cv}(k))$ in path 1')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
-#        fig14 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.imag(solution[:,1,:,1]), 100)
-#        pl.colorbar().set_label(r'$Im(p_{cv}(k))$ in path 1')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
+        '''
 
         BZ_plot(kpnts,a)
         path_plot(paths)
@@ -508,7 +418,7 @@ def main():
 # FUNCTIONS
 ################################################################################################
 def mesh(params, E_dir):
-    Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
+    Nk_in_path = params.Nk2                           # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      # 
@@ -542,7 +452,7 @@ def mesh(params, E_dir):
 
     return dk, np.array(mesh), paths
 
-def hex_mesh(Nk1, Nk2, a, b1, b2, test):
+def hex_mesh(Nk1, Nk2, a, b1, b2):
     # Calculate the alpha values needed based on the size of the Brillouin zone
     if Nk2 == 1: # 1d case set by Nk2 value
         # alpha1 zero to ensure 1d lane running through gamma-point
@@ -580,9 +490,9 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, test):
             # If the current point is NOT in the BZ, reflect is along the appropriate axis to get it in the BZ, then append.
             else:
                 while (is_in_hex(kpoint,a) != True):
-                    if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):
+                    if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):  # Crosses bottom
                         kpoint += b1
-                    elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)):
+                    elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)): # Crossed top
                         kpoint -= b1
                     elif (np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
                         kpoint -= b1 + b2
@@ -624,13 +534,6 @@ def driving_field(E0, w, t, alpha):
     '''
     #return E0*np.sin(2.0*np.pi*w*t)
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t)
-
-@njit
-def rabi(k,E0,w,t,alpha,dipole_in_path):
-    '''
-    Rabi frequency of the transition. Calculated from dipole element and driving field
-    '''
-    return dipole_in_path[k]*driving_field(E0, w, t, alpha)
 
 def diff(x,y):
     '''
