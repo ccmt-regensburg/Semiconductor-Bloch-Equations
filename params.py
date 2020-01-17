@@ -3,11 +3,11 @@ import numpy as np
 
 # Brillouin zone parameters
 ##########################################################################
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
+Nk_in_path          = 300         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 a                   = 8.308       # Lattice spacing in atomic units!! (4.395 A)
 length_path_in_BZ   = 5.0*np.pi/a # Length of path in BZ 
-angle_inc_E_field   = 30           # incoming angle of the E-field in degree
+angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV to broaden the drop of the Fermi function, if T > 1e-5, there will be an occupation of the conduction band
 k_cut               = 0.05

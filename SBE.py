@@ -49,6 +49,7 @@ def main():
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
+    dt_out = 1/(2*params.dt)                          # Solution output time step
     test = params.test                                # Testing flag for Travis
 
     # Hamiltonian parameters
@@ -82,9 +83,11 @@ def main():
 
     # Number of time steps, time vector
     Nt = int((tf-t0)/dt)
-    t = np.linspace(t0,tf,Nt)
+    t_constructed = False
+    #t = np.linspace(t0,tf,Nt)
     
     # Solution containers
+    t                           = []
     solution                    = []    
     dipole_E_dir_for_print      = []
     dipole_diag_E_dir_for_print = []
@@ -126,8 +129,8 @@ def main():
 
         # Calculate the dot products E_dir.d_nm(k). To be multiplied by E-field magnitude later. 
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path             = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
-        A_in_path = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
+        dipole_in_path = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
+        A_in_path      = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruct  = bite.evaluate_energy(kx_in_path, ky_in_path)
@@ -145,12 +148,27 @@ def main():
         # Propagate through time
         ti = 0
         while solver.successful() and ti < Nt:
-            if (ti%10000) == 0:
+            # User output of integration progress
+            if (ti%1000) == 0:
                 print('{:5.2f}%'.format(ti/Nt*100))
+
+            # Integrate one integration time step
             solver.integrate(solver.t + dt)
-            path_solution.append(solver.y)
+
+            # Save solution each output step 
+            if ti%dt_out == 0:
+                path_solution.append(solver.y)
+                # Construct time array only once
+                if not t_constructed:
+                    t.append(solver.t)
+
+            # Increment time counter
             ti += 1
 
+        # Flag that time array has been built up
+        t_constructed = True
+
+        # Append path solutions to the total solution arrays
         solution.append(path_solution)
         dipole_E_dir_for_print.append(dipole_in_path)
         dipole_diag_E_dir_for_print.append(A_in_path)
@@ -161,20 +179,25 @@ def main():
 #        phase_2.append((ky_in_path+1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
 #        phase_1.append((ky_in_path-1j*kx_in_path)/(kx_in_path[:]**2+ky_in_path[:]**2)**0.5)
 
-    # Slice solution along each path for easier observable calculation
+    # Convert solution and time array to numpy arrays
+    t        = np.array(t)
     solution = np.array(solution)
+    # Slice solution along each path for easier observable calculation
     solution = np.array_split(solution,Nk_in_path,axis=2)
     solution = np.array(solution)
+
+    print(np.shape(t))
+    print(np.shape(solution))
 
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
     # COMPUTE OBSERVABLES
     ###############################################################################################
-    bandstruc_deriv_for_print = []
+    bandstruct_deriv_for_print = []
     dipole_ortho_for_print    = []
 
     # Calculate the parallel and orthogonal components 
-    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruc_deriv_for_print)
+    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruct_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
 
     I_E_dir, I_ortho = (diff(t,P_E_dir) + J_E_dir)*Gaussian_envelope(t,alpha), \
@@ -184,8 +207,9 @@ def main():
     angles = np.linspace(0,2.0*np.pi,360)
     for angle in angles:
         Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(-angle)))
-        
-    freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
+
+    dt_out   = t[1]-t[0]
+    freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t),d=dt_out))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
     Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
     Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
@@ -323,20 +347,20 @@ def main():
         ax4_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
         ax4_2.set_xlabel(r'$k$-point in path 1 ($1/a_0$)')
         ax4_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
-        ax4_3.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[0][0]*E_dir[0] + bandstruc_deriv_for_print[0][1]*E_dir[1]))
-        ax4_3.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[0][2]*E_dir[0] + bandstruc_deriv_for_print[0][3]*E_dir[1]))
+        ax4_3.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[0][0]*E_dir[0] + bandstruct_deriv_for_print[0][1]*E_dir[1]))
+        ax4_3.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[0][2]*E_dir[0] + bandstruct_deriv_for_print[0][3]*E_dir[1]))
         ax4_3.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_3.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_{\parallel \mathbf{E}}$ (eV*$a_0$) in path 0 (blue: v, orange: c)')
-        ax4_4.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[1][0]*E_dir[0] + bandstruc_deriv_for_print[1][1]*E_dir[1]))
-        ax4_4.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[1][2]*E_dir[0] + bandstruc_deriv_for_print[1][3]*E_dir[1]))
+        ax4_4.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[1][0]*E_dir[0] + bandstruct_deriv_for_print[1][1]*E_dir[1]))
+        ax4_4.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[1][2]*E_dir[0] + bandstruct_deriv_for_print[1][3]*E_dir[1]))
         ax4_4.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_4.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_{\parallel \mathbf{E}}$ (eV*$a_0$) in path 1')
-        ax4_5.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[0][0]*E_ort[0] + bandstruc_deriv_for_print[0][1]*E_ort[1]))
-        ax4_5.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[0][2]*E_ort[0] + bandstruc_deriv_for_print[0][3]*E_ort[1]))
+        ax4_5.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[0][0]*E_ort[0] + bandstruct_deriv_for_print[0][1]*E_ort[1]))
+        ax4_5.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[0][2]*E_ort[0] + bandstruct_deriv_for_print[0][3]*E_ort[1]))
         ax4_5.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_5.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_{\bot \mathbf{E}}$ (eV*$a_0$) in path 0 (blue: v, orange: c)')
-        ax4_6.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[1][0]*E_ort[0] + bandstruc_deriv_for_print[1][1]*E_ort[1]))
-        ax4_6.plot(kp_array,1.0/eV_conv*(bandstruc_deriv_for_print[1][2]*E_ort[0] + bandstruc_deriv_for_print[1][3]*E_ort[1]))
+        ax4_6.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[1][0]*E_ort[0] + bandstruct_deriv_for_print[1][1]*E_ort[1]))
+        ax4_6.plot(kp_array,1.0/eV_conv*(bandstruct_deriv_for_print[1][2]*E_ort[0] + bandstruct_deriv_for_print[1][3]*E_ort[1]))
         ax4_6.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
         ax4_6.set_ylabel(r'$\partial \varepsilon_{v/c}(k)/\partial k_{\bot \mathbf{E}}$ (eV*$a_0$) in path 1 (blue: v, orange: c)')
 
@@ -659,7 +683,7 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
     return P_E_dir, P_ortho
 
 
-def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
+def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruct_deriv_for_print):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -675,7 +699,7 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruc_deriv_for_print):
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
         bandstruct_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
-        bandstruct_deriv_for_print.append(bandstruc_deriv)
+        bandstruct_deriv_for_print.append(bandstruct_deriv)
         #0: v, x   1: v,y   2: c, x  3: c, y
         je_E_dir.append(bandstruct_deriv[2]*E_dir[0] + bandstruct_deriv[3]*E_dir[1])
         je_ortho.append(bandstruct_deriv[2]*E_ort[0] + bandstruct_deriv[3]*E_ort[1])
