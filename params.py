@@ -24,29 +24,29 @@ b1 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 b2 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
 
 # full BZ parametes
-Nk1                 = 11         # Number of kpoints in b1 direction
-Nk2                 = 11         # Number of kpoints in b2 direction
-align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+Nk1                 = 2           # Number of kpoints in b1 direction
+Nk2                 = 800         # Number of kpoints in b2 direction
 
 # 2line BZ parameters
-Nk_in_path          = 300         # Number of kpoints in each of the two paths
+Nk_in_path          = 200         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5.0*np.pi/a # Length of path in BZ 
-angle_inc_E_field   = 0           # incoming angle of the E-field in degree
+angle_inc_E_field   = 0         # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
-E0    = 5.0                       # Pulse amplitude (MV/cm)
-w     = 25.0                      # Pulse frequency (THz)
-alpha = 25.0                      # Gaussian pulse width (femtoseconds)
-phase = np.pi/4                   # Carrier envelope phase 
+align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+E0                  = 5.0         # Pulse amplitude (MV/cm)
+w                   = 25.0        # Pulse frequency (THz)
+alpha               = 25.0        # Gaussian pulse width (femtoseconds)
+phase               = 0           # Carrier envelope phase 
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
 T2    = 1      # Phenomenological polarization damping time 
 t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000   # End time
-dt    = 0.05   # Time step
+dt    = 0.05    # Time step
 
 # Unit conversion factors
 ##########################################################################
