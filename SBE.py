@@ -179,7 +179,7 @@ def main():
 
             # Integrate one integration time step
             solver.integrate(solver.t + dt)
-
+            
             # Save solution each output step 
             if ti%dt_out == 0:
                 path_solution.append(solver.y)
@@ -238,9 +238,9 @@ def main():
     for angle in angles:
         Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(-angle)))
 
-    #dt_out   = t[1]-t[0]
-    #freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t),d=dt_out))
-    freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
+    dt_out   = t[1]-t[0]
+    freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t),d=dt_out))
+    #freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
     Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
     Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
@@ -533,6 +533,13 @@ def driving_field(E0, w, t, alpha, phase):
     #return E0*np.sin(2.0*np.pi*w*t)
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t + phase)
 
+@njit
+def rabi(k,E0,w,t,alpha,phase,dipole_in_path):
+    '''
+    Rabi frequency of the transition. Calculated from dipole element and driving field
+    '''
+    return dipole_in_path[k]*driving_field(E0, w, t, alpha, phase)
+
 def diff(x,y):
     '''
     Takes the derivative of y w.r.t. x
@@ -569,12 +576,9 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
         ky_in_path = path[:,1]
 
         di_x, di_y = dipole.evaluate(kx_in_path, ky_in_path)
-        #dipole_in_path, dipole_in_path = dipole.evaluate(kx_in_path, ky_in_path)
 
         d_E_dir.append(di_x[0,1,:]*E_dir[0] + di_y[0,1,:]*E_dir[1])
         d_ortho.append(di_x[0,1,:]*E_ort[0] + di_y[0,1,:]*E_ort[1])
-        #d_E_dir.append(dipole_in_path[0,1,:]*E_dir[0] + dipole_in_path[0,1,:]*E_dir[1])
-        #d_ortho.append(dipole_in_path[0,1,:]*E_ort[0] + dipole_in_path[0,1,:]*E_ort[1])
         
     dipole_ortho_for_print.append(d_ortho)
 
@@ -656,11 +660,13 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, phase, ecv_in_path, dipole_in_
 
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
-        wr          = dipole_in_path[k]*D
+        #wr          = dipole_in_path[k]*D
+        wr          = rabi(k, E0, w, t, alpha, phase, dipole_in_path)
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        wr_d_diag   = A_in_path[k]*D
+        #wr_d_diag   = A_in_path[k]*D
+        wr_d_diag   = rabi(k, E0, w, t, alpha, phase, A_in_path)
 
         # Update each component of the solution vector
         x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
