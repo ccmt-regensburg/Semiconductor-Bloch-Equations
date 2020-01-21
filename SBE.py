@@ -650,15 +650,15 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
     # Calculate the gradient analytically at each k-point
     J_E_dir, J_ortho = [], []
 
-    Berry_curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)           
+    curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)           
 
 #HACK
-    for path in paths:
-       path = np.array(path)
-       kx_in_path = path[:,0]
-       ky_in_path = path[:,1]
-       bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
-       Berry_curv_eval = Berry_curv.evaluate(kx_in_path, ky_in_path)
+#    for path in paths:
+#       path = np.array(path)
+#       kx_in_path = path[:,0]
+#       ky_in_path = path[:,1]
+#       bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+#       curv_eval = curv.evaluate(kx_in_path, ky_in_path)
 #HACK
 
     for j_time, time in enumerate(t):
@@ -671,17 +671,17 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
            kx_in_path = path[:,0]
            ky_in_path = path[:,1]
 
-           kx_in_path = np.array([x - A_field_x[j_time] for x in kx_in_path])
-           ky_in_path = np.array([y - A_field_y[j_time] for y in ky_in_path])
+           kx_in_path = np.real(np.array([x - A_field_x[j_time] for x in kx_in_path]))
+           ky_in_path = np.real(np.array([y - A_field_y[j_time] for y in ky_in_path]))
 
            bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
-#
-#           Berry_curv_eval = Berry_curv.evaluate(kx_in_path, ky_in_path)
 
-#           print("shape Berry_curv_eval =", np.shape(Berry_curv_eval))
+           curv_eval = curv.evaluate(kx_in_path, ky_in_path)
+
+#           print("shape curv_eval =", np.shape(curv_eval))
 
            # the cross product of Berry curvature and E-field points only in direction orthogonal to E
-           cross_prod_ortho = E_field[j_time]*Berry_curv_eval
+           cross_prod_ortho = E_field[j_time]*curv_eval
 
 #           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
 #           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
