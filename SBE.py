@@ -4,6 +4,7 @@ from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
+from scipy.special import erf
 
 import hfsbe.dipole
 import hfsbe.example
@@ -230,6 +231,8 @@ def main():
     # Calculate the parallel and orthogonal components 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruct_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
+    J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, \
+                                                 E0, w, phase, dipole)
 
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
@@ -396,6 +399,12 @@ def main():
         pl.ylabel(r'$k$')
         pl.tight_layout()
         '''
+
+        fig15, (ax15_1) = pl.subplots(1,1)
+        ax15_1.set_xlim(t_lims)
+        ax15_1.plot(t/fs_conv,get_A_field(E0,w,t,alpha)/E_conv/fs_conv)
+        ax15_1.set_xlabel(r'$t$ in fs')
+        ax15_1.set_ylabel(r'$A$-field in MV$\cdot$s/cm')
 
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
 
@@ -627,6 +636,89 @@ def current(paths,fv,fc,bite,path,t,alpha,E_dir,bandstruct_deriv_for_print):
 
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
+
+def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
+
+    # t contains all time points
+    A_field   = get_A_field(E0, w, t, alpha)
+    A_field_x = A_field*E_dir[0]
+    A_field_y = A_field*E_dir[1]
+    E_field   = driving_field(E0, w, t, alpha, phase)
+
+    E_ort = np.array([E_dir[1], -E_dir[0]])
+
+    print("shape f =", np.shape(fc))
+
+    # Calculate the gradient analytically at each k-point
+    J_E_dir, J_ortho = [], []
+
+    curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)           
+
+#HACK
+#    for path in paths:
+#       path = np.array(path)
+#       kx_in_path = path[:,0]
+#       ky_in_path = path[:,1]
+#       bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+#       curv_eval = curv.evaluate(kx_in_path, ky_in_path)
+#HACK
+
+    for j_time, time in enumerate(t):
+       je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
+
+       print("j_time =", j_time, "/", np.shape(fc[0,0,:]))
+
+       for path in paths:
+           path = np.array(path)
+           kx_in_path = path[:,0]
+           ky_in_path = path[:,1]
+
+           kx_in_path = np.real(np.array([x - A_field_x[j_time] for x in kx_in_path]))
+           ky_in_path = np.real(np.array([y - A_field_y[j_time] for y in ky_in_path]))
+
+           bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+
+           curv_eval = curv.evaluate(kx_in_path, ky_in_path)
+
+#           print("shape curv_eval =", np.shape(curv_eval))
+
+           # the cross product of Berry curvature and E-field points only in direction orthogonal to E
+           cross_prod_ortho = E_field[j_time]*curv_eval
+
+#           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
+#           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
+
+           #0: v, x   1: v,y   2: c, x  3: c, y
+           je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
+           je_ortho.append(bandstruc_deriv[2]*E_ort[0] + bandstruc_deriv[3]*E_ort[1] + cross_prod_ortho[1,1,:])
+           jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
+           jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1] + cross_prod_ortho[0,0,:])
+   
+       je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
+       je_ortho_swapped = np.swapaxes(je_ortho,0,1)
+       jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
+       jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
+ 
+#       print("shape f =", np.shape(fc))
+#       print("shape j =", np.shape(je_E_dir_swapped))
+
+       # we need tensordot for contracting the first two indices (2 kpoint directions)
+       J_E_dir.append(np.tensordot(je_E_dir_swapped,fc[:,:,j_time],2) + np.tensordot(jh_E_dir_swapped,fv[:,:,j_time],2))
+       J_ortho.append(np.tensordot(je_ortho_swapped,fc[:,:,j_time],2) + np.tensordot(jh_ortho_swapped,fv[:,:,j_time],2))
+
+#    # we need tensordot for contracting the first two indices (2 kpoint directions)
+#    J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) + np.tensordot(jh_E_dir_swapped,fv,2)
+#    J_ortho = np.tensordot(je_ortho_swapped,fc,2) + np.tensordot(jh_ortho_swapped,fv,2)
+
+    # Return the real part of each component
+    return np.real(J_E_dir), np.real(J_ortho)
+
+def get_A_field(E0, w, t, alpha):
+    '''
+    Returns the analytical A-field as integration of the E-field
+    '''
+    w_eff = 4*np.pi*alpha*w
+    return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
 def f(t, y, kpath, dk, gamma2, E0, w, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
