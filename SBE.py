@@ -52,7 +52,7 @@ def main():
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
-    dt_out = 1 #1/(2*params.dt)                          # Solution output time step
+    dt_out = 1/(2*params.dt)                          # Solution output time step
 
     # Brillouin zone type
     BZ_type = params.BZ_type                          # Type of Brillouin zone to construct
@@ -98,13 +98,14 @@ def main():
     if BZ_type == 'full':
         kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
         dk = 1/Nk1
-        if align == 'K':
+        if align == 'M':
             E_dir = np.array([1,0])
-        elif align == 'M':
+        elif align == 'K':
             E_dir = np.array([np.cos(-30/360*2*np.pi),np.sin(-30/360*2*np.pi)])
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
         dk, kpnts, paths = mesh(params, E_dir)
+                        
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
@@ -212,7 +213,7 @@ def main():
     
     # Slice solution along each path for easier observable calculation
     if BZ_type == 'full':
-        solution = np.array_split(solution,Nk2,axis=2)
+        solution = np.array_split(solution,Nk1,axis=2)
     elif BZ_type == '2line':
         solution = np.array_split(solution,Nk_in_path,axis=2)
 
@@ -240,7 +241,6 @@ def main():
 
     dt_out   = t[1]-t[0]
     freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t),d=dt_out))
-    #freq     = np.fft.fftshift(np.fft.fftfreq(Nt,d=dt))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
     Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
     Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
@@ -456,23 +456,32 @@ def mesh(params, E_dir):
     return dk, np.array(mesh), paths
 
 def hex_mesh(Nk1, Nk2, a, b1, b2, align):
-    # Calculate the alpha values needed based on the size of the Brillouin zone
-    if Nk2 == 1: # 1d case set by Nk2 value
-        # alpha1 zero to ensure 1d lane running through gamma-point
-        alpha1 = [0.0]
-        alpha2 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        # Rescale reciprocal lattice vector to original 1d case
-        #b2 = np.array([0,1]) 
-    else: 
-        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)    
+    alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+    alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)    
 
     def is_in_hex(p,a):
         # Returns true if the point is in the hexagonal BZ.
         # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
         x = np.abs(p[0])
         y = np.abs(p[1])
-        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+        return ((x <= 2.0*np.pi/(np.sqrt(3)*a)) and ((1/np.sqrt(3.0))*x + y <= 4*np.pi/(3*a)))
+
+    def reflect_point(p,a,b1,b2):
+        x = p[0]
+        y = p[1]
+        if (x > 2*np.pi/(np.sqrt(3)*a)):   # Crosses right
+            p -= b1
+        elif (x < -2*np.pi/(np.sqrt(3)*a)): # Crosses left
+            p += b1
+        elif ((1/np.sqrt(3))*x + y > 4*np.pi/(3*a)): #Crosses top-right
+            p -= b1 + b2
+        elif ((-1/np.sqrt(3))*x + y < -4*np.pi/(3*a)): #Crosses bot-right
+            p += b2
+        elif ((1/np.sqrt(3))*x + y < -4*np.pi/(3*a)): #Crosses bot-left
+            p += b1 + b2
+        elif ((-1/np.sqrt(3))*x + y > 4*np.pi/(3*a)): #Crosses top-left
+            p -= b2
+        return p
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
@@ -480,10 +489,10 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
 
     # Create the Monkhorst-Pack mesh
     if align == 'M':
-        for a1 in alpha1:
+        for a2 in alpha2:
             # Container for a single gamma-M path
             path_M = []
-            for a2 in alpha2:
+            for a1 in alpha1:
                 # Create a k-point
                 kpoint = a1*b1 + a2*b2
                 # If the current point is in the BZ, append it to the mesh and path_M
@@ -493,34 +502,27 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
                 # If the current point is NOT in the BZ, reflect is along the appropriate axis to get it in the BZ, then append.
                 else:
                     while (is_in_hex(kpoint,a) != True):
-                        if (kpoint[1] < -2*np.pi/(np.sqrt(3)*a)):  # Crosses bottom
-                            kpoint += b1
-                        elif (kpoint[1] > 2*np.pi/(np.sqrt(3)*a)): # Crossed top
-                            kpoint -= b1
-                        elif (np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
-                            kpoint -= b1 + b2
-                        elif (-np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
-                            kpoint -= b2
-                        elif (np.sqrt(3)*kpoint[0] + kpoint[1] < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
-                            kpoint += b1 + b2
-                        elif (-np.sqrt(3)*kpoint[0] + kpoint[1] > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
-                            kpoint += b2
+                        kpoint = reflect_point(kpoint,a,b1,b2)
                     mesh.append(kpoint)
                     path_M.append(kpoint)
-                    
             # Append the a1'th path to the paths array
             paths.append(path_M)
 
     elif align == 'K':
-        b2 = 4*np.pi/(a*np.sqrt(3))*np.array([1,0])
+        alpha1 = np.linspace((1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+        alpha2 = np.linspace(-1.0 + (1/(2*Nk2)), 2.0 - (1/(2*Nk2)), num = Nk2)
         for a1 in alpha1:
             path_K = []
             for a2 in alpha2:
-                kpoint = a1*b1 + a2*b2
+                kpoint = a1*b1 + a2*8*np.pi/(a*3)*np.array([1,0])
                 if is_in_hex(kpoint,a):
                     mesh.append(kpoint)
                     path_K.append(kpoint)
-
+                else:
+                    while (is_in_hex(kpoint,a) != True):
+                        kpoint = reflect_point(kpoint,a,b1,b2)
+                    mesh.append(kpoint)
+                    path_K.append(kpoint)
             paths.append(path_K)
     
     return np.array(mesh), paths
@@ -690,37 +692,36 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
 
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
-
-    # Firs Brillouin zone boundaries
-    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
-    # Second Brillouin zone boundaries
-    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
-
+    
+    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,fill=False))
+    
     ax.arrow(-0.5*E_dir[0],-0.5*E_dir[1],E_dir[0],E_dir[1],width=0.005,alpha=0.5,label='E-field')
-
+    
     pl.scatter(0,0,s=15,c='black')
-    pl.text(0.05,0.01,r'$\Gamma$')
-    pl.scatter(R,0,s=15,c='black')
-    pl.text(R,0.05,r'$K$')
-    pl.scatter(r*np.cos(np.pi/6),-r*np.sin(np.pi/6),s=15,c='black')
-    pl.text(r*np.cos(np.pi/6),-r*np.sin(np.pi/6)-0.05,r'$M$')
+    pl.text(0.01,0.01,r'$\Gamma$')
+    pl.scatter(r*np.cos(-np.pi/3),r*np.sin(-np.pi/3),s=15,c='black')
+    pl.text(r*np.cos(-np.pi/3)+0.01,r*np.sin(-np.pi/3)-0.05,r'$M$')
+    pl.scatter(R*np.cos(-np.pi/6),R*np.sin(-np.pi/6),s=15,c='black')
+    pl.text(R*np.cos(-np.pi/6)-0.01,R*np.sin(-np.pi/6)-0.06,r'$K$')
     pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
     pl.xlim(-5.0/a,5.0/a)
     pl.ylim(-5.0/a,5.0/a)
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
 
+    print(np.shape(paths))
     for path in paths:
         path = np.array(path)
-        pl.plot(path[:,0], path[:,1])
+        pl.plot(path[:,0],path[:,1])
     
     return
-
+    ax.arrow(-0.5*E_dir[0],-0.5*E_dir[1],E_dir[0],E_dir[1],width=0.005,alpha=0.5,label='E-field')
 if __name__ == "__main__":
     main()
 
