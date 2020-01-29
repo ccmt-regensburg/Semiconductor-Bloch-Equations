@@ -99,9 +99,9 @@ def main():
     if BZ_type == 'full':
         kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
         dk = 1/Nk1
-        if align == 'M':
+        if align == 'K':
             E_dir = np.array([1,0])
-        elif align == 'K':
+        elif align == 'M':
             E_dir = np.array([np.cos(-30/360*2*np.pi),np.sin(-30/360*2*np.pi)])
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
@@ -231,8 +231,7 @@ def main():
     # Calculate the parallel and orthogonal components 
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruct_deriv_for_print)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
-    J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, \
-                                                 E0, w, phase, dipole)
+    #J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
 
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
@@ -473,24 +472,25 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
         x = np.abs(p[0])
         y = np.abs(p[1])
-        return ((x <= 2.0*np.pi/(np.sqrt(3)*a)) and ((1/np.sqrt(3.0))*x + y <= 4*np.pi/(3*a)))
+        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
 
     def reflect_point(p,a,b1,b2):
         x = p[0]
         y = p[1]
-        if (x > 2*np.pi/(np.sqrt(3)*a)):   # Crosses right
-            p -= b1
-        elif (x < -2*np.pi/(np.sqrt(3)*a)): # Crosses left
-            p += b1
-        elif ((1/np.sqrt(3))*x + y > 4*np.pi/(3*a)): #Crosses top-right
-            p -= b1 + b2
-        elif ((-1/np.sqrt(3))*x + y < -4*np.pi/(3*a)): #Crosses bot-right
-            p += b2
-        elif ((1/np.sqrt(3))*x + y < -4*np.pi/(3*a)): #Crosses bot-left
-            p += b1 + b2
-        elif ((-1/np.sqrt(3))*x + y > 4*np.pi/(3*a)): #Crosses top-left
+        if (y > 2*np.pi/(np.sqrt(3)*a)):   # Crosses top
             p -= b2
+        elif (y < -2*np.pi/(np.sqrt(3)*a)): # Crosses right
+            p += b2
+        elif (np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
+            p -= b1 + b2
+        elif (-np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
+            p -= b1
+        elif (np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
+            p += b1 + b2
+        elif (-np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
+            p += b1
         return p
+
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
@@ -518,18 +518,21 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
             paths.append(path_M)
 
     elif align == 'K':
-        alpha1 = np.linspace((1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        alpha2 = np.linspace(-1.0 + (1/(2*Nk2)), 2.0 - (1/(2*Nk2)), num = Nk2)
-        for a1 in alpha1:
+        b_a1 = 8*np.pi/(a*3)*np.array([1,0])
+        b_a2 = 4*np.pi/(a*3)*np.array([1,np.sqrt(3)])
+        # Extend over half of the b2 direction and 1.5x the b1 direction (extending into the 2nd BZ to get correct boundary conditions)
+        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 1.0 - (1/(2*Nk1)), num = Nk1)
+        alpha2 = np.linspace((1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
+        alpha2 = np.linspace(0, 0.5 - (1/(2*Nk2)), num = Nk2)
+        for a2 in alpha2:
             path_K = []
-            for a2 in alpha2:
-                kpoint = a1*b1 + a2*8*np.pi/(a*3)*np.array([1,0])
+            for a1 in alpha1:
+                kpoint = a1*b_a1 + a2*b_a2
                 if is_in_hex(kpoint,a):
                     mesh.append(kpoint)
                     path_K.append(kpoint)
                 else:
-                    while (is_in_hex(kpoint,a) != True):
-                        kpoint = reflect_point(kpoint,a,b1,b2)
+                    kpoint -= 2*np.pi/(a)*np.array([1,1/np.sqrt(3)])
                     mesh.append(kpoint)
                     path_K.append(kpoint)
             paths.append(path_K)
@@ -785,22 +788,22 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
     
-    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,fill=False))
-    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,fill=False))
+    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
     
     ax.arrow(-0.5*E_dir[0],-0.5*E_dir[1],E_dir[0],E_dir[1],width=0.005,alpha=0.5,label='E-field')
     
     pl.scatter(0,0,s=15,c='black')
     pl.text(0.01,0.01,r'$\Gamma$')
-    pl.scatter(r*np.cos(-np.pi/3),r*np.sin(-np.pi/3),s=15,c='black')
-    pl.text(r*np.cos(-np.pi/3)+0.01,r*np.sin(-np.pi/3)-0.05,r'$M$')
-    pl.scatter(R*np.cos(-np.pi/6),R*np.sin(-np.pi/6),s=15,c='black')
-    pl.text(R*np.cos(-np.pi/6)-0.01,R*np.sin(-np.pi/6)-0.06,r'$K$')
+    pl.scatter(r*np.cos(-np.pi/6),r*np.sin(-np.pi/6),s=15,c='black')
+    pl.text(r*np.cos(-np.pi/6)+0.01,r*np.sin(-np.pi/6)-0.05,r'$M$')
+    pl.scatter(R,0,s=15,c='black')
+    pl.text(R,0.02,r'$K$')
     pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
     pl.xlim(-5.0/a,5.0/a)
     pl.ylim(-5.0/a,5.0/a)
@@ -813,7 +816,7 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
         pl.plot(path[:,0],path[:,1])
     
     return
-    ax.arrow(-0.5*E_dir[0],-0.5*E_dir[1],E_dir[0],E_dir[1],width=0.005,alpha=0.5,label='E-field')
+
 if __name__ == "__main__":
     main()
 

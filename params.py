@@ -21,18 +21,18 @@ k_cut               = 0.05        # Model hamiltonian cutoff
 BZ_type = 'full'
 
 # Reciprocal lattice vectors
-b1 = (4*np.pi/(a*np.sqrt(3)))*np.array([1,0])
-b2 = (2*np.pi/(a*np.sqrt(3)))*np.array([-1,np.sqrt(3)])
+b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
+b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 
 # full BZ parametes
-Nk1                 = 100         # Number of kpoints in b1 direction
-Nk2                 = 100         # Number of kpoints in b2 direction
+Nk1                 = 50         # Number of kpoints in b1 direction
+Nk2                 = 50          # Number of kpoints in b2 direction
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.25        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 7.0*np.pi/(3*a) # Length of path in BZ 
-angle_inc_E_field   = 0         # incoming angle of the E-field in degree
+angle_inc_E_field   = 0          # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
