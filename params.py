@@ -18,25 +18,25 @@ k_cut               = 0.05        # Model hamiltonian cutoff
 ##########################################################################
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-BZ_type = 'full'
+BZ_type = '2line'
 
 # Reciprocal lattice vectors
 b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
 b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 
 # full BZ parametes
-Nk1                 = 50         # Number of kpoints in b1 direction
-Nk2                 = 50          # Number of kpoints in b2 direction
+Nk1                 = 100           # Number of kpoints in b1 direction
+Nk2                 = 11           # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
+Nk_in_path          = 100         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.25        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 7.0*np.pi/(3*a) # Length of path in BZ 
+length_path_in_BZ   = 6*np.pi/(3*a) # Length of path in BZ 
 angle_inc_E_field   = 0          # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
-align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 alpha               = 25.0        # Gaussian pulse width (femtoseconds)

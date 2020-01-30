@@ -79,11 +79,16 @@ def main():
     # USER OUTPUT
     ###############################################################################################
     print("Solving for...")
+    print("Brillouin zone: " + BZ_type)
     if Nk < 20:
         print("***WARNING***: Convergence issues may result from Nk < 20")
     if params.dt > 1.0:
         print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
     print("Number of k-points              = " + str(Nk))
+    if BZ_type == 'full':
+        print("Driving field alignment         = " + align)
+    elif BZ_type == '2line':
+        print("Driving field direction         = " + str(angle_inc_E_field))
     print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
     print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
@@ -106,7 +111,8 @@ def main():
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
         dk, kpnts, paths = mesh(params, E_dir)
-                        
+
+    kx, ky = kpnts[:,0], kpnts[:,1]
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
@@ -134,6 +140,10 @@ def main():
     #bite = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
     h, ef, wf, ediff = bite.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
+
+    bite.evaluate_energy(kx, ky)
+    bite.plot_bands_3d(kx, ky)
+    bite.plot_bands_contour(kx, ky)
 
     # SOLVING 
     ###############################################################################################
@@ -228,9 +238,9 @@ def main():
     bandstruct_deriv_for_print = []
     dipole_ortho_for_print    = []
 
-    # Calculate the parallel and orthogonal components 
-    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruct_deriv_for_print)
+    # Calculate the parallel and orthogonal components
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir, dipole_ortho_for_print)
+    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, bandstruct_deriv_for_print)
     #J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
 
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
@@ -255,8 +265,8 @@ def main():
     if not test:
         real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
-        freq_lims = (0,25)
-        log_limits = (10e-15,100)
+        freq_lims = (0,30)
+        log_limits = (10e-20,100)
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv,driving_field(E0,w,t,alpha,phase)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
@@ -522,7 +532,6 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         b_a2 = 4*np.pi/(a*3)*np.array([1,np.sqrt(3)])
         # Extend over half of the b2 direction and 1.5x the b1 direction (extending into the 2nd BZ to get correct boundary conditions)
         alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 1.0 - (1/(2*Nk1)), num = Nk1)
-        alpha2 = np.linspace((1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
         alpha2 = np.linspace(0, 0.5 - (1/(2*Nk2)), num = Nk2)
         for a2 in alpha2:
             path_K = []
@@ -589,8 +598,10 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
+        # Evaluate the dipole moments in path
         di_x, di_y = dipole.evaluate(kx_in_path, ky_in_path)
 
+        # Append the dot product d.E 
         d_E_dir.append(di_x[0,1,:]*E_dir[0] + di_y[0,1,:]*E_dir[1])
         d_ortho.append(di_x[0,1,:]*E_ort[0] + di_y[0,1,:]*E_ort[1])
         
@@ -598,10 +609,10 @@ def polarization(paths,pcv,dipole,E_dir,dipole_ortho_for_print):
 
     d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
     d_ortho_swapped = np.swapaxes(d_ortho,0,1)
-
+    
     P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pcv,2))
     P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pcv,2))
-
+    
     return P_E_dir, P_ortho
 
 
@@ -810,7 +821,6 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
 
-    print(np.shape(paths))
     for path in paths:
         path = np.array(path)
         pl.plot(path[:,0],path[:,1])
