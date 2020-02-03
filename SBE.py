@@ -46,7 +46,7 @@ def main():
     w = params.w*THz_conv                             # Driving frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
-
+    
     # Time scales
     T2 = params.T2*fs_conv                            # Damping time
     gamma2 = 1/T2                                     # Gamma parameter
@@ -118,7 +118,7 @@ def main():
     
     # Solution containers
     t                           = []
-    solution                    = []    
+    solution                    = []
     dipole_E_dir                = []
     berry_conn_E_dir            = []
     dipole_x                    = []
@@ -147,7 +147,7 @@ def main():
     path_num = 1
     for path in paths:
         print('path: ' + str(path_num))
-        
+
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
 
@@ -187,7 +187,7 @@ def main():
 
             # Integrate one integration time step
             solver.integrate(solver.t + dt)
-            
+
             # Save solution each output step 
             if ti%dt_out == 0:
                 path_solution.append(solver.y)
@@ -200,9 +200,11 @@ def main():
 
         # Flag that time array has been built up
         t_constructed = True
+        path_num += 1
 
         # Append path solutions to the total solution arrays
         solution.append(path_solution)
+
         '''
         # Append path values of dipole etc... to arrays for plotting
         dipole_E_dir.append(dipole_in_path)
@@ -212,12 +214,11 @@ def main():
         val_band.append(bandstruct[0])
         cond_band.append(bandstruct[1])
         '''
-        path_num += 1
 
     # Convert solution and time array to numpy arrays
     t        = np.array(t)
     solution = np.array(solution)
-    
+
     # Slice solution along each path for easier observable calculation
     if BZ_type == 'full':
         solution = np.array_split(solution,Nk1,axis=2)
@@ -234,7 +235,7 @@ def main():
     val_band         = np.array(val_band)
     cond_band        = np.array(cond_band)
     '''
-    
+    print(np.shape(solution))
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
     # COMPUTE OBSERVABLES
@@ -273,6 +274,17 @@ def main():
     # Emission intensity
     Int_E_dir = np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2.0
     Int_ortho = np.abs(freq*Pw_ortho + 1j*Jw_ortho)**2.0
+
+    # Save observables to file
+    if (BZ_type == '2line'):
+        Nk1 = Nk_in_path
+        Nk2 = 2
+    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
+    np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, Jw_E_dir, Jw_ortho])
+    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
+    np.save(P_filename, [t/fs_conv,P_E_dir,P_ortho, Pw_E_dir, Pw_ortho])
+    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
+    np.save(I_filename, [freq/w, I_E_dir, I_ortho, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if not test:
         real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2)
@@ -500,8 +512,11 @@ def driving_field(E0, w, t, alpha, phase):
     '''
     Returns the instantaneous driving pulse field
     '''
+    wt = -0.0000005
+    # Non-pulse
     #return E0*np.sin(2.0*np.pi*w*t)
-    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t + phase)
+    # Gaussian pulse
+    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t + wt*t**2 + phase)
 
 @njit
 def rabi(k,E0,w,t,alpha,phase,dipole_in_path):
