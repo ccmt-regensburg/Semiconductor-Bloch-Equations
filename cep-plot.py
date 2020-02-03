@@ -24,7 +24,7 @@ z_Int_Edir = []
 z_Int_ortho = []
 for i_phase, phase in enumerate(phases):
     I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat.npy').format(Nk1,Nk2,w,E0,alpha,phase)
-    I = np.load(I_filename)
+    I = np.load('cep-2lineK-a-3.5e-7/'+I_filename)
     x  = I[0]
     z_I_Edir.append(I[3])
     z_I_ortho.append(I[4])
@@ -37,19 +37,36 @@ X, Y = np.meshgrid(x, phases)
 fig, ((ax_Int_Edir,ax_Int_ortho),(ax_I_Edir,ax_I_ortho)) = plt.subplots(2,2)
 
 ax_Int_Edir.set_title('Parallel Intensity')
+ax_Int_Edir.set_xlabel(r'$\omega/\omega_0$')
+ax_Int_Edir.set_ylabel(r'$CEP \  \phi$')
 cont_Int_Edir = ax_Int_Edir.contourf(X, Y, z_Int_Edir, levels=logspace, locator=ticker.LogLocator(), cmap=cm.inferno)
-cbar1 = fig.colorbar(cont_Int_Edir, ax=ax_Int_Edir)
+cbar1 = fig.colorbar(cont_Int_Edir, ax=ax_Int_Edir, label=r'$I_{\parallel}(\omega)$')
 
 ax_Int_ortho.set_title('Orthogonal Intensity')
+ax_Int_ortho.set_xlabel(r'$\omega/\omega_0$')
+ax_Int_ortho.set_ylabel(r'$CEP \  \phi$')
 cont_Int_ortho = ax_Int_ortho.contourf(X, Y, z_Int_ortho, levels=logspace, locator=ticker.LogLocator(), cmap=cm.inferno)
-cbar2 = fig.colorbar(cont_Int_ortho, ax=ax_Int_ortho)
+cbar2 = fig.colorbar(cont_Int_ortho, ax=ax_Int_ortho, label=r'$I_{\bot}(\omega)$')
 
 ax_I_Edir.set_title('Parallel Emission')
+ax_I_Edir.set_xlabel(r'$\omega/\omega_0$')
+ax_I_Edir.set_ylabel(r'$CEP \  \phi$')
 cont_I_Edir = ax_I_Edir.contourf(X, Y, z_I_Edir, levels=logspace, locator=ticker.LogLocator(), cmap=cm.inferno)
-cbar3 = fig.colorbar(cont_I_Edir, ax=ax_I_Edir)
+cbar3 = fig.colorbar(cont_I_Edir, ax=ax_I_Edir, label=r'$E_{\parallel}(\omega)$')
 
 ax_I_ortho.set_title('Orthogonal Emission')
+ax_I_ortho.set_xlabel(r'$\omega/\omega_0$')
+ax_I_ortho.set_ylabel(r'$CEP \  \phi$')
 cont_I_ortho = ax_I_ortho.contourf(X, Y, z_I_ortho, levels=logspace, locator=ticker.LogLocator(), cmap=cm.inferno)
-cbar4 = fig.colorbar(cont_I_ortho, ax=ax_I_ortho)
+cbar4 = fig.colorbar(cont_I_ortho, ax=ax_I_ortho, label=r'$E_{\bot}(\omega)$')
+
+fig2, ax = plt.subplots()
+# Plot some example emission spectra
+ax.set_xlim(0,30)
+ax.set_xlabel(r'$\omega/\omega_0$')
+ax.set_ylabel(r'$I_{\parallel}(\omega)$')
+ax.semilogy(x,z_Int_Edir[0],label=r'CEP = 0')
+ax.semilogy(x,z_Int_Edir[int(np.size(phases)/2)],label=r'CEP = $\pi/2$')
+fig2.legend()
 
 plt.show()
