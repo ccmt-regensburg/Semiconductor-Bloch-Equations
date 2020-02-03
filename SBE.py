@@ -42,8 +42,9 @@ def main():
     temperature = params.temperature*eV_conv          # Temperature for initial conditions
 
     # Driving field parameters
-    E0 = params.E0*E_conv                             # Driving field amplitude
-    w = params.w*THz_conv                             # Driving frequency
+    E0    = params.E0*E_conv                          # Driving pulse field amplitude
+    w     = params.w*THz_conv                         # Driving pulse frequency
+    wt    = params.wt*THz_conv                        # Pulse chirp frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
     
@@ -92,6 +93,7 @@ def main():
     print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
     print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
+    print("Chirp freq. (THz)[a.u.]         = " + "(" + '%.6f'%(wt/THz_conv) + ")" + "[" + '%.6f'%(wt) + "]")
     print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
     print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
     print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
@@ -176,7 +178,7 @@ def main():
             initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,wt,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
 
         # Propagate through time
         ti = 0
@@ -508,22 +510,21 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
     return np.array(mesh), paths
 
 @njit
-def driving_field(E0, w, t, alpha, phase):
+def driving_field(E0, w, wt, t, alpha, phase):
     '''
     Returns the instantaneous driving pulse field
     '''
-    wt = -0.0000005
     # Non-pulse
     #return E0*np.sin(2.0*np.pi*w*t)
     # Gaussian pulse
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t + wt*t**2 + phase)
 
 @njit
-def rabi(k,E0,w,t,alpha,phase,dipole_in_path):
+def rabi(k,E0,w,wt,t,alpha,phase,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole_in_path[k]*driving_field(E0, w, t, alpha, phase)
+    return dipole_in_path[k]*driving_field(E0, w, wt, t, alpha, phase)
 
 def diff(x,y):
     '''
@@ -694,18 +695,18 @@ def get_A_field(E0, w, t, alpha):
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
+def f(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
     
     # Gradient term coefficient
-    D = driving_field(E0, w, t, alpha, phase)/(2*dk)
+    D = driving_field(E0, w, wt, t, alpha, phase)/(2*dk)
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
@@ -728,12 +729,12 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, alpha, phase, ecv_in_path, dipole_in_
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
         #wr          = dipole_in_path[k]*D
-        wr          = rabi(k, E0, w, t, alpha, phase, dipole_in_path)
+        wr          = rabi(k, E0, w, wt, t, alpha, phase, dipole_in_path)
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
         #wr_d_diag   = A_in_path[k]*D
-        wr_d_diag   = rabi(k, E0, w, t, alpha, phase, A_in_path)
+        wr_d_diag   = rabi(k, E0, w, wt, t, alpha, phase, A_in_path)
 
         # Update each component of the solution vector
         x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])

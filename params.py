@@ -39,8 +39,9 @@ angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
+wt                  = 0.05       # Pulse chirp frequency (THz)
 alpha               = 25.0        # Gaussian pulse width (femtoseconds)
-phase               = (10/10)*np.pi# Carrier envelope phase 
+phase               = 0          # Carrier envelope phase 
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
