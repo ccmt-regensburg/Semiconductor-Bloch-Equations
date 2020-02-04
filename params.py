@@ -25,23 +25,23 @@ b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
 b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 
 # full BZ parametes
-Nk1                 = 10           # Number of kpoints in b1 direction
-Nk2                 = 10           # Number of kpoints in b2 direction (number of paths)
+Nk1                 = 50           # Number of kpoints in b1 direction
+Nk2                 = 50           # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ 
-angle_inc_E_field   = 0           # incoming angle of the E-field in degree
+angle_inc_E_field   = 60           # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
 align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
-wt                  = 0.05       # Pulse chirp frequency (THz)
+wt                  = 0.01        # Pulse chirp frequency (THz)
 alpha               = 25.0        # Gaussian pulse width (femtoseconds)
-phase               = 0          # Carrier envelope phase 
+phase               = (0/10)*np.pi          # Carrier envelope phase 
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
@@ -60,6 +60,7 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
+user_out      = False  # Set to True to get user plotting and progress output
 test          = False  # Set to True to output travis testing parameters
 matrix_method = False  # Set to True to use old matrix method for solving
 

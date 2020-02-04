@@ -75,28 +75,30 @@ def main():
     b1    = params.b1                               # Reciprocal lattice vectors
     b2    = params.b2
 
+    user_out = params.user_out
     test = params.test                                # Testing flag for Travis
 
     # USER OUTPUT
     ###############################################################################################
-    print("Solving for...")
-    print("Brillouin zone: " + BZ_type)
-    if Nk < 20:
-        print("***WARNING***: Convergence issues may result from Nk < 20")
-    if params.dt > 1.0:
-        print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
-    print("Number of k-points              = " + str(Nk))
-    if BZ_type == 'full':
-        print("Driving field alignment         = " + align)
-    elif BZ_type == '2line':
-        print("Driving field direction         = " + str(angle_inc_E_field))
-    print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
-    print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
-    print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
-    print("Chirp freq. (THz)[a.u.]         = " + "(" + '%.6f'%(wt/THz_conv) + ")" + "[" + '%.6f'%(wt) + "]")
-    print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
-    print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
-    print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
+    if user_out:
+        print("Solving for...")
+        print("Brillouin zone: " + BZ_type)
+        if Nk < 20:
+            print("***WARNING***: Convergence issues may result from Nk < 20")
+        if params.dt > 1.0:
+            print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
+        print("Number of k-points              = " + str(Nk))
+        if BZ_type == 'full':
+            print("Driving field alignment         = " + align)
+        elif BZ_type == '2line':
+            print("Driving field direction         = " + str(angle_inc_E_field))
+        print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
+        print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
+        print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
+        print("Chirp freq. (THz)[a.u.]         = " + "(" + '%.6f'%(wt/THz_conv) + ")" + "[" + '%.6f'%(wt) + "]")
+        print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
+        print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
+        print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
     
     # INITIALIZATIONS
     ###############################################################################################
@@ -148,7 +150,7 @@ def main():
     # Iterate through each path in the Brillouin zone
     path_num = 1
     for path in paths:
-        print('path: ' + str(path_num))
+        if user_out: print('path: ' + str(path_num))
 
         # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
         path = np.array(path)
@@ -184,7 +186,7 @@ def main():
         ti = 0
         while solver.successful() and ti < Nt:
             # User output of integration progress
-            if (ti%10000) == 0:
+            if (ti%10000 == 0 and user_out):
                 print('{:5.2f}%'.format(ti/Nt*100))
 
             # Integrate one integration time step
@@ -237,7 +239,6 @@ def main():
     val_band         = np.array(val_band)
     cond_band        = np.array(cond_band)
     '''
-    print(np.shape(solution))
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
     
     # COMPUTE OBSERVABLES
@@ -288,13 +289,13 @@ def main():
     I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
     np.save(I_filename, [freq/w, I_E_dir, I_ortho, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
-    if not test:
+    if (not test and user_out):
         real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
         log_limits = (10e-20,100)
         axE.set_xlim(t_lims)
-        axE.plot(t/fs_conv,driving_field(E0,w,t,alpha,phase)/E_conv)
+        axE.plot(t/fs_conv,driving_field(E0,w,wt,t,alpha,phase)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
         axP.set_xlim(t_lims)
@@ -407,10 +408,8 @@ def mesh(params, E_dir):
 
     alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
-    print ("vec_k_path =", vec_k_path)
 
     vec_k_ortho = 2.0*np.pi/a*rel_dist_to_Gamma*np.array([E_dir[1],-E_dir[0]])
-    print ("vec_k_ortho =", vec_k_ortho)
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
@@ -516,7 +515,7 @@ def driving_field(E0, w, wt, t, alpha, phase):
     '''
     # Non-pulse
     #return E0*np.sin(2.0*np.pi*w*t)
-    # Gaussian pulse
+    # Chirped Gaussian pulse
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t + wt*t**2 + phase)
 
 @njit
