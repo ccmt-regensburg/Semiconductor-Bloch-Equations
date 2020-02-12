@@ -10,13 +10,6 @@ import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
 
-'''
-TO DO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-- arbitrary (circular) polarization (big task)
-- make hex_mesh general for arbitrary direction
-- change testing outputs for 1d case 
-'''
-
 def main():
     
     # RETRIEVE PARAMETERS
@@ -44,13 +37,15 @@ def main():
     # Driving field parameters
     E0    = params.E0*E_conv                          # Driving pulse field amplitude
     w     = params.w*THz_conv                         # Driving pulse frequency
-    wt    = params.wt*THz_conv                        # Pulse chirp frequency
+    chirp = params.chirp*THz_conv                     # Pulse chirp frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
     
     # Time scales
-    T2 = params.T2*fs_conv                            # Damping time
-    gamma2 = 1/T2                                     # Gamma parameter
+    T1 = params.T1*fs_conv                            # Occupations damping time
+    T2 = params.T2*fs_conv                            # Polarization damping time
+    gamma1 = 1/T1                                     # Occupations damping parameter
+    gamma2 = 1/T2                                     # Polarization damping parameter
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
@@ -76,6 +71,8 @@ def main():
     b2    = params.b2
 
     user_out = params.user_out
+    energy_plots = params.energy_plots
+    dipole_plots = params.dipole_plots
     test = params.test                                # Testing flag for Travis
 
     # USER OUTPUT
@@ -83,10 +80,6 @@ def main():
     if user_out:
         print("Solving for...")
         print("Brillouin zone: " + BZ_type)
-        if Nk < 20:
-            print("***WARNING***: Convergence issues may result from Nk < 20")
-        if params.dt > 1.0:
-            print("***WARNING***: Time-step may be insufficiently small. Use dt < 1.0fs")
         print("Number of k-points              = " + str(Nk))
         if BZ_type == 'full':
             print("Driving field alignment         = " + align)
@@ -95,7 +88,7 @@ def main():
         print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
         print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
         print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
-        print("Chirp freq. (THz)[a.u.]         = " + "(" + '%.6f'%(wt/THz_conv) + ")" + "[" + '%.6f'%(wt) + "]")
+        print("Chirp rate (THz)[a.u.]          = " + "(" + '%.6f'%(chirp/THz_conv) + ")" + "[" + '%.6f'%(chirp) + "]")
         print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
         print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
         print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
@@ -141,9 +134,13 @@ def main():
     h, ef, wf, ediff = bite.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
-    #bite.evaluate_energy(kx, ky)
-    #bite.plot_bands_3d(kx, ky)
-    #bite.plot_bands_contour(kx, ky)
+    if energy_plots:
+        bite.evaluate_energy(kpnts[:,0], kpnts[:,1])
+        bite.plot_bands_3d(kpnts[:,0], kpnts[:,1])
+        bite.plot_bands_contour(kpnts[:,0], kpnts[:,1])
+    if dipole_plots:
+        Ax, Ay = dipole.evaluate(kpnts[:,0], kpnts[:,1])
+        dipole.plot_dipoles(Ax, Ay)
 
     # SOLVING 
     ###############################################################################################
@@ -180,7 +177,7 @@ def main():
             initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,wt,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma1,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
 
         # Propagate through time
         ti = 0
@@ -254,6 +251,9 @@ def main():
     # Berry curvature current
     #J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
 
+    #mem_total = (solution.nbytes + P_E_dir.nbytes + P_ortho.nbytes + J_E_dir.nbytes + J_ortho.nbytes + I_E_dir.nbytes + I_ortho.nbytes)/(1e9)
+    #print('Total memory: ' + str(mem_total))
+
     # Polar emission in time
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -268,8 +268,6 @@ def main():
     Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_E_dir = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir), norm='ortho'))
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho), norm='ortho'))
-    #Jw_E_dir = np.absolute(np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho')))
-    #Jw_ortho = np.absolute(np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho')))
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
@@ -282,11 +280,11 @@ def main():
     if (BZ_type == '2line'):
         Nk1 = Nk_in_path
         Nk2 = 2
-    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
+    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
     np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, Jw_E_dir, Jw_ortho])
-    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
+    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
     np.save(P_filename, [t/fs_conv,P_E_dir,P_ortho, Pw_E_dir, Pw_ortho])
-    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}.dat').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
+    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
     np.save(I_filename, [freq/w, I_E_dir, I_ortho, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if (not test and user_out):
@@ -295,7 +293,7 @@ def main():
         freq_lims = (0,30)
         log_limits = (10e-20,100)
         axE.set_xlim(t_lims)
-        axE.plot(t/fs_conv,driving_field(E0,w,wt,t,alpha,phase)/E_conv)
+        axE.plot(t/fs_conv,driving_field(E0,w,t,chirp,alpha,phase)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
         axP.set_xlim(t_lims)
@@ -509,21 +507,21 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
     return np.array(mesh), paths
 
 @njit
-def driving_field(E0, w, wt, t, alpha, phase):
+def driving_field(E0, w, t, chirp, alpha, phase):
     '''
     Returns the instantaneous driving pulse field
     '''
     # Non-pulse
     #return E0*np.sin(2.0*np.pi*w*t)
     # Chirped Gaussian pulse
-    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t + wt*t**2 + phase)
+    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
 @njit
-def rabi(k,E0,w,wt,t,alpha,phase,dipole_in_path):
+def rabi(k,E0,w,t,chirp,alpha,phase,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole_in_path[k]*driving_field(E0, w, wt, t, alpha, phase)
+    return dipole_in_path[k]*driving_field(E0, w, t, chirp, alpha, phase)
 
 def diff(x,y):
     '''
@@ -694,18 +692,18 @@ def get_A_field(E0, w, t, alpha):
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
+def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
     
     # Gradient term coefficient
-    D = driving_field(E0, w, wt, t, alpha, phase)/(2*dk)
+    D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
@@ -728,18 +726,19 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, wt, alpha, phase, ecv_in_path, dipole
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
         #wr          = dipole_in_path[k]*D
-        wr          = rabi(k, E0, w, wt, t, alpha, phase, dipole_in_path)
+        wr          = rabi(k, E0, w, t, chirp, alpha, phase, dipole_in_path)
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
         #wr_d_diag   = A_in_path[k]*D
-        wr_d_diag   = rabi(k, E0, w, wt, t, alpha, phase, A_in_path)
+        wr_d_diag   = rabi(k, E0, w, t, chirp, alpha, phase, A_in_path)
 
         # Update each component of the solution vector
-        x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
+        # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+        x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])# - gamma1*(x[i+3]-x[i])
         x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
-        x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
+        x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])# + gamma1*(x[i+3]-x[i])
 
     return x
 
