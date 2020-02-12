@@ -12,7 +12,7 @@ C0                  = 0           # Dirac point position
 C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
 R                   = 11.06       # k^3 coefficient
-k_cut               = 0.05        # Model hamiltonian cutoff
+k_cut               = 0.05       # Model hamiltonian cutoff
 
 # Brillouin zone parameters
 ##########################################################################
@@ -32,7 +32,7 @@ Nk2                 = 50           # Number of kpoints in b2 direction (number o
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ 
-angle_inc_E_field   = 60           # incoming angle of the E-field in degree
+angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
@@ -40,11 +40,12 @@ align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 wt                  = 0.01        # Pulse chirp frequency (THz)
-alpha               = 25.0        # Gaussian pulse width (femtoseconds)
-phase               = (0/10)*np.pi          # Carrier envelope phase 
+alpha               = 25.0         # Gaussian pulse width (femtoseconds)
+phase               = (0/1)*2*np.pi# Carrier envelope phase (edited by cep-scan.py)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
+T1    = 10      # Phenomenological occupations damping time
 T2    = 1      # Phenomenological polarization damping time 
 t0    = -1200  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1200   # End time
@@ -60,7 +61,9 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out      = False  # Set to True to get user plotting and progress output
+user_out      = True  # Set to True to get user plotting and progress output
+energy_plots  = False  # Set to True to plot 3d energy bands and contours
+dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
 test          = False  # Set to True to output travis testing parameters
 matrix_method = False  # Set to True to use old matrix method for solving
 
