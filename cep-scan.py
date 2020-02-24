@@ -2,7 +2,7 @@ import os
 import subprocess
 import fileinput
 
-N_phases = 40
+N_phases = 20
 paramFile = 'params.py'
 
 phase_div_prev = '(0/1)'
@@ -19,8 +19,8 @@ for i in range(N_phases+1):
 
 with fileinput.FileInput(paramFile, inplace=True) as file:
     for line in file:
-        print(line.replace(phase_div_prev,'(0/1)'), end='')   
+        print(line.replace(phase_div_prev,'(0/1)'), end='')
 
 # Call plotting script
-call = 'python3 cep-plot.py ' + str(N_phases) 
+call = 'python3 cep-plot.py ' + str(N_phases)
 os.system(call)

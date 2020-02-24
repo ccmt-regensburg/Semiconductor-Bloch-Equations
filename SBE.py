@@ -10,17 +10,22 @@ import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
 
+'''
+TO DO:
+UPDATE MATRIX METHOD. NOT COMPATIBLE WITH CODE AS OF NOW.
+'''
+
 def main():
-    
+
     # RETRIEVE PARAMETERS
     ###############################################################################################
     # Unit converstion factors
     fs_conv = params.fs_conv
-    E_conv = params.E_conv 
+    E_conv = params.E_conv
     THz_conv = params.THz_conv
     amp_conv = params.amp_conv
     eV_conv = params.eV_conv
-    
+
     # Set BZ type independent parameters
     # Hamiltonian parameters
     C0 = params.C0                                    # Dirac point position
@@ -40,11 +45,9 @@ def main():
     chirp = params.chirp*THz_conv                     # Pulse chirp frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
-    
+
     # Time scales
-    T1 = params.T1*fs_conv                            # Occupations damping time
     T2 = params.T2*fs_conv                            # Polarization damping time
-    gamma1 = 1/T1                                     # Occupations damping parameter
     gamma2 = 1/T2                                     # Polarization damping parameter
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
@@ -53,7 +56,7 @@ def main():
 
     # Brillouin zone type
     BZ_type = params.BZ_type                          # Type of Brillouin zone to construct
-    
+
     # Brillouin zone type
     if BZ_type == 'full':
         Nk1   = params.Nk1                              # Number of kpoints in b1 direction
@@ -67,7 +70,7 @@ def main():
         length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
 
-    b1    = params.b1                               # Reciprocal lattice vectors
+    b1    = params.b1                                  # Reciprocal lattice vectors
     b2    = params.b2
 
     user_out = params.user_out
@@ -92,11 +95,11 @@ def main():
         print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
         print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
         print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
-    
+
     # INITIALIZATIONS
     ###############################################################################################
     # Form the E-field direction
-   
+
     # Form the Brillouin zone in consideration
     if BZ_type == 'full':
         kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
@@ -112,7 +115,7 @@ def main():
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
     t_constructed = False
-    
+
     # Solution containers
     t                           = []
     solution                    = []
@@ -142,7 +145,7 @@ def main():
         Ax, Ay = dipole.evaluate(kpnts[:,0], kpnts[:,1])
         dipole.plot_dipoles(Ax, Ay)
 
-    # SOLVING 
+    # SOLVING
     ###############################################################################################
     # Iterate through each path in the Brillouin zone
     path_num = 1
@@ -162,7 +165,7 @@ def main():
         # Calculate the dipole components along the path
         di_x,di_y = dipole.evaluate(kx_in_path, ky_in_path)
 
-        # Calculate the dot products E_dir.d_nm(k). To be multiplied by E-field magnitude later. 
+        # Calculate the dot products E_dir.d_nm(k). To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
         dipole_in_path = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
         A_in_path      = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
@@ -177,19 +180,19 @@ def main():
             initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma1,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
 
         # Propagate through time
         ti = 0
         while solver.successful() and ti < Nt:
             # User output of integration progress
-            if (ti%10000 == 0 and user_out):
+            if (ti%1000 == 0 and user_out):
                 print('{:5.2f}%'.format(ti/Nt*100))
 
             # Integrate one integration time step
             solver.integrate(solver.t + dt)
 
-            # Save solution each output step 
+            # Save solution each output step
             if ti%dt_out == 0:
                 path_solution.append(solver.y)
                 # Construct time array only once
@@ -206,16 +209,6 @@ def main():
         # Append path solutions to the total solution arrays
         solution.append(path_solution)
 
-        '''
-        # Append path values of dipole etc... to arrays for plotting
-        dipole_E_dir.append(dipole_in_path)
-        berry_conn_E_dir.append(A_in_path)
-        dipole_x.append(di_x[0,1,:])
-        dipole_y.append(di_y[0,1,:])
-        val_band.append(bandstruct[0])
-        cond_band.append(bandstruct[1])
-        '''
-
     # Convert solution and time array to numpy arrays
     t        = np.array(t)
     solution = np.array(solution)
@@ -228,20 +221,12 @@ def main():
 
     # Convert lists into numpy arrays
     solution         = np.array(solution)
-    '''
-    dipole_E_dir     = np.array(dipole_E_dir)
-    berry_conn_E_dir = np.array(berry_conn_E_dir)
-    dipole_x         = np.array(dipole_x)
-    dipole_y         = np.array(dipole_y)
-    val_band         = np.array(val_band)
-    cond_band        = np.array(cond_band)
-    '''
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
-    
+
     # COMPUTE OBSERVABLES
     ###############################################################################################
     # Calculate parallel and orthogonal components of observables
-    # Polarization (interband) 
+    # Polarization (interband)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir)
     # Current (intraband)
     J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir)
@@ -250,9 +235,6 @@ def main():
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
     # Berry curvature current
     #J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
-
-    #mem_total = (solution.nbytes + P_E_dir.nbytes + P_ortho.nbytes + J_E_dir.nbytes + J_ortho.nbytes + I_E_dir.nbytes + I_ortho.nbytes)/(1e9)
-    #print('Total memory: ' + str(mem_total))
 
     # Polar emission in time
     Ir = []
@@ -273,19 +255,19 @@ def main():
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     # Emission intensity
-    Int_E_dir = np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2.0
-    Int_ortho = np.abs(freq*Pw_ortho + 1j*Jw_ortho)**2.0
+    Int_E_dir = (freq**2)*np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2.0
+    Int_ortho = (freq**2)*np.abs(freq*Pw_ortho + 1j*Jw_ortho)**2.0
 
     # Save observables to file
     if (BZ_type == '2line'):
         Nk1 = Nk_in_path
         Nk2 = 2
-    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
-    np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, Jw_E_dir, Jw_ortho])
-    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
-    np.save(P_filename, [t/fs_conv,P_E_dir,P_ortho, Pw_E_dir, Pw_ortho])
-    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase)
-    np.save(I_filename, [freq/w, I_E_dir, I_ortho, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+    np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
+    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+    np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
+    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+    np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if (not test and user_out):
         real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2)
@@ -368,15 +350,6 @@ def main():
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
 
-        '''
-        # Plot bandstructure
-        bandstruct = bite.evaluate_energy(kpnts[:,0],kpnts[:,1])
-        band_fig = pl.figure()
-        axBS = band_fig.gca(projection='3d')
-        axBS.plot_trisurf(kpnts[:,0],kpnts[:,1].T,bandstruct[0])
-        axBS.plot_trisurf(kpnts[:,0],kpnts[:,1].T,bandstruct[1])
-        '''
-
         pl.show()
 
     # OUTPUT STANDARD TEST VALUES
@@ -393,7 +366,7 @@ def main():
         test_out['names'] = np.array(['P(t=0)','J(t=0)','N_gamma(t=tf)','Emis(w/w0=5)','Emis(w/w0=12.5)','Emis(w/w0=15)'])
         test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
-        
+
 
 #################################################################################################
 # FUNCTIONS
@@ -402,7 +375,7 @@ def mesh(params, E_dir):
     Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a = params.a                                      # Lattice spacing
-    length_path_in_BZ = params.length_path_in_BZ      # 
+    length_path_in_BZ = params.length_path_in_BZ      #
 
     alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
@@ -433,7 +406,7 @@ def mesh(params, E_dir):
 
 def hex_mesh(Nk1, Nk2, a, b1, b2, align):
     alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-    alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)    
+    alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num = Nk2)
 
     def is_in_hex(p,a):
         # Returns true if the point is in the hexagonal BZ.
@@ -503,7 +476,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
                     mesh.append(kpoint)
                     path_K.append(kpoint)
             paths.append(path_K)
-    
+
     return np.array(mesh), paths
 
 @njit
@@ -538,10 +511,10 @@ def diff(x,y):
 
 def Gaussian_envelope(t,alpha):
     '''
-    Function to multiply a Function f(t) before Fourier transform 
+    Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)  
+    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 def polarization(paths,pcv,dipole,E_dir):
     '''
@@ -561,16 +534,16 @@ def polarization(paths,pcv,dipole,E_dir):
         # Evaluate the dipole moments in path
         di_x, di_y = dipole.evaluate(kx_in_path, ky_in_path)
 
-        # Append the dot product d.E 
+        # Append the dot product d.E
         d_E_dir.append(di_x[0,1,:]*E_dir[0] + di_y[0,1,:]*E_dir[1])
         d_ortho.append(di_x[0,1,:]*E_ort[0] + di_y[0,1,:]*E_ort[1])
 
     d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
     d_ortho_swapped = np.swapaxes(d_ortho,0,1)
-    
+
     P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pcv,2))
     P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pcv,2))
-    
+
     return P_E_dir, P_ortho
 
 
@@ -623,7 +596,7 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
     # Calculate the gradient analytically at each k-point
     J_E_dir, J_ortho = [], []
 
-    curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)           
+    curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)
 
 #HACK
 #    for path in paths:
@@ -664,12 +637,12 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
            je_ortho.append(bandstruc_deriv[2]*E_ort[0] + bandstruc_deriv[3]*E_ort[1] + cross_prod_ortho[1,1,:])
            jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
            jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1] + cross_prod_ortho[0,0,:])
-   
+
        je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
        je_ortho_swapped = np.swapaxes(je_ortho,0,1)
        jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
        jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
- 
+
 #       print("shape f =", np.shape(fc))
 #       print("shape j =", np.shape(je_E_dir_swapped))
 
@@ -692,16 +665,16 @@ def get_A_field(E0, w, t, alpha):
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
-def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
-    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
+def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
-    
+
     # Gradient term coefficient
     D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
 
@@ -735,12 +708,110 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_p
 
         # Update each component of the solution vector
         # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-        x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])# - gamma1*(x[i+3]-x[i])
+        x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
         x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
-        x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])# + gamma1*(x[i+3]-x[i])
+        x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
 
     return x
+
+def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
+    '''
+    Function driving the dynamics of the system.
+    This is required as input parameter to the ode solver
+    '''
+    # Constant vector container
+    b = []
+
+    # Create propogation matrix for this time step
+    for k1 in range(Nk): # Iterate down all the rows
+
+        # Construct each block of the matrix
+        '''
+        Energy term eband(i,k) the energy of band i at point k
+        '''
+        ecv = eband(2, kgrid[k1]) - eband(1, kgrid[k1])
+
+        '''
+        Rabi frequency: w_R = w_R(i,j,k,t) = d_ij(k).E(t)
+        Rabi frequency conjugate
+        '''
+        wr = rabi(1, 2, kgrid[k1], E0, w, t, alpha)
+        wr_c = np.conjugate(wr)
+
+        '''
+        Brillouin zone drift term coefficient: E(t)*grad_k
+        Coefficient for finite difference derivative.
+        '''
+        drift_coef = driving_field(E0, w, t, alpha)/(2.0*dk)
+
+        '''
+        Diagonal block of the propagation matrix M. Contains all terms not related to drift term. Case for electron-hole picture.
+        '''
+        diag_block = 1j*np.array([[0.0,wr,-wr_c,0.0],\
+                                  [wr_c,-(ecv-1j*gamma2),0.0,wr_c],\
+                                  [-wr,0.0,(ecv+1j*gamma2),-wr],\
+                                  [0.0,wr,-wr_c,0.0]])
+
+        '''
+        Blocks for the forward and backwards portion of the finite difference derivative
+        '''
+        for_deriv = np.array([[drift_coef,0.0,0.0,0.0],\
+                              [0.0,drift_coef,0.0,0.0],\
+                              [0.0,0.0,drift_coef,0.0],\
+                              [0.0,0.0,0.0,drift_coef]])
+        back_deriv = np.array([[-drift_coef,0.0,0.0,0.0],\
+                               [0.0,-drift_coef,0.0,0.0],\
+                               [0.0,0.0,-drift_coef,0.0],\
+                               [0.0,0.0,0.0,-drift_coef]])
+
+        '''
+        4x4 block of zeros. M is a very sparse matrix
+        '''
+        zero_block = np.zeros((4,4),dtype='float')
+
+        '''
+        Constructs the matrix M one block at a time. See notes for details
+        '''
+        # Put each block in their proper columns
+        if (k1 == 0): # Construction of the first row
+            M = np.concatenate((diag_block,for_deriv),axis=1) # Create first two columns
+            for k2 in range(2,Nk-1): # From k3 to Nk-1
+                M = np.concatenate((M,zero_block),axis=1) # Concatenate zero blocks
+            M = np.concatenate((M,back_deriv),axis=1) # Concatenate final column
+        elif (k1 == Nk-1): # Construction of the last row
+            row = for_deriv # Create first column
+            for k2 in range(1,Nk-2): # From k2 to Nk-2
+                row = np.concatenate((row,zero_block),axis=1) # Concatenate zero blocks
+            row = np.concatenate((row,back_deriv,diag_block),axis=1) # Concatenate final two columns
+            M = np.concatenate((M,row),axis=0) # Concatenate this row to the matrix
+        else: # Construction of all other rows
+            # Initiate row variable
+            if k1 == 1:
+                row = back_deriv
+            else:
+                row = zero_block
+            for k2 in range(1,Nk): # Scan across each column skipping the first
+                if k2 == k1: # On the diagonal
+                    row = np.concatenate((row,diag_block),axis=1) # Concatenate diagonal block
+                elif k2 == k1-1: # If one behind the diagonal
+                    row = np.concatenate((row,back_deriv),axis=1) # Concatenate back_deriv
+                elif k2 == k1+1: # If one in front of diagonal
+                    row = np.concatenate((row,for_deriv),axis=1)  # Concatenate for_deriv
+                else: # If anywhere else
+                    row = np.concatenate((row,zero_block),axis=1) # Concatenate zero_block
+            M = np.concatenate((M,row),axis=0)
+        '''
+        'Constant' vector with leftover terms
+        '''
+        b.extend([0.0,-wr_c,wr,0.0])
+
+    # Convert to numpy array
+    b = 1j*np.array(b)
+
+    # Calculate the timestep
+    svec = np.dot(M, y) + b
+    return svec
 
 def initial_condition(y0,e_fermi,temperature,e_c,i_k):
 
@@ -750,13 +821,13 @@ def initial_condition(y0,e_fermi,temperature,e_c,i_k):
       y0.extend([1.0,0.0,0.0,0.0])
 
 def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
-    
+
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
 
     BZ_fig = pl.figure()
     ax = BZ_fig.add_subplot(111,aspect='equal')
-    
+
     ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
     ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
     ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
@@ -764,9 +835,9 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
     ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
     ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
-    
+
     ax.arrow(-0.5*E_dir[0],-0.5*E_dir[1],E_dir[0],E_dir[1],width=0.005,alpha=0.5,label='E-field')
-    
+
     pl.scatter(0,0,s=15,c='black')
     pl.text(0.01,0.01,r'$\Gamma$')
     pl.scatter(r*np.cos(-np.pi/6),r*np.sin(-np.pi/6),s=15,c='black')
@@ -782,9 +853,8 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     for path in paths:
         path = np.array(path)
         pl.plot(path[:,0],path[:,1])
-    
+
     return
 
 if __name__ == "__main__":
     main()
-

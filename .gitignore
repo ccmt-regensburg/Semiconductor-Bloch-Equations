@@ -1,4 +1,9 @@
 *~
 *#
 *.pyc
+*.npy
+*.png
+*.txt
+*.pptx
+*.zip
 __pycache__/
