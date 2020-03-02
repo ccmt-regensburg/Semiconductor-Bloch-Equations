@@ -3,12 +3,12 @@ import numpy as np
 
 # System parameters
 #########################################################################
-a                   = 8.308       # Lattice spacing in atomic units (4.395 A)
+a                   = 1#8.308       # Lattice spacing in atomic units (4.395 A)
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
 # Model Hamiltonian parameters
-C0                  = 0           # Dirac point position
+C0                  = 0          # Dirac point position
 C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
 R                   = 11.06       # k^3 coefficient
@@ -25,8 +25,8 @@ b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
 b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 
 # full BZ parametes
-Nk1                 = 80           # Number of kpoints in b1 direction
-Nk2                 = 80           # Number of kpoints in b2 direction (number of paths)
+Nk1                 = 50           # Number of kpoints in b1 direction
+Nk2                 = 50         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
@@ -36,7 +36,7 @@ angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
-align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
+align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 chirp               = 0.0        # Pulse chirp ratio (chirp = c/w) (THz)
@@ -60,7 +60,7 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out      = True  # Set to True to get user plotting and progress output
+user_out      = True # Set to True to get user plotting and progress output
 energy_plots  = False  # Set to True to plot 3d energy bands and contours
 dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
 test          = False  # Set to True to output travis testing parameters
