@@ -12,9 +12,8 @@ import hfsbe.utility
 
 '''
 TO DO:
-UPDATE MATRIX METHOD. NOT COMPATIBLE WITH CODE AS OF NOW.
+UPDATE MATRIX METHOD. NOT COMPATIBLE WITH CODE AS OF NOW. MAGNETIC FIELD.
 '''
-
 def main():
 
     # RETRIEVE PARAMETERS
@@ -107,9 +106,9 @@ def main():
         if align == 'K':
             E_dir = np.array([1,0])
         elif align == 'M':
-            E_dir = np.array([np.cos(-30/360*2*np.pi),np.sin(-30/360*2*np.pi)])
+            E_dir = np.array([np.cos(np.radians(-30)),np.sin(np.radians(-30))])
     elif BZ_type == '2line':
-        E_dir = np.array([np.cos(angle_inc_E_field/360*2*np.pi),np.sin(angle_inc_E_field/360*2*np.pi)])
+        E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
 
     # Number of integration steps, time array construction flag
@@ -127,20 +126,32 @@ def main():
     cond_band                   = []
 
     # Initialize the ode solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step= dt)
+    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
 
-    # Get initialize sympy bandstructure, energies/derivatives, dipoles
-    # Topological cone call
-    bite = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,kcut=k_cut)
-    # Trivial cone call
-    #bite = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
-    h, ef, wf, ediff = bite.eigensystem(gidx=1)
+    # Initialize sympy bandstructure, energies/derivatives, dipoles
+    ### Bismuth Teluride calls
+    #system = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,kcut=k_cut)
+    ### Trivial Bismuth Teluride call
+    #system = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
+    ### Periodic Bismuth Teluride call
+    #system = hfsbe.example.BiTePeriodic(C0=C0,C2=C2,A=A,R=R)
+    system = hfsbe.example.BiTePeriodic(default_params=True)
+    ### Haldane calls
+    #system = hfsbe.example.Haldane(t1=1,t2=1,m=1,phi=np.pi/6,b1=b1,b2=b2)
+    ### Graphene calls
+    #system = hfsbe.example.Graphene(t=1)
+    ### Dirac calls
+    #system = hfsbe.example.Dirac(m=0.1)
+
+    # Get symbolic hamiltonian, energies, wavefunctions, energy derivatives
+    h, ef, wf, ediff = system.eigensystem(gidx=1)
+    # Get symbolic dipoles
     dipole = hfsbe.dipole.SymbolicDipole(h, ef, wf)
 
     if energy_plots:
-        bite.evaluate_energy(kpnts[:,0], kpnts[:,1])
-        bite.plot_bands_3d(kpnts[:,0], kpnts[:,1])
-        bite.plot_bands_contour(kpnts[:,0], kpnts[:,1])
+        system.evaluate_energy(kpnts[:,0], kpnts[:,1])
+        system.plot_bands_3d(kpnts[:,0], kpnts[:,1])
+        system.plot_bands_contour(kpnts[:,0], kpnts[:,1])
     if dipole_plots:
         Ax, Ay = dipole.evaluate(kpnts[:,0], kpnts[:,1])
         dipole.plot_dipoles(Ax, Ay)
@@ -151,9 +162,6 @@ def main():
     path_num = 1
     for path in paths:
         if user_out: print('path: ' + str(path_num))
-
-        # This step is needed for the gamma-K paths, as they are not uniform in length, thus not suitable to be stored as numpy array initially.
-        path = np.array(path)
 
         # Solution container for the current path
         path_solution = []
@@ -171,7 +179,7 @@ def main():
         A_in_path      = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
-        bandstruct  = bite.evaluate_energy(kx_in_path, ky_in_path)
+        bandstruct = system.evaluate_energy(kx_in_path, ky_in_path)
         ecv_in_path = bandstruct[1] - bandstruct[0]
 
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
@@ -229,7 +237,7 @@ def main():
     # Polarization (interband)
     P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir)
     # Current (intraband)
-    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir)
+    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], system, path, t, alpha, E_dir)
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
@@ -270,7 +278,7 @@ def main():
     np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if (not test and user_out):
-        real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2)
+        real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
         log_limits = (10e-20,100)
@@ -294,7 +302,7 @@ def main():
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
 
-        four_fig, ((axPw,axJw),(axIw,axInt)) = pl.subplots(2,2)
+        four_fig, ((axPw,axJw),(axIw,axInt)) = pl.subplots(2,2,figsize=(10,10))
         axPw.grid(True,axis='x')
         axPw.set_xlim(freq_lims)
         axPw.set_ylim(log_limits)
@@ -325,7 +333,7 @@ def main():
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
 
         # High-harmonic emission polar plots
-        polar_fig = pl.figure()
+        polar_fig = pl.figure(figsize=(10,10))
         i_loop = 1
         i_max  = 20
         while i_loop <= i_max:
@@ -402,7 +410,7 @@ def mesh(params, E_dir):
 
     dk = 1.0/Nk_in_path*length_path_in_BZ
 
-    return dk, np.array(mesh), paths
+    return dk, np.array(mesh), np.array(paths)
 
 def hex_mesh(Nk1, Nk2, a, b1, b2, align):
     alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
@@ -420,7 +428,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         y = p[1]
         if (y > 2*np.pi/(np.sqrt(3)*a)):   # Crosses top
             p -= b2
-        elif (y < -2*np.pi/(np.sqrt(3)*a)): # Crosses right
+        elif (y < -2*np.pi/(np.sqrt(3)*a)): # Crosses bottom
             p += b2
         elif (np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
             p -= b1 + b2
@@ -477,7 +485,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
                     path_K.append(kpoint)
             paths.append(path_K)
 
-    return np.array(mesh), paths
+    return np.array(mesh), np.array(paths)
 
 @njit
 def driving_field(E0, w, t, chirp, alpha, phase):
@@ -526,8 +534,6 @@ def polarization(paths,pcv,dipole,E_dir):
     d_E_dir, d_ortho = [],[]
     for path in paths:
 
-        path = np.array(path)
-
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
 
@@ -540,43 +546,50 @@ def polarization(paths,pcv,dipole,E_dir):
 
     d_E_dir_swapped = np.swapaxes(d_E_dir,0,1)
     d_ortho_swapped = np.swapaxes(d_ortho,0,1)
+    #d_E_dir = d_E_dir.T
+    #d_ortho = d_ortho.T
 
     P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pcv,2))
     P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pcv,2))
+    #P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
+    #P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
 
     return P_E_dir, P_ortho
 
-
-def current(paths,fv,fc,bite,path,t,alpha,E_dir):
+def current(paths,fv,fc,system,path,t,alpha,E_dir):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
     '''
+    print(np.shape(fc))
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
     # Calculate the gradient analytically at each k-point
     J_E_dir, J_ortho = [], []
-    je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
+    jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
     for path in paths:
         path = np.array(path)
         kx_in_path = path[:,0]
         ky_in_path = path[:,1]
-        bandstruct_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+        bandstruct_deriv = system.evaluate_ederivative(kx_in_path, ky_in_path)
         #0: v, x   1: v,y   2: c, x  3: c, y
-        je_E_dir.append(bandstruct_deriv[2]*E_dir[0] + bandstruct_deriv[3]*E_dir[1])
-        je_ortho.append(bandstruct_deriv[2]*E_ort[0] + bandstruct_deriv[3]*E_ort[1])
-        jh_E_dir.append(bandstruct_deriv[0]*E_dir[0] + bandstruct_deriv[1]*E_dir[1])
-        jh_ortho.append(bandstruct_deriv[0]*E_ort[0] + bandstruct_deriv[1]*E_ort[1])
+        jc_E_dir.append(bandstruct_deriv[2]*E_dir[0] + bandstruct_deriv[3]*E_dir[1])
+        print(np.shape(jc_E_dir))
+        jc_ortho.append(bandstruct_deriv[2]*E_ort[0] + bandstruct_deriv[3]*E_ort[1])
+        jv_E_dir.append(bandstruct_deriv[0]*E_dir[0] + bandstruct_deriv[1]*E_dir[1])
+        jv_ortho.append(bandstruct_deriv[0]*E_ort[0] + bandstruct_deriv[1]*E_ort[1])
 
-    je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
-    je_ortho_swapped = np.swapaxes(je_ortho,0,1)
-    jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
-    jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
+    print(np.shape(jc_E_dir))
+    jc_E_dir = np.array(jc_E_dir).T
+    jc_ortho = np.array(jc_ortho).T
+    jv_E_dir = np.array(jv_E_dir).T
+    jv_ortho = np.array(jv_ortho).T
+    print(np.shape(jc_E_dir))
 
     # we need tensordot for contracting the first two indices (2 kpoint directions)
-    J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) + np.tensordot(jh_E_dir_swapped,fv,2)
-    J_ortho = np.tensordot(je_ortho_swapped,fc,2) + np.tensordot(jh_ortho_swapped,fv,2)
+    J_E_dir = np.tensordot(jc_E_dir,fc,2) + np.tensordot(jv_E_dir,fv,2)
+    J_ortho = np.tensordot(jc_ortho,fc,2) + np.tensordot(jv_ortho,fv,2)
 
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
@@ -598,14 +611,13 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
 
     curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)
 
-#HACK
-#    for path in paths:
-#       path = np.array(path)
-#       kx_in_path = path[:,0]
-#       ky_in_path = path[:,1]
-#       bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
-#       curv_eval = curv.evaluate(kx_in_path, ky_in_path)
-#HACK
+    #for path in paths:
+    #   path = np.array(path)
+    #   kx_in_path = path[:,0]
+    #   ky_in_path = path[:,1]
+    #   bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+    #   curv_eval = curv.evaluate(kx_in_path, ky_in_path)
+
 
     for j_time, time in enumerate(t):
        je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
@@ -624,13 +636,13 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
 
            curv_eval = curv.evaluate(kx_in_path, ky_in_path)
 
-#           print("shape curv_eval =", np.shape(curv_eval))
+           #print("shape curv_eval =", np.shape(curv_eval))
 
            # the cross product of Berry curvature and E-field points only in direction orthogonal to E
            cross_prod_ortho = E_field[j_time]*curv_eval
 
-#           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
-#           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
+           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
+           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
 
            #0: v, x   1: v,y   2: c, x  3: c, y
            je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
@@ -643,16 +655,13 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
        jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
        jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
 
-#       print("shape f =", np.shape(fc))
-#       print("shape j =", np.shape(je_E_dir_swapped))
-
        # we need tensordot for contracting the first two indices (2 kpoint directions)
        J_E_dir.append(np.tensordot(je_E_dir_swapped,fc[:,:,j_time],2) + np.tensordot(jh_E_dir_swapped,fv[:,:,j_time],2))
        J_ortho.append(np.tensordot(je_ortho_swapped,fc[:,:,j_time],2) + np.tensordot(jh_ortho_swapped,fv[:,:,j_time],2))
 
-#    # we need tensordot for contracting the first two indices (2 kpoint directions)
-#    J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) + np.tensordot(jh_E_dir_swapped,fv,2)
-#    J_ortho = np.tensordot(je_ortho_swapped,fc,2) + np.tensordot(jh_ortho_swapped,fv,2)
+     # we need tensordot for contracting the first two indices (2 kpoint directions)
+     #J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) + np.tensordot(jh_E_dir_swapped,fv,2)
+     #J_ortho = np.tensordot(je_ortho_swapped,fc,2) + np.tensordot(jh_ortho_swapped,fv,2)
 
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
@@ -664,10 +673,8 @@ def get_A_field(E0, w, t, alpha):
     w_eff = 4*np.pi*alpha*w
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
-
 def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
     return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
-
 
 @njit
 def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
@@ -715,6 +722,9 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
 
     return x
 
+'''
+OUT OF DATE/NOT FUNCTIONAL! FOR FUTURE WORK ON MAGNETIC FIELD IMPLEMENTATION.
+'''
 def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     '''
     Function driving the dynamics of the system.
@@ -825,7 +835,7 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
 
-    BZ_fig = pl.figure()
+    BZ_fig = pl.figure(figsize=(10,10))
     ax = BZ_fig.add_subplot(111,aspect='equal')
 
     ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
