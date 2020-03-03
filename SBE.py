@@ -171,12 +171,13 @@ def main():
         ky_in_path = path[:,1]
 
         # Calculate the dipole components along the path
-        di_x,di_y = dipole.evaluate(kx_in_path, ky_in_path)
+        di_x, di_y = dipole.evaluate(kx_in_path, ky_in_path)
 
         # Calculate the dot products E_dir.d_nm(k). To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
-        A_in_path      = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
+        dipole_in_path = E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :]
+        A_in_path      = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
+                      - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruct = system.evaluate_energy(kx_in_path, ky_in_path)
@@ -185,7 +186,7 @@ def main():
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
         for i_k, k in enumerate(path):
-            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
+            initial_condition(y0, e_fermi, temperature, bandstruct[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
@@ -688,7 +689,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
     # Update the solution vector
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
-
         i = 4*k
         if k == 0:
             m = 4*(k+1)
@@ -707,7 +707,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
         # Rabi frequency conjugate
         #wr          = dipole_in_path[k]*D
         wr          = rabi(k, E0, w, t, chirp, alpha, phase, dipole_in_path)
-        wr_c        = np.conjugate(wr)
+        wr_c        = wr.conjugate()
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
         #wr_d_diag   = A_in_path[k]*D
@@ -715,10 +715,10 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
 
         # Update each component of the solution vector
         # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-        x[i]   = 2*np.imag(wr*y[i+1]) + D*(y[m] - y[n])
+        x[i]   = 2*(wr*y[i+1]).imag + D*(y[m] - y[n])
         x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
-        x[i+2] = np.conjugate(x[i+1])
-        x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
+        x[i+2] = x[i+1].conjugate()
+        x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3])
 
     return x
 
