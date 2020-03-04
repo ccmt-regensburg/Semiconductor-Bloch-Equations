@@ -130,12 +130,12 @@ def main():
 
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     ### Bismuth Teluride calls
-    #system = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,kcut=k_cut)
+    system = hfsbe.example.BiTe(C0=C0,C2=C2,A=A,R=R,kcut=k_cut)
     ### Trivial Bismuth Teluride call
     #system = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
     ### Periodic Bismuth Teluride call
     #system = hfsbe.example.BiTePeriodic(C0=C0,C2=C2,A=A,R=R)
-    system = hfsbe.example.BiTePeriodic(default_params=True)
+#    system = hfsbe.example.BiTePeriodic(default_params=True)
     ### Haldane calls
     #system = hfsbe.example.Haldane(t1=1,t2=1,m=1,phi=np.pi/6,b1=b1,b2=b2)
     ### Graphene calls

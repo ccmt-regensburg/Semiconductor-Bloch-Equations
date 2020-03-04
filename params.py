@@ -3,7 +3,7 @@ import numpy as np
 
 # System parameters
 #########################################################################
-a                   = 1#8.308       # Lattice spacing in atomic units (4.395 A)
+a                   = 8.308       # Lattice spacing in atomic units (4.395 A)
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
