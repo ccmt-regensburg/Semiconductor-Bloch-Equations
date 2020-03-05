@@ -190,6 +190,8 @@ def main():
         y0 = []
         for i_k, k in enumerate(path):
             initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
+        # append the A-field
+        y0.append(0.0)
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path, gauge)
@@ -219,7 +221,7 @@ def main():
         path_num += 1
 
         # Append path solutions to the total solution arrays
-        solution.append(path_solution)
+        solution.append(np.array(path_solution)[:,0:-1])
 
     # Convert solution and time array to numpy arrays
     t        = np.array(t)
@@ -728,6 +730,9 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
         x[i+1] = ( -1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
         x[i+2] = np.conjugate(x[i+1])
         x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
+
+    # last component of x is the E-field to obtain the vector potential A(t)
+    x[-1] = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
 
     return x
 
