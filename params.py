@@ -35,7 +35,7 @@ length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-gauge               = 'length'    # 'length': use length gauge with gradient_k present
+gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -45,7 +45,7 @@ E0                  = 5.0          # Pulse amplitude (MV/cm)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
-phase               = (0/1)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
+phase               = (1/2)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################

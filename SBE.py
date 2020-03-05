@@ -728,7 +728,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
             weight_1      = index_shift_2 - num_indices_shifted_float
             weight_2      = 1-weight_1
             if(index_shift_1 > 1):
-                print(index_shift_1, index_shift_2, weight_1, weight_2)
+                print(t, index_shift_1, index_shift_2, weight_1, weight_2, y[-1])
         else:
             index_shift_1 = 0
             index_shift_2 = 0
