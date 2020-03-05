@@ -707,20 +707,8 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
       D = 0
 
     if gauge == 'velocity':
-        num_indices_shifted_float = (y[-1]/dk).real
-        index_shift_1 = int(int(np.abs(num_indices_shifted_float))*np.sign(num_indices_shifted_float))
-        if(num_indices_shifted_float < 0): 
-            index_shift_1 = index_shift_1 - 1
-        index_shift_2 = index_shift_1 + 1
-        weight_1      = index_shift_2 - num_indices_shifted_float
-        weight_2      = 1-weight_1
-    else:
-        index_shift_1 = 0
-        index_shift_2 = 0
-        weight_1      = 1
-        weight_2      = 0
-
-    print(t, y[-1].real, num_indices_shifted_float, index_shift_1, index_shift_2, weight_1, weight_2)
+       k_shift = (y[-1]/dk).real
+       print(t, y[-1].real, k_shift)
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
@@ -738,15 +726,15 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
             n = 4*(k-1)
 
         #Energy term eband(i,k) the energy of band i at point k
-        ecv = weight_1*ecv_in_path[k+index_shift_1] + weight_2*ecv_in_path[k+index_shift_2]
+        ecv = ecv_in_path[k]
 
         # Rabi frequency: w_R = d_12(k).E(t)
-        dipole      = weight_1*dipole_in_path[k+index_shift_1] + weight_2*dipole_in_path[k+index_shift_2]
+        dipole      = dipole_in_path[k]
         wr          = rabi(E0, w, t, chirp, alpha, phase, dipole)
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        Berry_con   = weight_1*A_in_path[k+index_shift_1] + weight_2*A_in_path[k+index_shift_2]
+        Berry_con   = A_in_path[k]
         wr_d_diag   = rabi(E0, w, t, chirp, alpha, phase, Berry_con)
 
         # Update each component of the solution vector
