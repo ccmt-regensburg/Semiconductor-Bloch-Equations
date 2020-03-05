@@ -3,16 +3,16 @@ import numpy as np
 
 # System parameters
 #########################################################################
-a                   = 8.308*np.sqrt(3) # Lattice spacing in atomic units (4.395 A)
+a                   = 1 #8.308       # Lattice spacing in atomic units (4.395 A)
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
 # Model Hamiltonian parameters
-C0                  = 0          # Dirac point position
+C0                  = 0           # Dirac point position
 C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
 R                   = 11.06       # k^3 coefficient
-k_cut               = 0.05       # Model hamiltonian cutoff
+k_cut               = 0.05        # Model hamiltonian cutoff
 
 # Brillouin zone parameters
 ##########################################################################
@@ -21,12 +21,12 @@ k_cut               = 0.05       # Model hamiltonian cutoff
 BZ_type = 'full'
 
 # Reciprocal lattice vectors
-b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
-b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
+b1 = (2*np.pi/(a*3))*np.array([np.sqrt(3), -1])
+b2 = (4*np.pi/(a*3))*np.array([0, 1])
 
 # full BZ parametes
-Nk1                 = 50           # Number of kpoints in b1 direction
-Nk2                 = 50         # Number of kpoints in b2 direction (number of paths)
+Nk1                 = 50          # Number of kpoints in b1 direction
+Nk2                 = 50          # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
@@ -39,9 +39,9 @@ angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
-chirp               = 0.0        # Pulse chirp ratio (chirp = c/w) (THz)
-alpha               = 25.0         # Gaussian pulse width (femtoseconds)
-phase               = (0/1)*np.pi# Carrier envelope phase (edited by cep-scan.py)
+chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
+alpha               = 25.0        # Gaussian pulse width (femtoseconds)
+phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.py)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################

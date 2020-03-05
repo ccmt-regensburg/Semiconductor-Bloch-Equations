@@ -340,7 +340,7 @@ def main():
             i_loop += 1
 
         # Plot Brilluoin zone with paths
-        BZ_plot(kpnts,a,b1,b2,E_dir,paths)
+        BZ_plot(kpnts, a, b1, b2, E_dir, paths)
 
         pl.show()
 
@@ -407,27 +407,27 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         # the first quadrant of the hexagon.
         x = np.abs(p[0])
         y = np.abs(p[1])
-        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and
-                (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+        return ((y <= 2.0*np.pi/(3*a)) and
+                (np.sqrt(3.0)*x + y <= 4*np.pi/(3*a)))
 
     def reflect_point(p, a, b1, b2):
         x = p[0]
         y = p[1]
-        if (y > 2*np.pi/(np.sqrt(3)*a)):   # Crosses top
+        if (y > 2*np.pi/(3*a)):   # Crosses top
             p -= b2
-        elif (y < -2*np.pi/(np.sqrt(3)*a)):
+        elif (y < -2*np.pi/(3*a)):
             # Crosses bottom
             p += b2
-        elif (np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)):
+        elif (np.sqrt(3)*x + y > 4*np.pi/(3*a)):
             # Crosses top-right
             p -= b1 + b2
-        elif (-np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)):
+        elif (-np.sqrt(3)*x + y < -4*np.pi/(3*a)):
             # Crosses bot-right
             p -= b1
-        elif (np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)):
+        elif (np.sqrt(3)*x + y < -4*np.pi/(3*a)):
             # Crosses bot-left
             p += b1 + b2
-        elif (-np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)):
+        elif (-np.sqrt(3)*x + y > 4*np.pi/(3*a)):
             # Crosses top-left
             p += b1
         return p
@@ -459,8 +459,8 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
             paths.append(path_M)
 
     elif align == 'K':
-        b_a1 = 8*np.pi/(a*3)*np.array([1, 0])
-        b_a2 = 4*np.pi/(a*3)*np.array([1, np.sqrt(3)])
+        b_a1 = 8*np.pi/(a*np.sqrt(3)*3)*np.array([1, 0])
+        b_a2 = 4*np.pi/(a*np.sqrt(3)*3)*np.array([1, np.sqrt(3)])
         # Extend over half of the b2 direction and 1.5x the b1 direction
         # (extending into the 2nd BZ to get correct boundary conditions)
         alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 1.0 - (1/(2*Nk1)), num=Nk1)
@@ -469,11 +469,11 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
             path_K = []
             for a1 in alpha1:
                 kpoint = a1*b_a1 + a2*b_a2
-                if is_in_hex(kpoint,a):
+                if is_in_hex(kpoint, a):
                     mesh.append(kpoint)
                     path_K.append(kpoint)
                 else:
-                    kpoint -= 2*np.pi/(a)*np.array([1, 1/np.sqrt(3)])
+                    kpoint -= 2*np.pi/(np.sqrt(3)*a)*np.array([1, 1/np.sqrt(3)])
                     mesh.append(kpoint)
                     path_K.append(kpoint)
             paths.append(path_K)
@@ -664,8 +664,8 @@ def initial_condition(e_fermi, temperature, e_c):
 
 def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
 
-    R = 4.0*np.pi/(3*a)
-    r = 2.0*np.pi/(np.sqrt(3)*a)
+    R = 4.0*np.pi/(3*np.sqrt(3)*a)
+    r = 2.0*np.pi/(3*a)
 
     BZ_fig = pl.figure(figsize=(10, 10))
     ax = BZ_fig.add_subplot(111, aspect='equal')
@@ -687,8 +687,8 @@ def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
     pl.scatter(R,0,s=15,c='black')
     pl.text(R,0.02,r'$K$')
     pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
-    pl.xlim(-5.0/a,5.0/a)
-    pl.ylim(-5.0/a,5.0/a)
+    pl.xlim(-5.0/(np.sqrt(3)*a), 5.0/(np.sqrt(3)*a))
+    pl.ylim(-5.0/(np.sqrt(3)*a),5.0/(np.sqrt(3)*a))
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
 
