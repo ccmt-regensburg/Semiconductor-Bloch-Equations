@@ -69,10 +69,14 @@ def main():
         length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
 
+    # Gauge: length versus velocity gauge
+    gauge = params.gauge
+
     b1    = params.b1                                  # Reciprocal lattice vectors
     b2    = params.b2
 
     user_out = params.user_out
+    print_J_P_I_files = params.print_J_P_I_files
     energy_plots = params.energy_plots
     dipole_plots = params.dipole_plots
     test = params.test                                # Testing flag for Travis
@@ -188,7 +192,7 @@ def main():
             initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path, gauge)
 
         # Propagate through time
         ti = 0
@@ -270,12 +274,14 @@ def main():
     if (BZ_type == '2line'):
         Nk1 = Nk_in_path
         Nk2 = 2
-    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-    np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
-    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-    np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
-    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-    np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+
+    if print_J_P_I_files:  
+        J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
+        P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
+        I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if (not test and user_out):
         real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2,figsize=(10,10))
@@ -673,11 +679,11 @@ def get_A_field(E0, w, t, alpha):
     w_eff = 4*np.pi*alpha*w
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
-def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path)
+def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge)
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))

@@ -31,8 +31,13 @@ Nk2                 = 50         # Number of kpoints in b2 direction (number of 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ
+length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
+
+# Gauge
+gauge               = 'velocity'  # 'length': use length gauge with gradient_k present
+                                  # 'velocity': use velocity gauge with absent gradient_k
+
 
 # Driving field parameters
 ##########################################################################
@@ -46,8 +51,8 @@ phase               = (0/1)*np.pi# Carrier envelope phase (edited by cep-scan.py
 # Time scales (all units in femtoseconds)
 ##########################################################################
 T2    = 1     # Phenomenological polarization damping time
-t0    = -600  # Start time *pulse centered @ t=0, use t0 << 0
-tf    = 600   # End time
+t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
+tf    = 1000   # End time
 dt    = 0.05   # Time step
 
 # Unit conversion factors
@@ -60,8 +65,9 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out      = True # Set to True to get user plotting and progress output
-energy_plots  = False  # Set to True to plot 3d energy bands and contours
-dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
-test          = False  # Set to True to output travis testing parameters
-matrix_method = False  # Set to True to use old matrix method for solving
+user_out          = True   # Set to True to get user plotting and progress output
+print_J_P_I_files = False   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
+energy_plots      = False  # Set to True to plot 3d energy bands and contours
+dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)
+test              = False  # Set to True to output travis testing parameters
+matrix_method     = False  # Set to True to use old matrix method for solving
