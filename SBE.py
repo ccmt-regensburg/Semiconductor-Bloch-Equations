@@ -160,11 +160,13 @@ def main():
         A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
             - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
 
-        # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
+        # in bite.evaluate, there is also an interpolation done if b1, b2 are
+        # provided and a cutoff radius
         bandstruct = system.evaluate_energy(kx_in_path, ky_in_path)
         ecv_in_path = bandstruct[1] - bandstruct[0]
 
-        # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
+        # Initialize the values of of each k point vector
+        # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = initial_condition(e_fermi, temperature, bandstruct[1])
 
         # Set the initual values and function parameters for the current kpath

@@ -168,12 +168,13 @@ def main():
 #        y0 = []
         y0 = initial_condition(e_fermi, temperature, bandstruct[1])
         # Set the initual values and function parameters for the current kpath
-        # 
-        savetimes = np.arange(t0, Nt*dt, dt_out)
-        sol = solve_ivp(fnumba, (t0, Nt*dt), y0, method='BDF', t_eval=savetimes,
-                dense_output=False, events=None, vectorized=False, max_step=dt,
+        print(t0, tf, dt_out)
+        savetimes = np.arange(t0, tf, dt_out)
+        sol = solve_ivp(fnumba, (t0, tf), y0, method='BDF', t_eval=savetimes,
+                vectorized=True, max_step=dt,
                 args=(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path))
 
+        print("Done")
 #        solver.set_initial_value(y0, t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
 
         # Propagate through time
