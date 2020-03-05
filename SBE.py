@@ -287,7 +287,7 @@ def main():
         np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if (not test and user_out):
-        real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(1,5,figsize=(10,10))
+        real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
         log_limits = (10e-20,100)
@@ -297,6 +297,7 @@ def main():
         axE.set_ylabel(r'$E$-field in MV/cm')
         axA.set_xlim(t_lims)
         axA.plot(t/fs_conv,A_field/E_conv/fs_conv)
+#        axA.plot(t/fs_conv,1/E_conv/fs_conv*get_A_field(E0, w, t, alpha) )
         axA.set_xlabel(r'$t$ in fs')
         axA.set_ylabel(r'$A$-field in MV/cm$\cdot$fs')
         axP.set_xlim(t_lims)
@@ -748,7 +749,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
         x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
-    x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
+    x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
 
     return x
 
