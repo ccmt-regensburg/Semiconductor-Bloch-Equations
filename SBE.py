@@ -238,6 +238,10 @@ def main():
     solution         = np.array(solution)
     # Now the solution array is structred as: first index is kx-index, second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
+    # In case of the velocity gauge, we need to shift the time-dependent k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
+    if gauge == 'velocity':
+       solution = shift_solution(solution, A_field, dk)
+
     # COMPUTE OBSERVABLES
     ###############################################################################################
     # Calculate parallel and orthogonal components of observables
@@ -723,6 +727,8 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
             index_shift_2 = int(num_indices_shifted_float) + 1
             weight_1      = index_shift_2 - num_indices_shifted_float
             weight_2      = 1-weight_1
+            if(index_shift_1 > 1):
+                print(index_shift_1, index_shift_2, weight_1, weight_2)
         else:
             index_shift_1 = 0
             index_shift_2 = 0
@@ -853,6 +859,11 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     # Calculate the timestep
     svec = np.dot(M, y) + b
     return svec
+
+def shift_solution(solution, A_field, dk):
+
+
+    return solution
 
 def initial_condition(y0,e_fermi,temperature,e_c,i_k):
 
