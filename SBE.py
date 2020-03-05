@@ -727,14 +727,13 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
         ecv = weight_1*ecv_in_path[k+index_shift_1] + weight_2*ecv_in_path[k+index_shift_2]
 
         # Rabi frequency: w_R = d_12(k).E(t)
-        # Rabi frequency conjugate
-        #wr          = dipole_in_path[k]*D
-        wr          = rabi(E0, w, t, chirp, alpha, phase, dipole_in_path[k])
+        dipole      = weight_1*dipole_in_path[k+index_shift_1] + weight_2*dipole_in_path[k+index_shift_2]
+        wr          = rabi(E0, w, t, chirp, alpha, phase, dipole)
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        #wr_d_diag   = A_in_path[k]*D
-        wr_d_diag   = rabi(E0, w, t, chirp, alpha, phase, A_in_path[k])
+        Berry_con   = weight_1*A_in_path[k+index_shift_1] + weight_2*A_in_path[k+index_shift_2]
+        wr_d_diag   = rabi(E0, w, t, chirp, alpha, phase, Berry_con)
 
         # Update each component of the solution vector
         # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
