@@ -1,9 +1,9 @@
 import params
 import numpy as np
-from numba import jit, njit
+from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib import patches
-from scipy.integrate import ode
+from scipy.integrate import ode, solve_ivp
 
 import hfsbe.dipole
 import hfsbe.example
@@ -118,7 +118,7 @@ def main():
     solution = []
 
     # Initialize the ode solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
+
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # Bismuth Teluride calls
     system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
@@ -165,41 +165,47 @@ def main():
         ecv_in_path = bandstruct[1] - bandstruct[0]
 
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
+#        y0 = []
         y0 = initial_condition(e_fermi, temperature, bandstruct[1])
-
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
+        # 
+        savetimes = np.arange(t0, Nt*dt, dt_out)
+        sol = solve_ivp(fnumba, (t0, Nt*dt), y0, method='BDF', t_eval=savetimes,
+                dense_output=False, events=None, vectorized=False, max_step=dt,
+                args=(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path))
+
+#        solver.set_initial_value(y0, t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path)
 
         # Propagate through time
-        ti = 0
-        while solver.successful() and ti < Nt:
-            # User output of integration progress
-            if (ti % 1000 == 0 and user_out):
-                print('{:5.2f}%'.format(ti/Nt*100))
-
-            # Integrate one integration time step
-            solver.integrate(solver.t + dt)
-
-            # Save solution each output step
-            if (ti % dt_out == 0):
-                path_solution.append(solver.y)
-                # Construct time array only once
-                if not t_constructed:
-                    t.append(solver.t)
+#        ti = 0
+#        while solver.successful() and ti < Nt:
+#            # User output of integration progress
+#            if (ti % 1000 == 0 and user_out):
+#                print('{:5.2f}%'.format(ti/Nt*100))
+#
+#            # Integrate one integration time step
+#            solver.integrate(solver.t + dt)
+#
+#            # Save solution each output step
+#            if (ti % dt_out == 0):
+#                path_solution.append(solver.y)
+#                # Construct time array only once
+#                if not t_constructed:
+#                    t.append(solver.t)
 
             # Increment time counter
-            ti += 1
+#            ti += 1
 
         # Flag that time array has been built up
-        t_constructed = True
+ #       t_constructed = True
         path_num += 1
 
         # Append path solutions to the total solution arrays
-        solution.append(path_solution)
+#        solution.append(path_solution)
 
     # Convert solution and time array to numpy arrays
-    t = np.array(t)
-    solution = np.array(solution)
+    t = sol.t
+    solution = sol.y
 
     # Slice solution along each path for easier observable calculation
     if BZ_type == 'full':
@@ -613,6 +619,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
     D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
 
     # Update the solution vector
+    # 
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
         i = 4*k
@@ -649,15 +656,17 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
 
     return x
 
+
 def initial_condition(e_fermi, temperature, e_c):
     knum = e_c.size
+
     ones = np.ones(knum)
     zeros = np.zeros(knum)
     if (temperature > 1e-5):
         distrib = 1/(np.exp((e_c-e_fermi)/temperature)+1)
-        return np.array([ones, zeros, zeros, distrib]).flatten('F')
+        return np.array([ones, zeros, zeros, distrib], dtype=np.complex).flatten('F') 
     else:
-        return np.array([ones, zeros, zeros, zeros]).flatten('F')
+        return np.array([ones, zeros, zeros, zeros], dtype=np.complex).flatten('F')
 
 
 def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
