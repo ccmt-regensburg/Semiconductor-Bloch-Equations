@@ -506,11 +506,11 @@ def driving_field(E0, w, t, chirp, alpha, phase):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
 @njit
-def rabi(k,E0,w,t,chirp,alpha,phase,dipole_in_path):
+def rabi(E0,w,t,chirp,alpha,phase,dipole):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole_in_path[k]*driving_field(E0, w, t, chirp, alpha, phase)
+    return dipole*driving_field(E0, w, t, chirp, alpha, phase)
 
 def diff(x,y):
     '''
@@ -724,17 +724,17 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
             weight_2      = 0
 
         #Energy term eband(i,k) the energy of band i at point k
-        ecv = ecv_in_path[k]
+        ecv = weight_1*ecv_in_path[k+index_shift_1] + weight_2*ecv_in_path[k+index_shift_2]
 
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
         #wr          = dipole_in_path[k]*D
-        wr          = rabi(k, E0, w, t, chirp, alpha, phase, dipole_in_path)
+        wr          = rabi(E0, w, t, chirp, alpha, phase, dipole_in_path[k])
         wr_c        = np.conjugate(wr)
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
         #wr_d_diag   = A_in_path[k]*D
-        wr_d_diag   = rabi(k, E0, w, t, chirp, alpha, phase, A_in_path)
+        wr_d_diag   = rabi(E0, w, t, chirp, alpha, phase, A_in_path[k])
 
         # Update each component of the solution vector
         # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
