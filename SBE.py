@@ -711,6 +711,18 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
             m = 4*(k+1)
             n = 4*(k-1)
 
+        if gauge == 'velocity':
+            num_indices_shifted_float = (y[-1]/dk).real
+            index_shift_1 = int(num_indices_shifted_float)
+            index_shift_2 = int(num_indices_shifted_float) + 1
+            weight_1      = index_shift_2 - num_indices_shifted_float
+            weight_2      = 1-weight_1
+        else:
+            index_shift_1 = 0
+            index_shift_2 = 0
+            weight_1      = 1
+            weight_2      = 0
+
         #Energy term eband(i,k) the energy of band i at point k
         ecv = ecv_in_path[k]
 
@@ -732,7 +744,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
         x[i+3] = -2*np.imag(wr*y[i+1]) + D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
-    x[-1] = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
+    x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
 
     return x
 
