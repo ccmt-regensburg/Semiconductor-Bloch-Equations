@@ -706,6 +706,22 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
     elif gauge == 'velocity':
       D = 0
 
+    if gauge == 'velocity':
+        num_indices_shifted_float = (y[-1]/dk).real
+        index_shift_1 = int(int(np.abs(num_indices_shifted_float))*np.sign(num_indices_shifted_float))
+        if(num_indices_shifted_float < 0): 
+            index_shift_1 = index_shift_1 - 1
+        index_shift_2 = index_shift_1 + 1
+        weight_1      = index_shift_2 - num_indices_shifted_float
+        weight_2      = 1-weight_1
+    else:
+        index_shift_1 = 0
+        index_shift_2 = 0
+        weight_1      = 1
+        weight_2      = 0
+
+    print(t, y[-1].real, num_indices_shifted_float, index_shift_1, index_shift_2, weight_1, weight_2)
+
     # Update the solution vector
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
@@ -720,20 +736,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
         else:
             m = 4*(k+1)
             n = 4*(k-1)
-
-        if gauge == 'velocity':
-            num_indices_shifted_float = (y[-1]/dk).real
-            index_shift_1 = int(num_indices_shifted_float)
-            index_shift_2 = int(num_indices_shifted_float) + 1
-            weight_1      = index_shift_2 - num_indices_shifted_float
-            weight_2      = 1-weight_1
-            if(index_shift_1 > 1):
-                print(t, index_shift_1, index_shift_2, weight_1, weight_2, y[-1])
-        else:
-            index_shift_1 = 0
-            index_shift_2 = 0
-            weight_1      = 1
-            weight_2      = 0
 
         #Energy term eband(i,k) the energy of band i at point k
         ecv = weight_1*ecv_in_path[k+index_shift_1] + weight_2*ecv_in_path[k+index_shift_2]
