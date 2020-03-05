@@ -421,22 +421,22 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
         x = np.abs(p[0])
         y = np.abs(p[1])
-        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+        return ((y <= 2.0*np.pi/(3*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(3*a)))
 
     def reflect_point(p,a,b1,b2):
         x = p[0]
         y = p[1]
-        if (y > 2*np.pi/(np.sqrt(3)*a)):   # Crosses top
+        if (y > 2*np.pi/(3*a)):   # Crosses top
             p -= b2
-        elif (y < -2*np.pi/(np.sqrt(3)*a)): # Crosses bottom
+        elif (y < -2*np.pi/(3*a)): # Crosses bottom
             p += b2
-        elif (np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-right
+        elif (np.sqrt(3)*x + y > 4*np.pi/(3*a)): #Crosses top-right
             p -= b1 + b2
-        elif (-np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-right
+        elif (-np.sqrt(3)*x + y < -4*np.pi/(3*a)): #Crosses bot-right
             p -= b1
-        elif (np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)): #Crosses bot-left
+        elif (np.sqrt(3)*x + y < -4*np.pi/(3*a)): #Crosses bot-left
             p += b1 + b2
-        elif (-np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)): #Crosses top-left
+        elif (-np.sqrt(3)*x + y > 4*np.pi/(3*a)): #Crosses top-left
             p += b1
         return p
 
@@ -467,8 +467,8 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
             paths.append(path_M)
 
     elif align == 'K':
-        b_a1 = 8*np.pi/(a*3)*np.array([1,0])
-        b_a2 = 4*np.pi/(a*3)*np.array([1,np.sqrt(3)])
+        b_a1 = 8*np.pi/(a*3*np.sqrt(3))*np.array([1,0])
+        b_a2 = 4*np.pi/(a*3*np.sqrt(3))*np.array([1,np.sqrt(3)])
         # Extend over half of the b2 direction and 1.5x the b1 direction (extending into the 2nd BZ to get correct boundary conditions)
         alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 1.0 - (1/(2*Nk1)), num = Nk1)
         alpha2 = np.linspace(0, 0.5 - (1/(2*Nk2)), num = Nk2)
