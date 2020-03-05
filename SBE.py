@@ -689,7 +689,10 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
 
     # Gradient term coefficient
-    D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
+    if gauge == 'length':
+      D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
+    elif gauge == 'velocity':
+      D = 0
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
