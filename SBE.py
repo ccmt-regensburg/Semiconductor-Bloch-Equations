@@ -226,6 +226,7 @@ def main():
     # Convert solution and time array to numpy arrays
     t        = np.array(t)
     solution = np.array(solution)
+    A_field  = np.array(path_solution)[:,-1]
 
     # Slice solution along each path for easier observable calculation
     if BZ_type == 'full':
@@ -286,7 +287,7 @@ def main():
         np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
     if (not test and user_out):
-        real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2,figsize=(10,10))
+        real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(1,5,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
         log_limits = (10e-20,100)
@@ -294,6 +295,10 @@ def main():
         axE.plot(t/fs_conv,driving_field(E0,w,t,chirp,alpha,phase)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
+        axA.set_xlim(t_lims)
+        axA.plot(t/fs_conv,A_field/E_conv/fs_conv)
+        axA.set_xlabel(r'$t$ in fs')
+        axA.set_ylabel(r'$A$-field in MV/cm$\cdot$fs')
         axP.set_xlim(t_lims)
         axP.plot(t/fs_conv,P_E_dir)
         axP.plot(t/fs_conv,P_ortho)
