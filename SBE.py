@@ -194,7 +194,8 @@ def main():
         y0.append(0.0)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,A_in_path, gauge)
+        solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,\
+                                                     A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system)
 
         # Propagate through time
         ti = 0
@@ -691,11 +692,11 @@ def get_A_field(E0, w, t, alpha):
     w_eff = 4*np.pi*alpha*w
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
-def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge)
+def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system)
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -708,6 +709,8 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
 
     if gauge == 'velocity':
        k_shift = (y[-1]/dk).real
+       bandstruct = system.evaluate_energy(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
+       ecv_in_path = bandstruct[1] - bandstruct[0]
        print(t, y[-1].real, k_shift)
 
     # Update the solution vector
