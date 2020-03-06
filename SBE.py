@@ -5,6 +5,7 @@ import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
 from scipy.special import erf
+from systems import *
 
 import hfsbe.dipole
 import hfsbe.example
@@ -195,7 +196,7 @@ def main():
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0,t0).set_f_params(path,dk,gamma2,E0,w,chirp,alpha,phase,ecv_in_path,dipole_in_path,\
-                                                     A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system, dipole)
+                                                     A_in_path, gauge, kx_in_path, ky_in_path, E_dir)
 
         # Propagate through time
         ti = 0
@@ -692,11 +693,11 @@ def get_A_field(E0, w, t, alpha):
     w_eff = 4*np.pi*alpha*w
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
-def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system, dipole):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system, dipole)
+def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir):
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir)
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir, system, dipole):
+def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path, A_in_path, gauge, kx_in_path, ky_in_path, E_dir):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -709,9 +710,10 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
 
     if gauge == 'velocity':
        k_shift = (y[-1]/dk).real
-       bandstruct = system.evaluate_energy(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
-       ecv_in_path = bandstruct[1] - bandstruct[0]
-       di_x,di_y = dipole.evaluate(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
+       ecv_in_path = eigenvalues[1](kx=kx_in_path+E_dir[0]*k_shift, ky=ky_in_path+E_dir[1]*k_shift) - \
+                     eigenvalues[0](kx=kx_in_path+E_dir[0]*k_shift, ky=ky_in_path+E_dir[1]*k_shift)
+       di_x = dipole_x(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
+       di_y = dipole_y(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
        dipole_in_path = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
        A_in_path      = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
        print(t, y[-1].real, k_shift)
