@@ -711,7 +711,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dip
        k_shift = (y[-1]/dk).real
        bandstruct = system.evaluate_energy(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
        ecv_in_path = bandstruct[1] - bandstruct[0]
-       di_x,di_y = dipole.evaluate(kx_in_path, ky_in_path)
+       di_x,di_y = dipole.evaluate(kx_in_path+E_dir[0]*k_shift, ky_in_path+E_dir[1]*k_shift)
        dipole_in_path = E_dir[0]*di_x[0,1,:] + E_dir[1]*di_y[0,1,:]
        A_in_path      = E_dir[0]*di_x[0,0,:] + E_dir[1]*di_y[0,0,:] - (E_dir[0]*di_x[1,1,:] + E_dir[1]*di_y[1,1,:])
        print(t, y[-1].real, k_shift)
