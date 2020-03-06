@@ -21,7 +21,7 @@ k_cut               = 0.05       # Model hamiltonian cutoff
 ##########################################################################
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-BZ_type = 'full'
+BZ_type = '2line'
 
 # Reciprocal lattice vectors
 b1 = (2*np.pi/(a*3))*np.array([np.sqrt(3),-1])
@@ -38,7 +38,7 @@ length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-gauge               = 'length'    # 'length': use length gauge with gradient_k present
+gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters

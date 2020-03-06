@@ -229,14 +229,14 @@ def main():
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
     # Polarization (interband)
-    P_E_dir, P_ortho = polarization(paths, solution[:,:,:,1], dipole, E_dir)
+    P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir)
     # Current (intraband)
-    J_E_dir, J_ortho = current(paths, solution[:,:,:,0], solution[:,:,:,3], system, path, t, alpha, E_dir)
+    J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
     # Berry curvature current
-    #J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
+    # J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
 
     # Polar emission in time
     Ir = []
@@ -529,7 +529,7 @@ def Gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
-def polarization(paths, pcv, dipole, E_dir):
+def polarization(paths, pcv, E_dir):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -539,30 +539,30 @@ def polarization(paths, pcv, dipole, E_dir):
     d_E_dir, d_ortho = [],[]
     for path in paths:
 
-        kx_in_path = path[:,0]
-        ky_in_path = path[:,1]
+        kx_in_path = path[:, 0]
+        ky_in_path = path[:, 1]
 
         # Evaluate the dipole moments in path
-        di_x, di_y = dipole.evaluate(kx_in_path, ky_in_path)
+        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
 
         # Append the dot product d.E
-        d_E_dir.append(di_x[0,1,:]*E_dir[0] + di_y[0,1,:]*E_dir[1])
-        d_ortho.append(di_x[0,1,:]*E_ort[0] + di_y[0,1,:]*E_ort[1])
+        d_E_dir.append(di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1])
+        d_ortho.append(di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1])
 
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
-    #d_E_dir = d_E_dir.T
-    #d_ortho = d_ortho.T
+    # d_E_dir = d_E_dir.T
+    # d_ortho = d_ortho.T
 
-    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped,pcv,2))
-    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped,pcv,2))
-    #P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
-    #P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
+    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
+    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
+    # P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
+    # P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
 
     return P_E_dir, P_ortho
 
 
-def current(paths,fv,fc,system,path,t,alpha,E_dir):
+def current(paths, fv, fc, t, alpha, E_dir):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -576,7 +576,8 @@ def current(paths,fv,fc,system,path,t,alpha,E_dir):
         path = np.array(path)
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
-        bandstruct_deriv = system.evaluate_ederivative(kx_in_path, ky_in_path)
+        bandstruct_deriv = sys.system.evaluate_ederivative(kx_in_path,
+                                                           ky_in_path)
         # 0: v, x   1: v,y   2: c, x  3: c, y
         jc_E_dir.append(bandstruct_deriv[2]*E_dir[0]
                         + bandstruct_deriv[3]*E_dir[1])
@@ -599,7 +600,8 @@ def current(paths,fv,fc,system,path,t,alpha,E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
-def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
+
+def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
     # t contains all time points
     A_field   = get_A_field(E0, w, t, alpha)
     A_field_x = A_field*E_dir[0]
@@ -613,7 +615,7 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase,dipole):
     # Calculate the gradient analytically at each k-point
     J_E_dir, J_ortho = [], []
 
-    curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax,dipole.Ay)
+    curv = sys.dipole.SymbolicCurvature(sys.dipole.Ax, sys.dipole.Ay)
 
     #for path in paths:
     #   path = np.array(path)
