@@ -6,9 +6,6 @@ from matplotlib import patches
 from scipy.integrate import ode
 import systems as sys
 
-import hfsbe.dipole
-import hfsbe.example
-import hfsbe.utility
 
 # Flags for plotting
 user_out = params.user_out
@@ -18,7 +15,6 @@ test = params.test
 
 
 def main():
-
     # RETRIEVE PARAMETERS
     ###########################################################################
     # Unit converstion factors
@@ -27,14 +23,6 @@ def main():
     THz_conv = params.THz_conv
     # amp_conv = params.amp_conv
     eV_conv = params.eV_conv
-
-    # Set BZ type independent parameters
-    # Hamiltonian parameters
-    C0 = params.C0                              # Dirac point position
-    C2 = params.C2                              # k^2 coefficient
-    A = params.A                                # Fermi velocity
-    R = params.R                                # k^3 coefficient
-    k_cut = params.k_cut                        # hamiltonian cutoff parameter
 
     # System parameters
     a = params.a                                # Lattice spacing
@@ -128,7 +116,8 @@ def main():
     solution = []
 
     # Initialize the ode solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
+    solver = ode(f, jac=None)\
+        .set_integrator('zvode', method='bdf', max_step=dt)
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # SOLVING
     ###########################################################################
@@ -241,7 +230,7 @@ def main():
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t, P_ortho), norm='ortho'))
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
-    fw_0 = np.fft.fftshift(np.fft.fft(solution[:, 0, :, 0], norm='ortho'),axes=(1,))
+    # fw_0 = np.fft.fftshift(np.fft.fft(solution[:, 0, :, 0], norm='ortho'), axes=(1,))
 
     # Emission intensity
     Int_E_dir = (freq**2)*np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2.0
@@ -366,10 +355,11 @@ def mesh(params, E_dir):
     a = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      #
 
-    alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+    alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)),
+                              0.5 - (1/(2*Nk_in_path)), num=Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
 
-    vec_k_ortho = 2.0*np.pi/a*rel_dist_to_Gamma*np.array([E_dir[1],-E_dir[0]])
+    vec_k_ortho = 2.0*np.pi/a*rel_dist_to_Gamma*np.array([E_dir[1], -E_dir[0]])
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
@@ -470,12 +460,14 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
                     mesh.append(kpoint)
                     path_K.append(kpoint)
                 else:
-                    kpoint -= 2*np.pi/(np.sqrt(3)*a)*np.array([1, 1/np.sqrt(3)])
+                    kpoint -= 2*np.pi/(np.sqrt(3)*a)\
+                        * np.array([1, 1/np.sqrt(3)])
                     mesh.append(kpoint)
                     path_K.append(kpoint)
             paths.append(path_K)
 
     return np.array(mesh), np.array(paths)
+
 
 @njit
 def driving_field(E0, w, t, chirp, alpha, phase):
@@ -492,7 +484,8 @@ def driving_field(E0, w, t, chirp, alpha, phase):
 @njit
 def rabi(k, E0, w, t, chirp, alpha, phase, dipole_in_path):
     '''
-    Rabi frequency of the transition. Calculated from dipole element and driving field
+    Rabi frequency of the transition.
+    Calculated from dipole element and driving field.
     '''
     return dipole_in_path[k]*driving_field(E0, w, t, chirp, alpha, phase)
 
@@ -541,13 +534,13 @@ def polarization(paths, pcv, E_dir):
 
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
-    #d_E_dir = d_E_dir.T
-    #d_ortho = d_ortho.T
+    # d_E_dir = d_E_dir.T
+    # d_ortho = d_ortho.T
 
     P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
     P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
-    #P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
-    #P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
+    # P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
+    # P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
 
     return P_E_dir, P_ortho
 
@@ -583,7 +576,7 @@ def current(paths, fv, fc, t, alpha, E_dir):
     jv_E_dir = np.array(jv_E_dir).T
     jv_ortho = np.array(jv_ortho).T
 
-    # we need tensordot for contracting the first two indices (2 kpoint directions)
+    # tensordot for contracting the first two indices (2 kpoint directions)
     J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
     J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
 
@@ -664,31 +657,39 @@ def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
     BZ_fig = pl.figure(figsize=(10, 10))
     ax = BZ_fig.add_subplot(111, aspect='equal')
 
-    ax.add_patch(patches.RegularPolygon((0,0),6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(b1+b2,6,radius=R,orientation=np.pi/6,fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1-b2,6,radius=R,orientation=np.pi/6,fill=False))
+    ax.add_patch(patches.RegularPolygon((0, 0), 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
+    ax.add_patch(patches.RegularPolygon(b1, 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1, 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
+    ax.add_patch(patches.RegularPolygon(b2, 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
+    ax.add_patch(patches.RegularPolygon(-b2, 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
+    ax.add_patch(patches.RegularPolygon(b1+b2, 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
+    ax.add_patch(patches.RegularPolygon(-b1-b2, 6, radius=R,
+                                        orientation=np.pi/6, fill=False))
 
-    ax.arrow(-0.5*E_dir[0],-0.5*E_dir[1],E_dir[0],E_dir[1],width=0.005,alpha=0.5,label='E-field')
+    ax.arrow(-0.5*E_dir[0], -0.5*E_dir[1], E_dir[0], E_dir[1],
+             width=0.005, alpha=0.5, label='E-field')
 
-    pl.scatter(0,0,s=15,c='black')
-    pl.text(0.01,0.01,r'$\Gamma$')
-    pl.scatter(r*np.cos(-np.pi/6),r*np.sin(-np.pi/6),s=15,c='black')
-    pl.text(r*np.cos(-np.pi/6)+0.01,r*np.sin(-np.pi/6)-0.05,r'$M$')
-    pl.scatter(R,0,s=15,c='black')
-    pl.text(R,0.02,r'$K$')
-    pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
+    pl.scatter(0, 0, s=15, c='black')
+    pl.text(0.01, 0.01, r'$\Gamma$')
+    pl.scatter(r*np.cos(-np.pi/6), r*np.sin(-np.pi/6), s=15, c='black')
+    pl.text(r*np.cos(-np.pi/6)+0.01, r*np.sin(-np.pi/6)-0.05, r'$M$')
+    pl.scatter(R, 0, s=15, c='black')
+    pl.text(R, 0.02, r'$K$')
+    pl.scatter(kpnts[:, 0], kpnts[:, 1], s=15)
     pl.xlim(-5.0/(np.sqrt(3)*a), 5.0/(np.sqrt(3)*a))
-    pl.ylim(-5.0/(np.sqrt(3)*a),5.0/(np.sqrt(3)*a))
+    pl.ylim(-5.0/(np.sqrt(3)*a), 5.0/(np.sqrt(3)*a))
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
 
     for path in paths:
         path = np.array(path)
-        pl.plot(path[:,0],path[:,1])
+        pl.plot(path[:, 0], path[:, 1])
 
     return
 
