@@ -3,7 +3,7 @@ import numpy as np
 
 # System parameters
 #########################################################################
-a                   = 1 #8.308       # Lattice spacing in atomic units (4.395 A)
+a                   = 8.308       # Lattice spacing in atomic units (4.395 A)
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
@@ -18,7 +18,7 @@ k_cut               = 0.05        # Model hamiltonian cutoff
 ##########################################################################
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-BZ_type = 'full'
+BZ_type = '2line'
 
 # Reciprocal lattice vectors
 b1 = (2*np.pi/(a*3))*np.array([np.sqrt(3), -1])
