@@ -722,7 +722,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
     if gauge == 'length':
         D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
     elif gauge == 'velocity':
-        k_shift = -(y[-1]).real
+        k_shift = (y[-1]).real
         kx_shift_path = kx_in_path+E_dir[0]*k_shift
         ky_shift_path = ky_in_path+E_dir[1]*k_shift
         ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
