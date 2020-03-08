@@ -168,9 +168,12 @@ def main():
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        y0 = initial_condition(e_fermi, temperature, bandstruct[1])
+        y0 = []
+        for i_k, k in enumerate(path):
+            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
+
         # append the A-field
-        np.append(y0, 0.0)
+        y0.append(0.0)
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
@@ -866,15 +869,12 @@ def shift_solution(solution, A_field, dk):
     return solution
 
 
-def initial_condition(e_fermi, temperature, e_c):
-    knum = e_c.size
-    ones = np.ones(knum, dtype=np.complex)
-    zeros = np.zeros(knum, dtype=np.complex)
+def initial_condition(y0,e_fermi,temperature,e_c,i_k):
+
     if (temperature > 1e-5):
-        distrib = 1/(np.exp((e_c-e_fermi)/temperature)+1)
-        return np.array([ones, zeros, zeros, distrib]).flatten('F')
+      y0.extend([1.0,0.0,0.0,1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)])
     else:
-        return np.array([ones, zeros, zeros, zeros]).flatten('F')
+      y0.extend([1.0,0.0,0.0,0.0])
 
 
 def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
