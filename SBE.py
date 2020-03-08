@@ -343,16 +343,16 @@ def main():
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
 
-        fig4, (ax4_1,ax4_2) = pl.subplots(1,2)
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-        ax4_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
-        ax4_1.plot(kp_array,1.0/eV_conv*cond_band_for_print[0])
-        ax4_2.plot(kp_array,1.0/eV_conv*val_band_for_print[1])
-        ax4_2.plot(kp_array,1.0/eV_conv*cond_band_for_print[1])
-        ax4_1.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
-        ax4_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
-        ax4_2.set_xlabel(r'$k$-point in path 1 ($1/a_0$)')
-        ax4_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
+        # Countour plots of occupations and gradients of occupations
+        fig5 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
