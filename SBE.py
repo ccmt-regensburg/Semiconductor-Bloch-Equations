@@ -124,6 +124,8 @@ def main():
     # Solution containers
     t = []
     solution = []
+    val_band_for_print          = []
+    cond_band_for_print         = []
 
     # Initialize the ode solver
     solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
@@ -205,6 +207,9 @@ def main():
 
         # Append path solutions to the total solution arrays
         solution.append(np.array(path_solution)[:, 0:-1])
+
+        val_band_for_print.append(bandstruct[0])
+        cond_band_for_print.append(bandstruct[1])
 
     # Convert solution and time array to numpy arrays
     t = np.array(t)
@@ -335,6 +340,17 @@ def main():
         axInt.semilogy(freq/w,np.abs(Int_ortho))
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
+
+        fig4, (ax4_1,ax4_2) = pl.subplots(1,2)
+        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+        ax4_1.plot(kp_array,1.0/eV_conv*val_band_for_print[0])
+        ax4_1.plot(kp_array,1.0/eV_conv*cond_band_for_print[0])
+        ax4_2.plot(kp_array,1.0/eV_conv*val_band_for_print[1])
+        ax4_2.plot(kp_array,1.0/eV_conv*cond_band_for_print[1])
+        ax4_1.set_xlabel(r'$k$-point in path 0 ($1/a_0$)')
+        ax4_1.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
+        ax4_2.set_xlabel(r'$k$-point in path 1 ($1/a_0$)')
+        ax4_2.set_ylabel(r'Bandstruc. $\varepsilon(k)$ (eV)')
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))

@@ -4,6 +4,7 @@ import numpy as np
 # System parameters
 #########################################################################
 a                   = 10.259       # Lattice spacing in atomic units (4.395 A)
+#a                   = 8.308
 # Galium Selenide  lattice spacing = 5.429 Angstrom = 10.259 a.u.
 # Galium Arsenic   lattice spacing = 5.653 angstrom = 10.683 a.u.
 # Bismuth Teluride lattice spacing = 4.395 angstrom = 8.308
@@ -48,7 +49,7 @@ E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 chirp               = 0.0        # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
-phase               = (1/2)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
+phase               = (0/2)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
