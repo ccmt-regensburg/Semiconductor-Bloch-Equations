@@ -722,7 +722,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
     if gauge == 'length':
         D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
     elif gauge == 'velocity':
-        k_shift = (y[-1]).real
+        k_shift = -(y[-1]).real
         kx_shift_path = kx_in_path+E_dir[0]*k_shift
         ky_shift_path = ky_in_path+E_dir[1]*k_shift
         ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
@@ -906,7 +906,7 @@ def shift_solution(solution, A_field, dk):
     for i_time in range(np.size(A_field)):
         # shift of k index in the direction of the E-field 
         # (direction is already included in the paths)
-        k_shift = (-A_field[i_time]/dk).real
+        k_shift = (A_field[i_time]/dk).real
         k_index_shift_1 = int(int(np.abs(k_shift))*np.sign(k_shift))
         if(k_shift < 0): 
             k_index_shift_1 = k_index_shift_1 - 1
