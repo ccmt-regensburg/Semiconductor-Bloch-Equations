@@ -135,23 +135,29 @@ def main():
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+        di_00x = sys.di_00xjit(kx=kx_in_path, ky=ky_in_path)
+        di_01x = sys.di_01xjit(kx=kx_in_path, ky=ky_in_path)
+        di_11x = sys.di_11xjit(kx=kx_in_path, ky=ky_in_path)
+        di_00y = sys.di_00yjit(kx=kx_in_path, ky=ky_in_path)
+        di_01y = sys.di_01yjit(kx=kx_in_path, ky=ky_in_path)
+        di_11y = sys.di_11yjit(kx=kx_in_path, ky=ky_in_path)
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :]
-        A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
-            - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
+        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
+        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
+            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are
         # provided and a cutoff radius
-        bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
-        ecv_in_path = bandstruct[1] - bandstruct[0]
+        ec = sys.ecjit(kx=kx_in_path, ky=ky_in_path)
+        ev = sys.evjit(kx=kx_in_path, ky=ky_in_path)
+        ecv_in_path = ec - ev
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        y0 = initial_condition(e_fermi, temperature, bandstruct[1])
+        y0 = initial_condition(e_fermi, temperature, ec)
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
@@ -247,7 +253,7 @@ def main():
     I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
     np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
-    if (not test and user_out):
+    if (user_out):
         real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,30)
@@ -330,25 +336,10 @@ def main():
 
         pl.show()
 
-    # OUTPUT STANDARD TEST VALUES
-    ##############################################################################################
-    if test:
-        t_zero = np.argwhere(t == 0)
-        f5 = np.argwhere(np.logical_and(freq/w > 4.9, freq/w < 5.1))
-        f125 = np.argwhere(np.logical_and(freq/w > 12.4, freq/w < 12.6))
-        f15= np.argwhere(np.logical_and(freq/w > 14.9, freq/w < 15.1))
-        f_5 = f5[int(np.size(f5)/2)]
-        f_125 = f125[int(np.size(f125)/2)]
-        f_15 = f15[int(np.size(f15)/2)]
-        test_out = np.zeros(6, dtype=[('names','U16'),('values',float)])
-        test_out['names'] = np.array(['P(t=0)','J(t=0)','N_gamma(t=tf)','Emis(w/w0=5)','Emis(w/w0=12.5)','Emis(w/w0=15)'])
-        test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
-        np.savetxt('test.dat',test_out, fmt='%16s %.16e')
 
-
-#################################################################################################
+###############################################################################
 # FUNCTIONS
-################################################################################################
+###############################################################################
 def mesh(params, E_dir):
     Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
