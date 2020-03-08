@@ -3,8 +3,8 @@ import numpy as np
 
 # System parameters
 #########################################################################
-#a                   = 10.259       # Lattice spacing in atomic units (4.395 A)
-a                   = 8.308
+a                   = 10.259       # Lattice spacing in atomic units (4.395 A)
+#a                   = 8.308
 # Galium Selenide  lattice spacing = 5.429 Angstrom = 10.259 a.u.
 # Galium Arsenic   lattice spacing = 5.653 angstrom = 10.683 a.u.
 # Bismuth Teluride lattice spacing = 4.395 angstrom = 8.308
@@ -39,8 +39,8 @@ length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-#gauge               = 'length'
-gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+gauge               = 'length'
+#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
