@@ -232,6 +232,8 @@ def main():
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
     if gauge == 'velocity':
         solution = shift_solution(solution, A_field, dk)
+        print("shape solution", np.shape(solution))
+        print("shape A field", np.shape(A_field))
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -898,6 +900,26 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
 
 
 def shift_solution(solution, A_field, dk):
+
+    print("np.size(A_field)", np.size(A_field))
+
+    for i_time in range(np.size(A_field)):
+        # shift of k index in the direction of the E-field 
+        # (direction is already included in the paths)
+        k_shift = (-A_field[i_time]/dk).real
+        k_index_shift_1 = int(int(np.abs(k_shift))*np.sign(k_shift))
+        if(k_shift < 0): 
+            k_index_shift_1 = k_index_shift_1 - 1
+        k_index_shift_2 = k_index_shift_1 + 1
+        weight_1      = k_index_shift_2 - k_shift
+        weight_2      = 1-weight_1
+
+#        solution[:, :, i_time, :] = weight_1*solution[k_index_shift_1:-k_index_shift_1-1,:,i_time,:] + \
+#                                    weight_2*solution[k_index_shift_2:-k_index_shift_2-1,:,i_time,:] 
+
+        solution[:, :, i_time, :] = weight_1*np.roll(solution[:,:,i_time,:], k_index_shift_1, axis=0) + \
+                                    weight_2*np.roll(solution[:,:,i_time,:], k_index_shift_2, axis=0)
+
     return solution
 
 
