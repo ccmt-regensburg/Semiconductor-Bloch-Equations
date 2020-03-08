@@ -719,58 +719,33 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
     # Gradient term coefficient
     if gauge == 'length':
         D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
-        k_shift = 0
     elif gauge == 'velocity':
         k_shift = (y[-1]/dk).real
-        D = 0
-
-#    if gauge == 'velocity':
-#        k_shift = (y[-1]/dk).real
-#        kx_shift_path = kx_in_path+E_dir[0]*k_shift
-#        ky_shift_path = ky_in_path+E_dir[1]*k_shift
-#        ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
-#            - sys.evjit(kx=kx_shift_path, ky=ky_shift_path)
-#
-#        di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
-#        di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
-#        di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
-#        di_00y = sys.di_00yjit(kx=kx_shift_path, ky=ky_shift_path)
-#        di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
-#        di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
-#        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
-#        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
-#            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
-#
+        kx_shift_path = kx_in_path+E_dir[0]*k_shift
+        ky_shift_path = ky_in_path+E_dir[1]*k_shift
+        ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
+            - sys.evjit(kx=kx_shift_path, ky=ky_shift_path)
+    
+        di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
+        di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
+        di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
+        di_00y = sys.di_00yjit(kx=kx_shift_path, ky=ky_shift_path)
+        di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
+        di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
+        # found that the dipole needs a complex conjugate
+        dipole_in_path = np.conj(E_dir[0]*di_01x + E_dir[1]*di_01y)
+        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
+            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
 
 #    print("")
 #    print("dipole_in_path before", dipole_in_path)
 #    print("")
 #    print("")
 
-
-    kx_shift_path = kx_in_path+E_dir[0]*k_shift
-    ky_shift_path = ky_in_path+E_dir[1]*k_shift
-    ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
-        - sys.evjit(kx=kx_shift_path, ky=ky_shift_path)
-
-    di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
-    di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
-    di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
-    di_00y = sys.di_00yjit(kx=kx_shift_path, ky=ky_shift_path)
-    di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
-    di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
-    # found that the dipole needs a complex conjugate
-    dipole_in_path = np.conj(E_dir[0]*di_01x + E_dir[1]*di_01y)
-    A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
-        - (E_dir[0]*di_11x + E_dir[1]*di_11y)
-
-
-
 #    print("")
 #    print("dipole_in_path after", dipole_in_path)
 #    print("")
 #    print("")
-
 
 #    if(t>-100 and t<-99):
 #       print(t, k_shift)
