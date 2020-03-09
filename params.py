@@ -14,6 +14,9 @@ A                   = 0.1974      # Fermi velocity
 R                   = 11.06       # k^3 coefficient
 k_cut               = 0.05       # Model hamiltonian cutoff
 
+delta_min           = 1.2        # Minimal energy gap in eV
+delta_d             = 0.0      # Difference between min and max of the energy gap in eV
+
 # Brillouin zone parameters
 ##########################################################################
 # Type of Brillouin zone
@@ -45,7 +48,7 @@ phase               = (0/1)*np.pi# Carrier envelope phase (edited by cep-scan.py
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 1     # Phenomenological polarization damping time
+T2    = 100     # Phenomenological polarization damping time
 t0    = -600  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 600   # End time
 dt    = 0.05   # Time step

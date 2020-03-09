@@ -1,4 +1,5 @@
 import params
+import analytical
 import numpy as np
 from numba import njit
 import matplotlib.pyplot as pl
@@ -33,6 +34,9 @@ def main():
     A = params.A                                      # Fermi velocity
     R = params.R                                      # k^3 coefficient
     k_cut = params.k_cut                              # Model hamiltonian cutoff parameter
+
+    delta_min = params.delta_min*eV_conv                # Minimal energy gap in a.u.
+    delta_d = params.delta_d*eV_conv                    # Difference min and max energy gap in a.u.
 
     # System parameters
     a = params.a                                      # Lattice spacing
@@ -77,6 +81,7 @@ def main():
     energy_plots = params.energy_plots
     dipole_plots = params.dipole_plots
     test = params.test                                # Testing flag for Travis
+
 
     # USER OUTPUT
     ###############################################################################################
@@ -172,7 +177,8 @@ def main():
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruct  = bite.evaluate_energy(kx_in_path, ky_in_path)
-        ecv_in_path = bandstruct[1] - bandstruct[0]
+        ecv_in_path = delta_min + delta_d*np.sin(kx_in_path*np.pi/length_path_in_BZ)**2
+        print(ecv_in_path/params.eV_conv)
 
         # Initialize the values of of each k point vector (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
@@ -323,6 +329,9 @@ def main():
         axInt.semilogy(freq/w,np.abs(Int_ortho))
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
+
+        analytics = analytical.emission()
+        axInt.plot(analytics[:,0], analytics[:,1] )
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure()
@@ -494,7 +503,7 @@ def rabi(k,E0,w,t,chirp,alpha,phase,dipole_in_path):
     '''
     Rabi frequency of the transition. Calculated from dipole element and driving field
     '''
-    return dipole_in_path[k]*driving_field(E0, w, t, chirp, alpha, phase)
+    return 1*driving_field(E0, w, t, chirp, alpha, phase)
 
 def diff(x,y):
     '''
