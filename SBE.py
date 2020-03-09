@@ -12,7 +12,9 @@ import systems as sys
 user_out = params.user_out
 energy_plots = params.energy_plots
 dipole_plots = params.dipole_plots
-test = params.test
+time_plots = params.time_plots
+fourier_plots = params.fourier_plots
+polar_plots = params.polar_plots
 
 
 def main():
@@ -240,7 +242,6 @@ def main():
     Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
     Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
     Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
-    # fw_0 = np.fft.fftshift(np.fft.fft(solution[:, 0, :, 0], norm='ortho'), axes=(1,))
 
     # Emission intensity
     Int_E_dir = (freq**2)*np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2
@@ -250,40 +251,43 @@ def main():
     if (BZ_type == '2line'):
         Nk1 = Nk_in_path
         Nk2 = 2
-    J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+    J_filename = 'J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'.format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
     np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
     P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
     np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
     I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
     np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
-    if (user_out):
-        real_fig, ((axE,axP),(axPdot,axJ)) = pl.subplots(2,2,figsize=(10,10))
+    if (time_plots):
+        pl.rcParams['figure.figsize'] = (10, 10)
+        real_fig, ((axE, axP), (axPdot, axJ)) = pl.subplots(2, 2)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
-        freq_lims = (0,30)
-        log_limits = (10e-20,100)
+        freq_lims = (0, 30)
+        log_limits = (10e-20, 100)
         axE.set_xlim(t_lims)
-        axE.plot(t/fs_conv,driving_field(E0,w,t,chirp,alpha,phase)/E_conv)
+        axE.plot(t/fs_conv, driving_field(E0, w, t, chirp, alpha, phase)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
         axP.set_xlim(t_lims)
-        axP.plot(t/fs_conv,P_E_dir)
-        axP.plot(t/fs_conv,P_ortho)
+        axP.plot(t/fs_conv, P_E_dir)
+        axP.plot(t/fs_conv, P_ortho)
         axP.set_xlabel(r'$t$ in fs')
         axP.set_ylabel(r'$P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
         axPdot.set_xlim(t_lims)
-        axPdot.plot(t/fs_conv,diff(t,P_E_dir))
-        axPdot.plot(t/fs_conv,diff(t,P_ortho))
+        axPdot.plot(t/fs_conv, diff(t, P_E_dir))
+        axPdot.plot(t/fs_conv, diff(t, P_ortho))
         axPdot.set_xlabel(r'$t$ in fs')
         axPdot.set_ylabel(r'$\dot P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
         axJ.set_xlim(t_lims)
-        axJ.plot(t/fs_conv,J_E_dir)
-        axJ.plot(t/fs_conv,J_ortho)
+        axJ.plot(t/fs_conv, J_E_dir)
+        axJ.plot(t/fs_conv, J_ortho)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        pl.show()
 
-        four_fig, ((axPw,axJw),(axIw,axInt)) = pl.subplots(2,2,figsize=(10,10))
-        axPw.grid(True,axis='x')
+    if (fourier_plots):
+        four_fig, ((axPw, axJw), (axIw, axInt)) = pl.subplots(2, 2)
+        axPw.grid(True, axis='x')
         axPw.set_xlim(freq_lims)
         axPw.set_ylim(log_limits)
         axPw.semilogy(freq/w,np.abs(Pw_E_dir))
@@ -311,9 +315,11 @@ def main():
         axInt.semilogy(freq/w,np.abs(Int_ortho))
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
+        pl.show()
 
         # High-harmonic emission polar plots
-        polar_fig = pl.figure(figsize=(10,10))
+    if (polar_plots):
+        polar_fig = pl.figure()
         i_loop = 1
         i_max  = 20
         while i_loop <= i_max:
@@ -334,12 +340,9 @@ def main():
                 pax.set_xticklabels([""])
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
-
-        # Plot Brilluoin zone with paths
-        BZ_plot(kpnts, a, b1, b2, E_dir, paths)
-
         pl.show()
-
+        # Plot Brilluoin zone with paths
+        # BZ_plot(kpnts, a, b1, b2, E_dir, paths)
 
 ###############################################################################
 # FUNCTIONS
