@@ -34,6 +34,8 @@ h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
 
 # Assign all energy band functions
 evjit, ecjit = system.efjit[0], system.efjit[1]
+evdxjit, evdyjit = system.ederivjit[0], system.ederivjit[1]
+ecdxjit, ecdyjit = system.ederivjit[2], system.ederivjit[3]
 
 # Get symbolic dipoles
 dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
