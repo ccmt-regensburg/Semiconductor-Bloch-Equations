@@ -1,5 +1,4 @@
 import params
-from copy import deepcopy
 
 import hfsbe.dipole
 import hfsbe.example
@@ -7,18 +6,19 @@ import hfsbe.utility
 
 # Set BZ type independent parameters
 # Hamiltonian parameters
-a = params.a
-C0 = params.C0                             # Dirac point position
-C2 = params.C2                             # k^2 coefficient
-A = params.A                               # Fermi velocity
-R = params.R                               # k^3 coefficient
-k_cut = params.k_cut                       # Model hamiltonian cutoff parameter
-
+C0                  = 0           # Dirac point position
+C2                  = 0           # k^2 coefficient
+A                   = 0.1974      # Fermi velocity
+R                   = 11.06       # k^3 coefficient
+k_cut               = 0.05        # Model hamiltonian cutoff
+m                   = 1.0           # Wilson mass
+order               = 8           # hz order in periodic hamiltonian
+ 
 # Initialize sympy bandstructure, energies/derivatives, dipoles
 # ## Bismuth Teluride calls
 # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
 # ## Periodic Bismuth Teluride call
-system = hfsbe.example.BiTePeriodic(A=A, R=R, a=a, m=1)
+system = hfsbe.example.BiTePeriodic(A=A, R=R, a=params.a, m=m, order=order)
 
 # Get symbolic hamiltonian, energies, wavefunctions, energy derivatives
 # h, ef, wf, ediff = system.eigensystem(gidx=1)

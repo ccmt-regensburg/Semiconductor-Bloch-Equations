@@ -8,25 +8,19 @@ e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
 # Model Hamiltonian parameters
-C0                  = 0           # Dirac point position
-C2                  = 0           # k^2 coefficient
-A                   = 0.1974      # Fermi velocity
-R                   = 11.06       # k^3 coefficient
-k_cut               = 0.05        # Model hamiltonian cutoff
-
 # Brillouin zone parameters
 ##########################################################################
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-BZ_type = '2line'
+BZ_type = 'full'
 
 # Reciprocal lattice vectors
-b1 = (2*np.pi/(a*3))*np.array([np.sqrt(3), -1])
-b2 = (4*np.pi/(a*3))*np.array([0, 1])
+b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
+b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
 # full BZ parametes
-Nk1                 = 50          # Number of kpoints in b1 direction
-Nk2                 = 50          # Number of kpoints in b2 direction (number of paths)
+Nk1                 = 400         # Number of kpoints in b1 direction
+Nk2                 = 10          # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
@@ -63,6 +57,6 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 user_out      = True   # Set to True to get user plotting and progress output
 energy_plots  = False  # Set to True to plot 3d energy bands and contours
 dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
-time_plots    = True
+time_plots    = False
 fourier_plots = False
 polar_plots   = False

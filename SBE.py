@@ -8,7 +8,6 @@ from matplotlib import patches
 from scipy.integrate import ode
 import systems as sys
 
-
 # Flags for plotting
 user_out = params.user_out
 energy_plots = params.energy_plots
