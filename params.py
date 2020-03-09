@@ -22,15 +22,15 @@ k_cut               = 0.05       # Model hamiltonian cutoff
 ##########################################################################
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-BZ_type = '2line'
+BZ_type = 'full'
 
 # Reciprocal lattice vectors
-b1 = (2*np.pi/(a*3))*np.array([np.sqrt(3),-1])
-b2 = (4*np.pi/(a*3))*np.array([0,1])
+b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
+b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 
 # full BZ parametes
-Nk1                 = 400           # Number of kpoints in b1 direction
-Nk2                 = 7         # Number of kpoints in b2 direction (number of paths)
+Nk1                 = 100           # Number of kpoints in b1 direction
+Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
@@ -39,8 +39,8 @@ length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-#gauge               = 'length'
-gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+gauge               = 'length'
+#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -57,7 +57,7 @@ phase               = (0/2)*np.pi  # Carrier envelope phase (edited by cep-scan.
 T2    = 1     # Phenomenological polarization damping time
 t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000   # End time
-dt    = 0.05   # Time step
+dt    = 0.1   # Time step
 
 # Unit conversion factors
 ##########################################################################
