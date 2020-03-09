@@ -12,10 +12,10 @@ for i in range(N_phases+1):
     print(phase_div)
     with fileinput.FileInput(paramFile, inplace=True) as file:
         for line in file:
-            print(line.replace(phase_div_prev,phase_div), end='')
+            print(line.replace(phase_div_prev, phase_div), end='')
     phase_div_prev = phase_div
 
-    subprocess.Popen(["python3","SBE.py"]).communicate()
+    subprocess.Popen(["python3", "SBE.py"]).communicate()
 
 with fileinput.FileInput(paramFile, inplace=True) as file:
     for line in file:
