@@ -1,3 +1,4 @@
+#!/bin/python
 import params
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
@@ -251,12 +252,23 @@ def main():
     if (BZ_type == '2line'):
         Nk1 = Nk_in_path
         Nk2 = 2
-    J_filename = 'J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'.format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-    np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
-    P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-    np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
-    I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-    np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+
+    tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
+        .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
+
+    J_name = 'J_' + tail
+    np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
+    P_name = 'P_' + tail
+    np.save(P_name, [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
+    I_name = 'I_' + tail
+    np.save(I_name, [t, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir),
+                     np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+
+    driving_tail = 'w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_wc-{:4.3f}'\
+        .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
+
+    D_name = 'E_' + driving_tail
+    np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
 
     if (time_plots):
         pl.rcParams['figure.figsize'] = (10, 10)

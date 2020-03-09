@@ -2,8 +2,10 @@
 *#
 *.pyc
 *.npy
+*.npz
 *.png
 *.txt
 *.pptx
 *.zip
 __pycache__/
+data/
