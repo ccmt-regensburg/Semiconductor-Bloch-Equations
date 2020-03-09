@@ -731,7 +731,7 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
         di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
         di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
         # found that the dipole needs a complex conjugate
-        dipole_in_path = np.conj(E_dir[0]*di_01x + E_dir[1]*di_01y)
+        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
         A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
             - (E_dir[0]*di_11x + E_dir[1]*di_11y)
 
