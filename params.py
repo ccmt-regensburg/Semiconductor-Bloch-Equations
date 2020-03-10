@@ -23,7 +23,7 @@ k_cut               = 0.05       # Model hamiltonian cutoff
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
 # 'full_for_velocity' for Monkhorst-Pack mesh for velocity gauge
-BZ_type = 'full_for_velocity'
+BZ_type = '2line'
 
 # Reciprocal lattice vectors
 b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
@@ -35,7 +35,7 @@ Nk2_vel             = 10          # Number of kpoints in b2 direction
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # full BZ parametes
-Nk1                 = 100       # Number of kpoints in b1 direction
+Nk1                 = 200       # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
@@ -45,8 +45,8 @@ length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-#gauge               = 'length'
-gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+gauge               = 'length'
+#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -57,7 +57,11 @@ E0                  = 5.0          # Pulse amplitude (MV/cm)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
-phase               = (0/2)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
+phase               = (0/1)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
+
+# scaling of the dipole
+scale_dipole_eq_mot = 1
+scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
@@ -76,7 +80,7 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out          = True   # Set to True to get user plotting and progress output
+user_out          = True  # Set to True to get user plotting and progress output
 print_J_P_I_files = False   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 energy_plots      = False  # Set to True to plot 3d energy bands and contours
 dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)

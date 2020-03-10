@@ -45,6 +45,10 @@ def main():
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
 
+    # Dipole scaling to obtain semiclassical motion
+    scale_dipole_eq_mot = params.scale_dipole_eq_mot
+    scale_dipole_emiss  = params.scale_dipole_emiss
+
     # Time scales
     T2 = params.T2*fs_conv                            # Polarization damping time
     gamma2 = 1/T2                                     # Polarization damping parameter
@@ -170,7 +174,7 @@ def main():
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :]
+        dipole_in_path = scale_dipole_eq_mot*(E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :])
         A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
             - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
 
@@ -248,7 +252,7 @@ def main():
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
     # Polarization (interband)
-    P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir)
+    P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
     # Current (intraband)
     J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
     # Emission in time
@@ -276,8 +280,8 @@ def main():
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     # Emission intensity
-    Int_E_dir = (freq**2)*np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2.0
-    Int_ortho = (freq**2)*np.abs(freq*Pw_ortho + 1j*Jw_ortho)**2.0
+    Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2.0
+    Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2.0
 
     # Save observables to file
     if (BZ_type == '2line'):
@@ -337,20 +341,50 @@ def main():
         axJw.semilogy(freq/w,np.abs(Jw_ortho))
         axJw.set_xlabel(r'Frequency $\omega/\omega_0$')
         axJw.set_ylabel(r'$[\dot P](\omega)$ (intraband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+#        axIw.grid(True,axis='x')
+#        axIw.set_xlim(freq_lims)
+#        axIw.set_ylim(log_limits)
+#        axIw.semilogy(freq/w,np.abs(Iw_E_dir))
+#        axIw.semilogy(freq/w,np.abs(Iw_ortho))
+#        axIw.set_xlabel(r'Frequency $\omega/\omega_0$')
+#        axIw.set_ylabel(r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.')
         axIw.grid(True,axis='x')
         axIw.set_xlim(freq_lims)
         axIw.set_ylim(log_limits)
-        axIw.semilogy(freq/w,np.abs(Iw_E_dir))
-        axIw.semilogy(freq/w,np.abs(Iw_ortho))
+        axIw.semilogy(freq/w,np.abs(Int_E_dir))
+        axIw.semilogy(freq/w,np.abs(Int_ortho))
         axIw.set_xlabel(r'Frequency $\omega/\omega_0$')
-        axIw.set_ylabel(r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.')
+        axIw.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
         axInt.grid(True,axis='x')
         axInt.set_xlim(freq_lims)
         axInt.set_ylim(log_limits)
-        axInt.semilogy(freq/w,np.abs(Int_E_dir))
-        axInt.semilogy(freq/w,np.abs(Int_ortho))
+        axInt.semilogy(freq/w,np.sqrt(Int_E_dir**2 + Int_ortho**2))
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
+
+#        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+#        # Countour plots of occupations and gradients of occupations
+#        fig5 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
+#
+##        print("")
+##        print("freq          emis E_dir           emis E_ort")
+##        print("")
+##        for i_index in range(np.size(freq)):
+##            print(freq[i_index]/w, np.abs(Jw_E_dir[i_index]), np.abs(Jw_ortho[i_index]))
+#
+#        print("")
+#        print("freq          emis")
+#        print("")
+#        for i_index in range(np.size(freq)):
+#            print(freq[i_index]/w, np.sqrt(Int_E_dir[i_index]**2 + Int_ortho[i_index]**2)   )
+
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
@@ -548,7 +582,7 @@ def Gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
-def polarization(paths, pcv, E_dir):
+def polarization(paths, pcv, E_dir, scale_dipole_emiss):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -573,8 +607,8 @@ def polarization(paths, pcv, E_dir):
     # d_E_dir = d_E_dir.T
     # d_ortho = d_ortho.T
 
-    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
-    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
+    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))*scale_dipole_emiss
+    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))*scale_dipole_emiss
     # P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
     # P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
 
