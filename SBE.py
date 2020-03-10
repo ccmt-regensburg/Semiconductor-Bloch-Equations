@@ -58,10 +58,15 @@ def main():
 
     # Brillouin zone type
     if BZ_type == 'full':
-        Nk1   = params.Nk1                              # Number of kpoints in b1 direction
-        Nk2   = params.Nk2                              # Number of kpoints in b2 direction
-        Nk    = Nk1*Nk2                                 # Total number of kpoints
-        align = params.align                            # E-field alignment
+        Nk1   = params.Nk1                                # Number of kpoints in b1 direction
+        Nk2   = params.Nk2                                # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                   # Total number of kpoints
+        align = params.align                              # E-field alignment
+    elif BZ_type == 'full_for_velocity':
+        Nk1   = params.Nk1_vel                            # Number of kpoints in b1 direction
+        Nk2   = params.Nk2_vel                            # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                   # Total number of kpoints
+        angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
     elif BZ_type == '2line':
         Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
         Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
@@ -89,7 +94,7 @@ def main():
         print("Number of k-points              = " + str(Nk))
         if BZ_type == 'full':
             print("Driving field alignment         = " + align)
-        elif BZ_type == '2line':
+        elif BZ_type == '2line' or BZ_type == 'full_for_velocity':
             print("Driving field direction         = " + str(angle_inc_E_field))
         print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
         print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
@@ -112,6 +117,12 @@ def main():
         elif align == 'M':
             E_dir = np.array([np.cos(np.radians(-30)),
                              np.sin(np.radians(-30))])
+    elif BZ_type == 'full_for_velocity':
+        E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
+                         np.sin(np.radians(angle_inc_E_field))])
+        kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, 'M')
+        # dummy
+        dk = 1
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
@@ -217,7 +228,7 @@ def main():
     A_field = np.array(path_solution)[:, -1]
 
     # Slice solution along each path for easier observable calculation
-    if BZ_type == 'full':
+    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
         solution = np.array_split(solution, Nk1, axis=2)
     elif BZ_type == '2line':
         solution = np.array_split(solution, Nk_in_path, axis=2)
