@@ -2,7 +2,7 @@ import os
 import subprocess
 import fileinput
 
-N_phases = 20
+N_phases = 5
 paramFile = 'params.py'
 
 phase_div_prev = '(0/1)'

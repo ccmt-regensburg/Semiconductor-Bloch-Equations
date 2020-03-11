@@ -6,7 +6,7 @@ import params
 
 # Fetch parameters from params.py
 N_phases  = int(sys.argv[1])
-xlims     = [1,22]
+xlims     = [13,22]
 phaselims = [0,np.pi]
 Nk1       = params.Nk1
 Nk2       = params.Nk2
@@ -61,8 +61,7 @@ for i_phase, phase in enumerate(phases):
     I_ortho.append(I[5])
     Int_Edir.append(I[6])
     Int_ortho.append(I[7])
-I_Edir,I_ortho,Int_Edir,Int_ortho = np.array(I_Edir),np.array(I_ortho),
-                                    np.array(Int_Edir),np.array(Int_ortho)
+I_Edir,I_ortho,Int_Edir,Int_ortho = np.array(I_Edir),np.array(I_ortho),np.array(Int_Edir),np.array(Int_ortho)
 
 cep_plot(freq, phases, Int_Edir+Int_ortho, xlims, r'Intensity (a.u.)')
 #cep_plot(freq, phases, I_ortho, xlims, r'$I_{\bot}(\omega)$')
@@ -71,8 +70,8 @@ cep_plot(freq, phases, Int_Edir+Int_ortho, xlims, r'Intensity (a.u.)')
 
 fig, ax = plt.subplots()
 ax.semilogy(freq, I_Edir[0]+I_ortho[0], '-', lw=7, zorder=1, label=r'$\phi=0$')
-ax.semilogy(freq, I_Edir[10]+I_ortho[10], '-', lw=5, zorder=2, label=r'$\phi=0$')
-ax.semilogy(freq, I_Edir[20]+I_ortho[20], '--', lw=3, zorder=3, label=r'$\phi=\pi$')
+#ax.semilogy(freq, I_Edir[10]+I_ortho[10], '-', lw=5, zorder=2, label=r'$\phi=0$')
+#ax.semilogy(freq, I_Edir[20]+I_ortho[20], '--', lw=3, zorder=3, label=r'$\phi=\pi$')
 ax.set_xlabel(r'$\omega/\omega_0$')
 ax.set_ylabel(r'$Intensity$')
 ax.legend()

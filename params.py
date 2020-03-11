@@ -35,11 +35,11 @@ Nk2_vel             = 10          # Number of kpoints in b2 direction
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # full BZ parametes
-Nk1                 = 200       # Number of kpoints in b1 direction
+Nk1                 = 100       # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
+Nk_in_path          = 100         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -80,8 +80,8 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out          = True  # Set to True to get user plotting and progress output
-print_J_P_I_files = False   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
+user_out          = False  # Set to True to get user plotting and progress output
+print_J_P_I_files = True   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 energy_plots      = False  # Set to True to plot 3d energy bands and contours
 dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)
 test              = False  # Set to True to output travis testing parameters
