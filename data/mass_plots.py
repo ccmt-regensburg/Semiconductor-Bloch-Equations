@@ -11,42 +11,44 @@ eV_conv = 0.03674932176                # (1eV    = 0.036749322176 a.u.)
 
 plt.rcParams['text.usetex'] = True
 
-orderpath = './order_4/'
-dirpath = 'K_dir/'
+orderpath = './order_4/NK2_10/'
+dirpath = 'M_dir/'
 masspaths = ['m_00/', 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
 
 
 def read_data():
-    Pdata = []
-    Jdata = []
     Idata = []
+    Jdata = []
+    Pdata = []
 
     print("Evaluating " + orderpath + dirpath + " data", end='\n\n')
     for i, massp in enumerate(masspaths):
         totalpath = orderpath + dirpath + massp
         filelist = os.listdir(totalpath)
+        filelist.sort()
+
         # Read electric field only once
         if (i == 0):
             print("Reading electric field:")
             print(filelist[0], end='\n\n')
+
+        # Emissions I
+        # [t, I_E_dir, I_ortho, freq/w, abs(Iw_E_dir), abs(Iw_ortho),
+        # Int_E_dir, Int_ortho]
+        print("Reading :", massp, filelist[3], end='\n\n')
+        Idata.append(np.load(totalpath + filelist[3]))
+
+        # Currents J
+        # [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_Ortho]
+        print("Reading :", massp, filelist[2])
+        Jdata.append(np.load(totalpath + filelist[2]))
 
         # Polarizations P
         # [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho]
         print("Reading :", massp, filelist[1])
         Pdata.append(np.load(totalpath + filelist[1]))
 
-        # Currents J
-        # [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_Ortho]
-        print("Reading :", massp, filelist[3])
-        Jdata.append(np.load(totalpath + filelist[3]))
-
-        # Emissions I
-        # [t, I_E_dir, I_ortho, freq/w, abs(Iw_E_dir), abs(Iw_ortho),
-        # Int_E_dir, Int_ortho]
-        print("Reading :", massp, filelist[2], end='\n\n')
-        Idata.append(np.load(totalpath + filelist[2]))
-
-    return Pdata, Jdata, Idata
+    return Idata, Jdata, Pdata
 
 
 def Pplot(Pdata):

@@ -244,8 +244,8 @@ def main():
     Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
 
     # Emission intensity
-    Int_E_dir = (freq**2)*np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2
-    Int_ortho = (freq**2)*np.abs(freq*Pw_ortho + 1j*Jw_ortho)**2
+    Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2
+    Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2
 
     # Save observables to file
     if (BZ_type == '2line'):
