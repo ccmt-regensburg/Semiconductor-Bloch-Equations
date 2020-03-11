@@ -28,23 +28,23 @@ def read_data():
         # Read electric field only once
         if (i == 0):
             print("Reading electric field:")
-            print(filelist[1], end='\n\n')
+            print(filelist[0], end='\n\n')
 
         # Polarizations P
         # [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho]
-        print("Reading :", massp, filelist[0])
-        Pdata.append(np.load(totalpath + filelist[0]))
+        print("Reading :", massp, filelist[1])
+        Pdata.append(np.load(totalpath + filelist[1]))
 
         # Currents J
         # [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_Ortho]
-        print("Reading :", massp, filelist[2])
-        Jdata.append(np.load(totalpath + filelist[2]))
+        print("Reading :", massp, filelist[3])
+        Jdata.append(np.load(totalpath + filelist[3]))
 
         # Emissions I
         # [t, I_E_dir, I_ortho, freq/w, abs(Iw_E_dir), abs(Iw_ortho),
         # Int_E_dir, Int_ortho]
-        print("Reading :", massp, filelist[3], end='\n\n')
-        Idata.append(np.load(totalpath + filelist[3]))
+        print("Reading :", massp, filelist[2], end='\n\n')
+        Idata.append(np.load(totalpath + filelist[2]))
 
     return Pdata, Jdata, Idata
 
@@ -82,8 +82,15 @@ def Jplot(Jdata):
 
     plt.show()
 
+
 def Iplot(Idata):
-    fig, ax = plt.subplots(len(masspaths))
+    fig, ax = plt.subplots(2)
+    for a in ax:
+        a.set_xlim((0, 30))
+        a.grid(True, axis='x')
+    ax[0].set_ylim((10e-20, 10))
+    ax[1].set_ylim((10e-20, 10e-7))
+
     for i, Idat in enumerate(Idata):
         t = Idat[0]
         I_E_dir = Idat[1]
@@ -93,11 +100,8 @@ def Iplot(Idata):
         Iw_ortho = Idat[5]
         Int_E_dir = Idat[6]
         Int_ortho = Idat[7]
-
-        ax[i].set_xlim((0, 30))
-        ax[i].grid(True, axis='x')
-        ax[i].semilogy(freqw, Int_E_dir)
-        ax[i].semilogy(freqw, Int_ortho)
+        ax[0].semilogy(freqw, Int_E_dir)
+        ax[1].semilogy(freqw, Int_ortho)
 
     plt.show()
 

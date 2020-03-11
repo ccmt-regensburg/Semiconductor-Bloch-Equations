@@ -11,13 +11,14 @@ C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
 R                   = 11.06       # k^3 coefficient
 k_cut               = 0.05        # Model hamiltonian cutoff
-m                   = 1.0           # Wilson mass
-order               = 8           # hz order in periodic hamiltonian
+m                   = 1.0         # Wilson mass
+order               = 4           # hz order in periodic hamiltonian
  
 # Initialize sympy bandstructure, energies/derivatives, dipoles
 # ## Bismuth Teluride calls
 # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
 # ## Periodic Bismuth Teluride call
+print("mass in params", m)
 system = hfsbe.example.BiTePeriodic(A=A, R=R, a=params.a, m=m, order=order)
 
 # Get symbolic hamiltonian, energies, wavefunctions, energy derivatives

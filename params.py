@@ -20,7 +20,7 @@ b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
 # full BZ parametes
 Nk1                 = 400         # Number of kpoints in b1 direction
-Nk2                 = 10          # Number of kpoints in b2 direction (number of paths)
+Nk2                 = 40          # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
 Nk_in_path          = 400         # Number of kpoints in each of the two paths
@@ -30,7 +30,7 @@ angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
-align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
