@@ -12,8 +12,7 @@ import systems as sys
 user_out = params.user_out
 energy_plots = params.energy_plots
 dipole_plots = params.dipole_plots
-time_plots = params.time_plots
-fourier_plots = params.fourier_plots
+normal_plots = params.normal_plots
 polar_plots = params.polar_plots
 
 
@@ -269,7 +268,7 @@ def main():
     D_name = 'E_' + driving_tail
     np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
 
-    if (time_plots):
+    if (normal_plots):
         pl.rcParams['figure.figsize'] = (10, 10)
         real_fig, ((axE, axP), (axPdot, axJ)) = pl.subplots(2, 2)
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
@@ -294,9 +293,7 @@ def main():
         axJ.plot(t/fs_conv, J_ortho)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        pl.show()
 
-    if (fourier_plots):
         four_fig, ((axPw, axJw), (axIw, axInt)) = pl.subplots(2, 2)
         axPw.grid(True, axis='x')
         axPw.set_xlim(freq_lims)
@@ -517,7 +514,7 @@ def gaussian_envelope(t, alpha):
     Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
+    return np.exp(-t**2.0/(2.0*alpha)**2)
 
 
 def polarization(paths, pcv, E_dir):
@@ -602,7 +599,8 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
 
     # Gradient term coefficient
-    D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
+    driving_f = driving_field(E0, w, t, chirp, alpha, phase)
+    D = driving_f/(2*dk)
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
@@ -624,12 +622,12 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
         # wr          = dipole_in_path[k]*D
-        wr = rabi(k, E0, w, t, chirp, alpha, phase, dipole_in_path)
+        wr = dipole_in_path[k]*driving_f
         wr_c = wr.conjugate()
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
         # wr_d_diag   = A_in_path[k]*D
-        wr_d_diag = rabi(k, E0, w, t, chirp, alpha, phase, A_in_path)
+        wr_d_diag = A_in_path[k]*driving_f
 
         # Update each component of the solution vector
         # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
