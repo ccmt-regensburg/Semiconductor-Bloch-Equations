@@ -1,10 +1,10 @@
 #!/bin/python
-import params
+import params as params
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
 import matplotlib.pyplot as pl
-from matplotlib import patches
+from matplotlib.patches import RegularPolygon
 from scipy.integrate import ode
 import systems as sys
 
@@ -14,6 +14,7 @@ energy_plots = params.energy_plots
 dipole_plots = params.dipole_plots
 normal_plots = params.normal_plots
 polar_plots = params.polar_plots
+save_file = params.save_file
 
 
 def main():
@@ -90,6 +91,7 @@ def main():
     # Form the Brillouin zone in consideration
     if BZ_type == 'full':
         kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
+        BZ_plot(kpnts, a, b1, b2, paths)
         dk = 1/Nk1
         if align == 'K':
             E_dir = np.array([1, 0])
@@ -100,6 +102,7 @@ def main():
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
+        BZ_plot(kpnts, a, b1, b2, paths)
 
     if energy_plots:
         sys.system.evaluate_energy(kpnts[:, 0], kpnts[:, 1])
@@ -208,8 +211,12 @@ def main():
 
     # Convert lists into numpy arrays
     solution = np.array(solution)
-    # The solution array is structred as: first index is kx-index,
-    # second is ky-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
+    # The solution array is structred as: first index is Nk1-index,
+    # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
+
+    # CONTOUR PLOT OF OCCUPATIONS
+    # pl.figure()
+    # X, Y = np.meshgrid(t/fs_conv, k
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -251,22 +258,23 @@ def main():
         Nk1 = Nk_in_path
         Nk2 = 2
 
-    tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
-        .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
+    if (save_file):
+        tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
+            .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
 
-    J_name = 'J_' + tail
-    np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
-    P_name = 'P_' + tail
-    np.save(P_name, [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
-    I_name = 'I_' + tail
-    np.save(I_name, [t, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir),
-                     np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+        J_name = 'J_' + tail
+        np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
+        P_name = 'P_' + tail
+        np.save(P_name, [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
+        I_name = 'I_' + tail
+        np.save(I_name, [t, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir),
+                         np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
-    driving_tail = 'w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_wc-{:4.3f}'\
-        .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
+        driving_tail = 'w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_wc-{:4.3f}'\
+            .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
 
-    D_name = 'E_' + driving_tail
-    np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
+        D_name = 'E_' + driving_tail
+        np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
 
     if (normal_plots):
         pl.rcParams['figure.figsize'] = (10, 10)
@@ -298,59 +306,60 @@ def main():
         axPw.grid(True, axis='x')
         axPw.set_xlim(freq_lims)
         axPw.set_ylim(log_limits)
-        axPw.semilogy(freq/w,np.abs(Pw_E_dir))
-        axPw.semilogy(freq/w,np.abs(Pw_ortho))
+        axPw.semilogy(freq/w, np.abs(Pw_E_dir))
+        axPw.semilogy(freq/w, np.abs(Pw_ortho))
         axPw.set_xlabel(r'Frequency $\omega/\omega_0$')
         axPw.set_ylabel(r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        axJw.grid(True,axis='x')
+        axJw.grid(True, axis='x')
         axJw.set_xlim(freq_lims)
         axJw.set_ylim(log_limits)
-        axJw.semilogy(freq/w,np.abs(Jw_E_dir))
-        axJw.semilogy(freq/w,np.abs(Jw_ortho))
+        axJw.semilogy(freq/w, np.abs(Jw_E_dir))
+        axJw.semilogy(freq/w, np.abs(Jw_ortho))
         axJw.set_xlabel(r'Frequency $\omega/\omega_0$')
         axJw.set_ylabel(r'$[\dot P](\omega)$ (intraband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        axIw.grid(True,axis='x')
+        axIw.grid(True, axis='x')
         axIw.set_xlim(freq_lims)
         axIw.set_ylim(log_limits)
-        axIw.semilogy(freq/w,np.abs(Iw_E_dir))
-        axIw.semilogy(freq/w,np.abs(Iw_ortho))
+        axIw.semilogy(freq/w, np.abs(Iw_E_dir))
+        axIw.semilogy(freq/w, np.abs(Iw_ortho))
         axIw.set_xlabel(r'Frequency $\omega/\omega_0$')
         axIw.set_ylabel(r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.')
-        axInt.grid(True,axis='x')
+        axInt.grid(True, axis='x')
         axInt.set_xlim(freq_lims)
         axInt.set_ylim(log_limits)
-        axInt.semilogy(freq/w,np.abs(Int_E_dir))
-        axInt.semilogy(freq/w,np.abs(Int_ortho))
+        axInt.semilogy(freq/w, np.abs(Int_E_dir))
+        axInt.semilogy(freq/w, np.abs(Int_ortho))
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
         pl.show()
 
-        # High-harmonic emission polar plots
+    # High-harmonic emission polar plots
     if (polar_plots):
         polar_fig = pl.figure()
         i_loop = 1
-        i_max  = 20
+        i_max = 20
         while i_loop <= i_max:
             freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
-            freq_index   = freq_indices[int(np.size(freq_indices)/2)]
-            pax          = polar_fig.add_subplot(1,i_max,i_loop,projection='polar')
-            pax.plot(angles,np.abs(Iw_r[:,freq_index]))
+            freq_index = freq_indices[int(np.size(freq_indices)/2)]
+            pax = polar_fig.add_subplot(1, i_max, i_loop, projection='polar')
+            pax.plot(angles, np.abs(Iw_r[:, freq_index]))
             rmax = pax.get_rmax()
             pax.set_rmax(1.1*rmax)
             pax.set_yticklabels([""])
             if i_loop == 1:
-                pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax,1.0*rmax],labels=None, angle=None, fmt=None)
+                pax.set_rgrids([0.25*rmax, 0.5*rmax, 0.75*rmax, 1.0*rmax],
+                               labels=None, angle=None, fmt=None)
                 pax.set_title('HH'+str(i_loop), va='top', pad=30)
-                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
+                pax.set_xticks(np.arange(0, 2.0*np.pi, np.pi/6.0))
             else:
-                pax.set_rgrids([0.0],labels=None, angle=None, fmt=None)
-                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/2.0))
+                pax.set_rgrids([0.0], labels=None, angle=None, fmt=None)
+                pax.set_xticks(np.arange(0, 2.0*np.pi, np.pi/2.0))
                 pax.set_xticklabels([""])
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
             i_loop += 1
         pl.show()
         # Plot Brilluoin zone with paths
-        # BZ_plot(kpnts, a, b1, b2, E_dir, paths)
+
 
 ###############################################################################
 # FUNCTIONS
@@ -651,31 +660,20 @@ def initial_condition(e_fermi, temperature, e_c):
         return np.array([ones, zeros, zeros, zeros]).flatten('F')
 
 
-def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
+def BZ_plot(kpnts, a, b1, b2, paths):
 
-    R = 4.0*np.pi/(3*np.sqrt(3)*a)
-    r = 2.0*np.pi/(3*a)
+    R = 4.0*np.pi/(3*a)
+    r = 2.0*np.pi/(np.sqrt(3)*a)
 
     BZ_fig = pl.figure(figsize=(10, 10))
     ax = BZ_fig.add_subplot(111, aspect='equal')
 
-    ax.add_patch(patches.RegularPolygon((0, 0), 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
-    ax.add_patch(patches.RegularPolygon(b1, 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1, 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
-    ax.add_patch(patches.RegularPolygon(b2, 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
-    ax.add_patch(patches.RegularPolygon(-b2, 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
-    ax.add_patch(patches.RegularPolygon(b1+b2, 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
-    ax.add_patch(patches.RegularPolygon(-b1-b2, 6, radius=R,
-                                        orientation=np.pi/6, fill=False))
+    for b in ((0, 0), b1, -b1, b2, -b2, b1+b2, -b1-b2):
+        poly = RegularPolygon(b, 6, radius=R, orientation=np.pi/6, fill=False)
+        ax.add_patch(poly)
 
-    ax.arrow(-0.5*E_dir[0], -0.5*E_dir[1], E_dir[0], E_dir[1],
-             width=0.005, alpha=0.5, label='E-field')
+#    ax.arrow(-0.5*E_dir[0], -0.5*E_dir[1], E_dir[0], E_dir[1],
+#             width=0.005, alpha=0.5, label='E-field')
 
     pl.scatter(0, 0, s=15, c='black')
     pl.text(0.01, 0.01, r'$\Gamma$')
@@ -684,8 +682,8 @@ def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
     pl.scatter(R, 0, s=15, c='black')
     pl.text(R, 0.02, r'$K$')
     pl.scatter(kpnts[:, 0], kpnts[:, 1], s=15)
-    pl.xlim(-5.0/(np.sqrt(3)*a), 5.0/(np.sqrt(3)*a))
-    pl.ylim(-5.0/(np.sqrt(3)*a), 5.0/(np.sqrt(3)*a))
+    pl.xlim(-5.0/a, 5.0/a)
+    pl.ylim(-5.0/a, 5.0/a)
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
 
@@ -693,7 +691,7 @@ def BZ_plot(kpnts, a, b1, b2, E_dir, paths):
         path = np.array(path)
         pl.plot(path[:, 0], path[:, 1])
 
-    return
+    pl.show()
 
 
 if __name__ == "__main__":
