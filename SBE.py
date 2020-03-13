@@ -363,7 +363,7 @@ def main():
         axInt.grid(True,axis='x')
         axInt.set_xlim(freq_lims)
         axInt.set_ylim(log_limits)
-        axInt.semilogy(freq/w,np.sqrt(Int_E_dir**2 + Int_ortho**2))
+        axInt.semilogy(freq/w,Int_E_dir+Int_ortho)
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
 
