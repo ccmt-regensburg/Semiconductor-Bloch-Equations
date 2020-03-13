@@ -28,11 +28,16 @@ def cep_plot(x, y, z, xlims, zlabel):
     # Set color bar ticks
     logticks = [np.exp(log_max*np.log(10)),np.exp(0.5*(log_min+log_max)*np.log(10)),np.exp(log_min*np.log(10))]
 
-    print("\n\nx", x)
+    print("\n\nx", x[x_indices])
     print("\n\ny", y)
 
+    print("np.shape(z)", np.shape(z))
+    print("np.shape(z[:,x_indices])", np.shape(z[:,x_indices[:,0]]))
+    print("np.shape(x_indices)", np.shape(x_indices))
+    print("x_indices", x_indices)
+
     # Meshgrid for xy-plane
-    X, Y = np.meshgrid(x, y)
+    X, Y = np.meshgrid(x[x_indices[:,0]], y)
     # Do the plotting
     fig, ax = plt.subplots()
     ax.set_xlabel(r'$\omega/\omega_0$')
@@ -40,7 +45,7 @@ def cep_plot(x, y, z, xlims, zlabel):
     ax.set_yticks([0,phases[-1]/2,phases[-1]])
     ax.set_yticklabels([0,str(r'$\pi/2$'),str(r'$\pi$')])
     ax.set_xlim(xlims)
-    cont = ax.contourf(X, Y, z, levels=logspace, locator=ticker.LogLocator(), cmap=cm.nipy_spectral)
+    cont = ax.contourf(X, Y, z[:,x_indices[:,0]], levels=logspace, locator=ticker.LogLocator(), cmap=cm.nipy_spectral)
     cbar = fig.colorbar(cont, ax=ax, label=zlabel)
     cbar.set_ticks(logticks)
     cbar.set_ticklabels(['{:.2e}'.format(tick) for tick in logticks])
