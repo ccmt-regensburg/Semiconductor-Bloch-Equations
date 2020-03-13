@@ -338,14 +338,14 @@ def main():
         axPw.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2))
         axPw.set_xlabel(r'Frequency $\omega/\omega_0$')
 #        axPw.set_ylabel(r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        axPw.set_ylabel(r'$I(\omega)$ (interband-p\'s only) in a.u.')
+        axPw.set_ylabel(r'$I(\omega)$ (interband-p only) in a.u.')
         axJw.grid(True,axis='x')
         axJw.set_xlim(freq_lims)
         axJw.set_ylim(log_limits)
         axJw.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2))
         axJw.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2))
         axJw.set_xlabel(r'Frequency $\omega/\omega_0$')
-        axJw.set_ylabel(r'$I(\omega)$ (intraband-f\'s only) in a.u.')
+        axJw.set_ylabel(r'$I(\omega)$ (intraband-f only) in a.u.')
 #        axIw.grid(True,axis='x')
 #        axIw.set_xlim(freq_lims)
 #        axIw.set_ylim(log_limits)
@@ -389,7 +389,6 @@ def main():
 #        print("")
 #        for i_index in range(np.size(freq)):
 #            print(freq[i_index]/w, np.sqrt(Int_E_dir[i_index]**2 + Int_ortho[i_index]**2)   )
-
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
