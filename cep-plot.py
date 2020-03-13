@@ -21,24 +21,17 @@ fs_conv   = params.fs_conv
 def cep_plot(x, y, z, xlims, zlabel):
     # Determine maximums of the spectra for color bar values
     x_indices = np.argwhere(np.logical_and(x<xlims[1], x>xlims[0]))
-    log_max = np.log(np.max(z[:,x_indices]))/np.log(10)
-    log_min = np.log(np.min(z[:,x_indices]))/np.log(10)
+    log_max = np.ceil(np.log(np.max(z[:,x_indices]))/np.log(10))
+    log_min = np.floor(np.log(np.min(z[:,x_indices]))/np.log(10))
+    print("log_max", log_max, "log_min", log_min)
     # Set contour spacing
     logspace = np.flip(np.logspace(log_max,log_min,100))
     # Set color bar ticks
-    logticks = [np.exp(log_max*np.log(10)),np.exp(0.5*(log_min+log_max)*np.log(10)),np.exp(log_min*np.log(10))]
+    exp_of_ticks = np.linspace(log_min, log_max, int(log_max)-int(log_min)+1)
+    print("exp_of_ticks", exp_of_ticks)
+    logticks = np.exp(exp_of_ticks*np.log(10))
 
-    print("\n\nx", x[x_indices])
-    print("\n\ny", y)
-
-    print("np.shape(z)", np.shape(z))
-    print("np.shape(z[:,x_indices])", np.shape(z[:,x_indices[:,0]]))
-    print("np.shape(x_indices)", np.shape(x_indices))
-    print("x_indices", x_indices)
-
-    print("z[:,x_indices]", z[0,x_indices[:,0]])
-    print("freq[:,x_indices]", x[x_indices[:,0]])
-    print("freq", x)
+    print("logticks", logticks)
 
     # Meshgrid for xy-plane
     X, Y = np.meshgrid(x[x_indices[:,0]], y)
@@ -52,7 +45,7 @@ def cep_plot(x, y, z, xlims, zlabel):
     cont = ax.contourf(X, Y, z[:,x_indices[:,0]], levels=logspace, locator=ticker.LogLocator(), cmap=cm.nipy_spectral)
     cbar = fig.colorbar(cont, ax=ax, label=zlabel)
     cbar.set_ticks(logticks)
-    cbar.set_ticklabels(['{:.2e}'.format(tick) for tick in logticks])
+    cbar.set_ticklabels(['{:.0e}'.format(tick/logticks[-1]) for tick in logticks])
 
 # Load the files for all phases
 phases = np.linspace(phaselims[0],phaselims[1],N_phases+1,endpoint=True)
@@ -71,9 +64,7 @@ for i_phase, phase in enumerate(phases):
     Int_ortho.append(I[7])
 I_Edir,I_ortho,Int_Edir,Int_ortho = np.array(I_Edir),np.array(I_ortho),np.array(Int_Edir),np.array(Int_ortho)
 
-print("freq outside", freq)
-
-cep_plot(freq, phases, Int_Edir+Int_ortho, xlims, r'Intensity (a.u.)')
+cep_plot(freq, phases, Int_Edir+Int_ortho, xlims, r'Relative intensity')
 #cep_plot(freq, phases, I_ortho, xlims, r'$I_{\bot}(\omega)$')
 #cep_plot(freq, phases, Int_Edir, xlims, r'$E_{\parallel}(\omega)$')
 #cep_plot(freq, phases, Int_ortho, xlims, r'$E_{\bot}(\omega)$')
