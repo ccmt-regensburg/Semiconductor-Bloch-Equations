@@ -39,7 +39,7 @@ Nk1                 = 100       # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 100         # Number of kpoints in each of the two paths
+Nk_in_path          = 400         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -57,7 +57,7 @@ E0                  = 5.0          # Pulse amplitude (MV/cm)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
-phase               = (0/1)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
+phase               = (0/5)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
 
 # scaling of the dipole
 scale_dipole_eq_mot = 1
@@ -65,7 +65,8 @@ scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T2    = 1     # Phenomenological polarization damping time
+T1    = 20    # Phenomenological damping time for diagonal occupations
+T2    = 1     # Phenomenological damping time for off-diagonal polarizations
 t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000   # End time
 dt    = 0.1   # Time step
@@ -80,7 +81,7 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out          = False  # Set to True to get user plotting and progress output
+user_out          = True  # Set to True to get user plotting and progress output
 print_J_P_I_files = True   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 energy_plots      = False  # Set to True to plot 3d energy bands and contours
 dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)

@@ -50,7 +50,9 @@ def main():
     scale_dipole_emiss  = params.scale_dipole_emiss
 
     # Time scales
+    T1 = params.T2*fs_conv                            # Occupation damping time
     T2 = params.T2*fs_conv                            # Polarization damping time
+    gamma1 = 1/T1                                     # Occupation damping parameter
     gamma2 = 1/T2                                     # Polarization damping parameter
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
@@ -192,9 +194,11 @@ def main():
         # append the A-field
         y0.append(0.0)
 
+        y0_for_T1_damping = np.array(y0)
+
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
-                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir)
+                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir, y0_for_T1_damping)
 
         # Propagate through time
         ti = 0
@@ -735,16 +739,16 @@ def get_A_field(E0, w, t, alpha):
 
 def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
       ecv_in_path, dipole_in_path, A_in_path, gauge,
-      kx_in_path, ky_in_path, E_dir):
+      kx_in_path, ky_in_path, E_dir, y0_for_T1_damping):
     return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
                   ecv_in_path, dipole_in_path, A_in_path, gauge,
-                  kx_in_path, ky_in_path, E_dir)
+                  kx_in_path, ky_in_path, E_dir, y0_for_T1_damping)
 
 
 @njit
 def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
            ecv_in_path, dipole_in_path, A_in_path, gauge,
-           kx_in_path, ky_in_path, E_dir):
+           kx_in_path, ky_in_path, E_dir, y0_for_T1_damping):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
