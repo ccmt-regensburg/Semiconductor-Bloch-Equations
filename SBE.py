@@ -50,7 +50,7 @@ def main():
     scale_dipole_emiss  = params.scale_dipole_emiss
 
     # Time scales
-    T1 = params.T2*fs_conv                            # Occupation damping time
+    T1 = params.T1*fs_conv                            # Occupation damping time
     T2 = params.T2*fs_conv                            # Polarization damping time
     gamma1 = 1/T1                                     # Occupation damping parameter
     gamma2 = 1/T2                                     # Polarization damping parameter
