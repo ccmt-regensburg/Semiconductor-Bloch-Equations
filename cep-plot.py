@@ -36,6 +36,10 @@ def cep_plot(x, y, z, xlims, zlabel):
     print("np.shape(x_indices)", np.shape(x_indices))
     print("x_indices", x_indices)
 
+    print("z[:,x_indices]", z[0,x_indices[:,0]])
+    print("freq[:,x_indices]", x[x_indices[:,0]])
+    print("freq", x)
+
     # Meshgrid for xy-plane
     X, Y = np.meshgrid(x[x_indices[:,0]], y)
     # Do the plotting
@@ -60,12 +64,14 @@ Int_ortho = []
 for i_phase, phase in enumerate(phases):
     I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}.npy').format(Nk1,Nk2,w,E0,alpha,phase,T2)
     I = np.load(I_filename)
-    freq  = I[0]
-    I_Edir.append(I[5])
+    freq  = I[3]
+    I_Edir.append(I[4])
     I_ortho.append(I[5])
     Int_Edir.append(I[6])
     Int_ortho.append(I[7])
 I_Edir,I_ortho,Int_Edir,Int_ortho = np.array(I_Edir),np.array(I_ortho),np.array(Int_Edir),np.array(Int_ortho)
+
+print("freq outside", freq)
 
 cep_plot(freq, phases, Int_Edir+Int_ortho, xlims, r'Intensity (a.u.)')
 #cep_plot(freq, phases, I_ortho, xlims, r'$I_{\bot}(\omega)$')
