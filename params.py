@@ -23,8 +23,8 @@ Nk1                 = 400         # Number of kpoints in b1 direction
 Nk2                 = 10          # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
-rel_dist_to_Gamma   = 0.01        # relative distance (in units of 2pi/a) of both paths to Gamma
+Nk_in_path          = 1000         # Number of kpoints in each of the two paths
+rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a)   # Length of path in BZ
 angle_inc_E_field   = -30         # incoming angle of the E-field in degree
 
@@ -57,6 +57,6 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 user_out      = True   # Set to True to get user plotting and progress output
 energy_plots  = False  # Set to True to plot 3d energy bands and contours
 dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
-normal_plots  = True   # Standard plots of P, J, I and w-dependency
+normal_plots  = False  # Standard plots of P, J, I and w-dependency
 polar_plots   = False  # Higher harmonic polarization rotation
 save_file     = False  # Save all data files

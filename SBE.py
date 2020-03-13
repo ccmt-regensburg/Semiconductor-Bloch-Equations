@@ -1,5 +1,5 @@
 #!/bin/python
-import params as params
+import params_compare as params
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
@@ -15,6 +15,7 @@ dipole_plots = params.dipole_plots
 normal_plots = params.normal_plots
 polar_plots = params.polar_plots
 save_file = params.save_file
+debug = params.debug
 
 
 def main():
@@ -163,6 +164,10 @@ def main():
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = initial_condition(e_fermi, temperature, ec)
+        if (debug):
+            pl.plot(y0[3::4])
+            pl.plot(y0[0::4])
+            pl.show()
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
@@ -214,9 +219,12 @@ def main():
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
-    # CONTOUR PLOT OF OCCUPATIONS
-    # pl.figure()
-    # X, Y = np.meshgrid(t/fs_conv, k
+    # TEST PLOT OF OCCUPATIONS
+    if (debug):
+        f_e = np.real(solution[:, 0, :, 3])
+
+        pl.imshow(f_e)
+        pl.show()
 
     # COMPUTE OBSERVABLES
     ###########################################################################

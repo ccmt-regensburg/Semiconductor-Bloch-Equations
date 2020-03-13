@@ -35,15 +35,11 @@ angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 ##########################################################################
 align               = 'K'          # E-field direction (gamma-'K' or gamma-'M'), 
                                    # or angle (30 for 30 degrees, only works with velocity gauge) 
-E0                  = 0.25          # Pulse amplitude (MV/cm)
+E0                  = 4.00         # Pulse amplitude (MV/cm)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
 phase               = (0/1)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
-
-# scaling of the dipole
-scale_dipole_eq_mot = 1
-scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
@@ -65,5 +61,7 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 user_out          = True  # Set to True to get user plotting and progress output
 energy_plots      = False  # Set to True to plot 3d energy bands and contours
 dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)
-normal_plots      = True
+normal_plots      = False
 polar_plots       = False
+save_file         = True
+debug             = False

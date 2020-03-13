@@ -16,12 +16,12 @@ order               = 4           # hz order in periodic hamiltonian
  
 # Initialize sympy bandstructure, energies/derivatives, dipoles
 # ## Bismuth Teluride calls
-# system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
+system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
 # ## Periodic Bismuth Teluride call
 print("Mass in params ", m)
 print("Order in params ", order)
 print("kcut in params ", k_cut)
-system = hfsbe.example.BiTePeriodic(A=A, R=R, a=params.a, m=m, order=order)
+# system = hfsbe.example.BiTePeriodic(A=A, R=R, a=params.a, m=m, order=order)
 
 # Get symbolic hamiltonian, energies, wavefunctions, energy derivatives
 # h, ef, wf, ediff = system.eigensystem(gidx=1)
