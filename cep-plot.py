@@ -21,17 +21,15 @@ fs_conv   = params.fs_conv
 def cep_plot(x, y, z, xlims, zlabel):
     # Determine maximums of the spectra for color bar values
     x_indices = np.argwhere(np.logical_and(x<xlims[1], x>xlims[0]))
-    log_max = np.ceil(np.log(np.max(z[:,x_indices]))/np.log(10))
-    log_min = np.floor(np.log(np.min(z[:,x_indices]))/np.log(10))
-    print("log_max", log_max, "log_min", log_min)
+    log_max = np.log(np.max(z[:,x_indices]))/np.log(10)
+    log_min = np.log(np.min(z[:,x_indices]))/np.log(10)
+    log_min = log_max - np.ceil(log_max-log_min)
+
     # Set contour spacing
     logspace = np.flip(np.logspace(log_max,log_min,100))
     # Set color bar ticks
     exp_of_ticks = np.linspace(log_min, log_max, int(log_max)-int(log_min)+1)
-    print("exp_of_ticks", exp_of_ticks)
     logticks = np.exp(exp_of_ticks*np.log(10))
-
-    print("logticks", logticks)
 
     # Meshgrid for xy-plane
     X, Y = np.meshgrid(x[x_indices[:,0]], y)
@@ -45,7 +43,7 @@ def cep_plot(x, y, z, xlims, zlabel):
     cont = ax.contourf(X, Y, z[:,x_indices[:,0]], levels=logspace, locator=ticker.LogLocator(), cmap=cm.nipy_spectral)
     cbar = fig.colorbar(cont, ax=ax, label=zlabel)
     cbar.set_ticks(logticks)
-    cbar.set_ticklabels(['{:.0e}'.format(tick/logticks[-1]) for tick in logticks])
+    cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
 # Load the files for all phases
 phases = np.linspace(phaselims[0],phaselims[1],N_phases+1,endpoint=True)
