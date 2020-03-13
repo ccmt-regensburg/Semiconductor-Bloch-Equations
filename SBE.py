@@ -194,11 +194,11 @@ def main():
         # append the A-field
         y0.append(0.0)
 
-        y0_for_T1_damping = np.array(y0)
+        y0_np = np.array(y0)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
-                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir, y0_for_T1_damping)
+        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
+                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir, y0_np)
 
         # Propagate through time
         ti = 0
@@ -367,17 +367,17 @@ def main():
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
 
-#        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-#        # Countour plots of occupations and gradients of occupations
-#        fig5 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
-#
+        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+        # Countour plots of occupations and gradients of occupations
+        fig5 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
+
 ##        print("")
 ##        print("freq          emis E_dir           emis E_ort")
 ##        print("")
@@ -737,18 +737,18 @@ def get_A_field(E0, w, t, alpha):
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
+def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
       ecv_in_path, dipole_in_path, A_in_path, gauge,
-      kx_in_path, ky_in_path, E_dir, y0_for_T1_damping):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
+      kx_in_path, ky_in_path, E_dir, y0_np):
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
                   ecv_in_path, dipole_in_path, A_in_path, gauge,
-                  kx_in_path, ky_in_path, E_dir, y0_for_T1_damping)
+                  kx_in_path, ky_in_path, E_dir, y0_np)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
            ecv_in_path, dipole_in_path, A_in_path, gauge,
-           kx_in_path, ky_in_path, E_dir, y0_for_T1_damping):
+           kx_in_path, ky_in_path, E_dir, y0_np):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -803,11 +803,11 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
 
         # Update each component of the solution vector
         # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-        x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n])
+        x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
         x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
             - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
         x[i+2] = x[i+1].conjugate()
-        x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3])
+        x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
