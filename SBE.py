@@ -1,5 +1,5 @@
 #!/bin/python
-import params_compare as params
+import params as params
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
@@ -141,12 +141,12 @@ def main():
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_00x = sys.di_00xjit(kx=kx_in_path, ky=ky_in_path)
+        di_00x = np.real(sys.di_00xjit(kx=kx_in_path, ky=ky_in_path))
         di_01x = sys.di_01xjit(kx=kx_in_path, ky=ky_in_path)
-        di_11x = sys.di_11xjit(kx=kx_in_path, ky=ky_in_path)
-        di_00y = sys.di_00yjit(kx=kx_in_path, ky=ky_in_path)
+        di_11x = np.real(sys.di_11xjit(kx=kx_in_path, ky=ky_in_path))
+        di_00y = np.real(sys.di_00yjit(kx=kx_in_path, ky=ky_in_path))
         di_01y = sys.di_01yjit(kx=kx_in_path, ky=ky_in_path)
-        di_11y = sys.di_11yjit(kx=kx_in_path, ky=ky_in_path)
+        di_11y = np.real(sys.di_11yjit(kx=kx_in_path, ky=ky_in_path))
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
@@ -164,6 +164,7 @@ def main():
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = initial_condition(e_fermi, temperature, ec)
+
         if (debug):
             pl.plot(y0[3::4])
             pl.plot(y0[0::4])
@@ -205,7 +206,6 @@ def main():
     # Convert solution and time array to numpy arrays
     t = np.array(t)
     solution = np.array(solution)
-
     # Slice solution along each path for easier observable calculation
     # Split the last index into 100 subarrays, corresponding to kx
     # Consquently the new last axis becomes 4.
@@ -504,12 +504,12 @@ def driving_field(E0, w, t, chirp, alpha, phase):
 
 
 @njit
-def rabi(k, E0, w, t, chirp, alpha, phase, dipole_in_path):
+def rabi(E0, w, t, chirp, alpha, phase, dipole):
     '''
     Rabi frequency of the transition.
     Calculated from dipole element and driving field.
     '''
-    return dipole_in_path[k]*driving_field(E0, w, t, chirp, alpha, phase)
+    return dipole*driving_field(E0, w, t, chirp, alpha, phase)
 
 
 def diff(x, y):
@@ -578,6 +578,13 @@ def current(paths, fv, fc, t, alpha, E_dir):
         path = np.array(path)
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
+
+        # bderiv = sys.system.evaluate_ederivative(kx_in_path,
+        #                                          ky_in_path)
+        # evdx = bderiv[0]
+        # evdy = bderiv[1]
+        # ecdx = bderiv[2]
+        # ecdy = bderiv[3]
         evdx = sys.evdxjit(kx=kx_in_path, ky=ky_in_path)
         evdy = sys.evdyjit(kx=kx_in_path, ky=ky_in_path)
         ecdx = sys.ecdxjit(kx=kx_in_path, ky=ky_in_path)
@@ -638,7 +645,6 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
 
         # Rabi frequency: w_R = d_12(k).E(t)
         # Rabi frequency conjugate
-        # wr          = dipole_in_path[k]*D
         wr = dipole_in_path[k]*driving_f
         wr_c = wr.conjugate()
 

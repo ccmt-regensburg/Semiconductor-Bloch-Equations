@@ -23,15 +23,15 @@ Nk1                 = 400         # Number of kpoints in b1 direction
 Nk2                 = 10          # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 400        # Number of kpoints in each of the two paths
-rel_dist_to_Gamma   = 0.05       # relative distance (in units of 2pi/a) of both paths to Gamma
+Nk_in_path          = 400         # Number of kpoints in each of the two paths
+rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a  # Length of path in BZ
-angle_inc_E_field   = 30         # incoming angle of the E-field in degree
+angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
 align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
-E0                  = 0.25        # Pulse amplitude (MV/cm)
+E0                  = 4.0         # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0        # Gaussian pulse width (femtoseconds)
