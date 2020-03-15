@@ -8,8 +8,12 @@ import params
 N_phases  = int(sys.argv[1])
 xlims     = [10,22]
 phaselims = [0,np.pi]
-Nk1       = params.Nk1
-Nk2       = params.Nk2
+if params.BZ_type == 'full':
+  Nk1     = params.Nk1
+  Nk2     = params.Nk2
+elif params.BZ_type == '2line':
+  Nk1     = params.Nk_in_path
+  Nk2     = 2
 w         = params.w
 T2        = params.T2
 E0        = params.E0

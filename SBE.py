@@ -79,6 +79,8 @@ def main():
         rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
         length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
+        Nk1   = params.Nk_in_path                         # for printing file names, we use Nk1 and ...
+        Nk2   = 2                                         # ... and Nk2 = 2
 
     # Gauge: length versus velocity gauge
     gauge = params.gauge
