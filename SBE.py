@@ -92,7 +92,6 @@ def main():
     # Form the Brillouin zone in consideration
     if BZ_type == 'full':
         kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
-        BZ_plot(kpnts, a, b1, b2, paths)
         dk = 1/Nk1
         if align == 'K':
             E_dir = np.array([1, 0])
@@ -103,7 +102,6 @@ def main():
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
-        BZ_plot(kpnts, a, b1, b2, paths)
 
     if energy_plots:
         sys.system.evaluate_energy(kpnts[:, 0], kpnts[:, 1])
@@ -141,12 +139,12 @@ def main():
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_00x = np.real(sys.di_00xjit(kx=kx_in_path, ky=ky_in_path))
+        di_00x = sys.di_00xjit(kx=kx_in_path, ky=ky_in_path)
         di_01x = sys.di_01xjit(kx=kx_in_path, ky=ky_in_path)
-        di_11x = np.real(sys.di_11xjit(kx=kx_in_path, ky=ky_in_path))
-        di_00y = np.real(sys.di_00yjit(kx=kx_in_path, ky=ky_in_path))
+        di_11x = sys.di_11xjit(kx=kx_in_path, ky=ky_in_path)
+        di_00y = sys.di_00yjit(kx=kx_in_path, ky=ky_in_path)
         di_01y = sys.di_01yjit(kx=kx_in_path, ky=ky_in_path)
-        di_11y = np.real(sys.di_11yjit(kx=kx_in_path, ky=ky_in_path))
+        di_11y = sys.di_11yjit(kx=kx_in_path, ky=ky_in_path)
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
@@ -503,15 +501,6 @@ def driving_field(E0, w, t, chirp, alpha, phase):
         * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
 
-@njit
-def rabi(E0, w, t, chirp, alpha, phase, dipole):
-    '''
-    Rabi frequency of the transition.
-    Calculated from dipole element and driving field.
-    '''
-    return dipole*driving_field(E0, w, t, chirp, alpha, phase)
-
-
 def diff(x, y):
     '''
     Takes the derivative of y w.r.t. x
@@ -579,12 +568,6 @@ def current(paths, fv, fc, t, alpha, E_dir):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
 
-        # bderiv = sys.system.evaluate_ederivative(kx_in_path,
-        #                                          ky_in_path)
-        # evdx = bderiv[0]
-        # evdy = bderiv[1]
-        # ecdx = bderiv[2]
-        # ecdy = bderiv[3]
         evdx = sys.evdxjit(kx=kx_in_path, ky=ky_in_path)
         evdy = sys.evdyjit(kx=kx_in_path, ky=ky_in_path)
         ecdx = sys.ecdxjit(kx=kx_in_path, ky=ky_in_path)
