@@ -11,12 +11,12 @@ eV_conv = 0.03674932176                # (1eV    = 0.036749322176 a.u.)
 
 
 plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.figsize'] = (20, 40)
+plt.rcParams['figure.figsize'] = (20, 25)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './order_sweep_complete_bz/order_4/NK2_10/'
-parampaths = ['k_05/', 'm_00/', 'm_10/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
+orderpath = './order_sweep_complete_bz/order_8/NK2_20/'
+parampaths = ['m_00/', 'm_10/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
 
 # Use kcut evaluational instead
 # orderpath = './kcut/NK2_10/'
@@ -26,7 +26,7 @@ parampaths = ['k_05/', 'm_00/', 'm_10/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', '
 # orderpath = './compare/'
 # parampaths = ['E_03/', 'E_06/', 'E_12/', 'E_20/', 'E_30/', 'E_40/']
 
-dirpath = 'K_dir/'
+dirpath = 'M_dir/'
 dirname = dirpath.strip('/').replace('_', '-')
 
 
@@ -66,7 +66,7 @@ def read_data():
 
 
 def logplot_fourier(freqw, data_dir, data_ortho,
-                    xlim=(0, 30), ylim=(10e-20, 10),
+                    xlim=(0, 30), ylim=(10e-20, 100),
                     xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
                     savename='data'):
 
@@ -87,8 +87,8 @@ def logplot_fourier(freqw, data_dir, data_ortho,
     ax[0].legend(paramlegend)
     ax[1].legend(paramlegend)
     fig.suptitle(dirname)
-    plt.show()
-    # plt.savefig(savename)
+#    plt.show()
+    plt.savefig(savename)
 
 
 if __name__ == "__main__":
