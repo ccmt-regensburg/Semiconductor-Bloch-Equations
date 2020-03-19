@@ -663,6 +663,15 @@ def current(paths, fv, fc, t, alpha, E_dir):
 
 def emission_exact(paths, solution, E_dir):
 
+    for path in paths:
+        path = np.array(path)
+        kx_in_path = path[:, 0]
+        ky_in_path = path[:, 1]
+
+        h_deriv_x = sys.h_deriv[0](kx=kx_in_path, ky=ky_in_path)
+
+        for i_k in range(path):
+           np.matmul(h_deriv)
 
 
     return np.real(I_E_dir), np.real(I_ortho)
