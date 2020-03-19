@@ -266,6 +266,8 @@ def main():
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
     # Berry curvature current
     # J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
+    # emission with exact formula
+    I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir) 
 
     # Polar emission in time
     Ir = []
@@ -659,6 +661,11 @@ def current(paths, fv, fc, t, alpha, E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
+def emission_exact(paths, solution, E_dir):
+
+
+
+    return np.real(I_E_dir), np.real(I_ortho)
 
 def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
     # t contains all time points

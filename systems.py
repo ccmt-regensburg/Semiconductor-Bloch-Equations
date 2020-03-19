@@ -35,6 +35,13 @@ h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
 # Assign all energy band functions
 evjit, ecjit = system.efjit[0], system.efjit[1]
 
+# for improved emission formula, we need derivative of the Hamiltonian 
+h_deriv = system.hderivf
+
+# 
+wf = system.Uf
+wf_h = system.Uf_h
+
 # Get symbolic dipoles
 dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
 
