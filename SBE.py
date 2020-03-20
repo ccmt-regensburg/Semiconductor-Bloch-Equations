@@ -10,6 +10,7 @@ import systems as sys
 import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
+from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
 '''
 TO DO:
@@ -668,16 +669,15 @@ def emission_exact(paths, solution, E_dir):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
 
-#        h_deriv_x = sys.h_deriv[0](kx=kx_in_path, ky=ky_in_path)
-        h_deriv_x = sys.h_deriv[0](kx=kx_in_path, ky=ky_in_path)
+        h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path, ky=ky_in_path)
 
         U = sys.wf(kx=kx_in_path, ky=ky_in_path)
         U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
 
+        print("np.shape(U)", np.shape(U))
+        print("np.shape(h_deriv_x)", np.shape(h_deriv_x))
 
         for i_k in range(np.size(kx_in_path)):
-            print("np.shape(h_deriv_x)", np.shape(h_deriv_x))
-            print("np.shape(U)", np.shape(U))
 
             U_h_H_U = np.matmul(h_deriv_x[:,:,i_k], U[:,:,i_k])
 

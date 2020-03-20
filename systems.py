@@ -3,7 +3,6 @@ from copy import deepcopy
 
 import hfsbe.dipole
 import hfsbe.example
-import hfsbe.utility
 
 # Set BZ type independent parameters
 # Hamiltonian parameters
@@ -36,7 +35,7 @@ h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
 evjit, ecjit = system.efjit[0], system.efjit[1]
 
 # for improved emission formula, we need derivative of the Hamiltonian 
-h_deriv = system.hderivf
+h_deriv = system.hderivfjit
 
 # 
 wf = system.Uf
