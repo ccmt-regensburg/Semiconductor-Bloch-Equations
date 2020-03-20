@@ -270,9 +270,6 @@ def main():
     # emission with exact formula
     I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
 
-    print("\n\nI_exact_E_dir", I_exact_E_dir)
-    print("\n\nI_E_dir", I_E_dir)
-
     # Polar emission in time
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -289,12 +286,9 @@ def main():
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho), norm='ortho'))
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_E_dir = np.fft.fftshift(np.fft.fft(I_exact_E_dir, norm='ortho'))
-    Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho, norm='ortho'))
+    Iw_exact_E_dir = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
-
-    print("\n\nIw_exact_E_dir", Iw_exact_E_dir)
-    print("\n\nIw_E_dir", Iw_E_dir)
 
     # Emission intensity
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2.0
