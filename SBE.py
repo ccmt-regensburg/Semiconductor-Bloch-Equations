@@ -677,9 +677,20 @@ def emission_exact(paths, solution, E_dir):
         print("np.shape(U)", np.shape(U))
         print("np.shape(h_deriv_x)", np.shape(h_deriv_x))
 
-        for i_k in range(np.size(kx_in_path)):
+        bandstruct_deriv = np.array(sys.system.evaluate_ederivative(kx_in_path,ky_in_path))
 
-            U_h_H_U = np.matmul(h_deriv_x[:,:,i_k], U[:,:,i_k])
+        print("bandstruct_deriv", np.shape(bandstruct_deriv))
+
+        for i_k in range(np.size(kx_in_path)):
+            U_h_H_U = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_x[:,:,i_k], U[:,:,i_k]))
+            print("\n i_k", i_k)
+            print("U_h_H_U", U_h_H_U)
+            print("bandstruct_deriv", bandstruct_deriv[0,i_k], bandstruct_deriv[2,i_k])
+            print("U_h_U", np.matmul(U_h[:,:,i_k],U[:,:,i_k]))
+            print("h_deriv_x",h_deriv_x[:,:,i_k] )
+
+            
+
 
 
     return np.real(I_E_dir), np.real(I_ortho)
