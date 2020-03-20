@@ -268,7 +268,7 @@ def main():
     # Berry curvature current
     # J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
     # emission with exact formula
-    I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, dk) 
+    I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
 
     # Polar emission in time
     Ir = []
@@ -662,9 +662,13 @@ def current(paths, fv, fc, t, alpha, E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
-def emission_exact(paths, solution, E_dir, A_field, dk):
+def emission_exact(paths, solution, E_dir, A_field):
+
+    E_ort = np.array([E_dir[1], -E_dir[0]])
 
     n_time_steps = np.size(solution[0,0,:,0])
+
+    print("np.shape(solution)", np.shape(solution))
 
     print("n_time_steps", n_time_steps, 'size A', np.size(A_field))
 
@@ -673,34 +677,41 @@ def emission_exact(paths, solution, E_dir, A_field, dk):
 
     for i_time in range(n_time_steps):
 
-        k_shift = (A_field[i_time]/dk).real
+        print ("i_time", i_time, "/", n_time_steps)
 
-        for path in paths:
+        for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
     
+            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
+            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+
             h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path, ky=ky_in_path)
-    
+            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path, ky=ky_in_path)
+   
+            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+
             U = sys.wf(kx=kx_in_path, ky=ky_in_path)
             U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
     
-            print("np.shape(U)", np.shape(U))
-            print("np.shape(h_deriv_x)", np.shape(h_deriv_x))
+#            print("np.shape(U)", np.shape(U))
+#            print("np.shape(h_deriv_x)", np.shape(h_deriv_x))
     
             bandstruct_deriv = np.array(sys.system.evaluate_ederivative(kx_in_path,ky_in_path))
     
-            print("bandstruct_deriv", np.shape(bandstruct_deriv))
+#            print("bandstruct_deriv", np.shape(bandstruct_deriv))
     
             for i_k in range(np.size(kx_in_path)):
                 U_h_H_U = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_x[:,:,i_k], U[:,:,i_k]))
-                print("\n i_k", i_k)
-                print("U_h_H_U", U_h_H_U)
-                print("bandstruct_deriv", bandstruct_deriv[0,i_k], bandstruct_deriv[2,i_k])
-                print("U_h_U", np.matmul(U_h[:,:,i_k],U[:,:,i_k]))
-                print("h_deriv_x",h_deriv_x[:,:,i_k] )
+#                print("\n i_k", i_k)
+#                print("U_h_H_U", U_h_H_U)
+#                print("bandstruct_deriv", bandstruct_deriv[0,i_k], bandstruct_deriv[2,i_k])
+#                print("U_h_U", np.matmul(U_h[:,:,i_k],U[:,:,i_k]))
+#                print("h_deriv_x",h_deriv_x[:,:,i_k] )
 
-            
+                I_E_dir += np.real(U_h_H_U[0,0])*np.real(solution[i_k, i_path, i_time, 0])
 
 
 
