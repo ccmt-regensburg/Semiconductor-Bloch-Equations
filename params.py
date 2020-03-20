@@ -25,13 +25,14 @@ Nk2                 = 20          # Number of kpoints in b2 direction (number of
 # 2line BZ parameters
 Nk_in_path          = 400        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.01       # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 5*np.pi/a  # Length of path in BZ
-angle_inc_E_field   = 30         # incoming angle of the E-field in degree
+# length_path_in_BZ   = 4*np.pi/a  # Length of path in BZ K-direction
+length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
+angle_inc_E_field   = -30        # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
 align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
-E0                  = 2.00        # Pulse amplitude (MV/cm)
+E0                  = 5.00        # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0        # Gaussian pulse width (femtoseconds)
@@ -42,7 +43,7 @@ phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.p
 T2    = 1      # Phenomenological polarization damping time
 t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000   # End time
-dt    = 0.01    # Time step
+dt    = 0.10    # Time step
 
 # Unit conversion factors
 ##########################################################################
@@ -60,4 +61,4 @@ dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
 normal_plots  = False   # Standard plots of P, J, I and w-dependency
 polar_plots   = False  # Higher harmonic polarization rotation
 save_file     = True   # Save all data files
-debug         = True
+debug         = False

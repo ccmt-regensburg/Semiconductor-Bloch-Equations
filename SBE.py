@@ -102,6 +102,7 @@ def main():
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
+        BZ_plot(kpnts, a, b1, b2, paths)
 
     if energy_plots:
         sys.system.evaluate_energy(kpnts[:, 0], kpnts[:, 1])
@@ -679,8 +680,8 @@ def BZ_plot(kpnts, a, b1, b2, paths):
     pl.scatter(R, 0, s=15, c='black')
     pl.text(R, 0.02, r'$K$')
     pl.scatter(kpnts[:, 0], kpnts[:, 1], s=15)
-    pl.xlim(-5.0/a, 5.0/a)
-    pl.ylim(-5.0/a, 5.0/a)
+    pl.xlim(-7.0/a, 7.0/a)
+    pl.ylim(-7.0/a, 7.0/a)
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
 

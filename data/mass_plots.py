@@ -11,12 +11,12 @@ eV_conv = 0.03674932176                # (1eV    = 0.036749322176 a.u.)
 
 
 plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.figsize'] = (20, 25)
+plt.rcParams['figure.figsize'] = (20, 40)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './order_sweep_complete_bz/order_8/NK2_20/'
-parampaths = ['m_00/', 'm_10/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
+orderpath = './2line/'
+parampaths = ['k_05/', 'm_00/', 'm_10/', 'm_20/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
 
 # Use kcut evaluational instead
 # orderpath = './kcut/NK2_10/'
@@ -26,8 +26,8 @@ parampaths = ['m_00/', 'm_10/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
 # orderpath = './compare/'
 # parampaths = ['E_03/', 'E_06/', 'E_12/', 'E_20/', 'E_30/', 'E_40/']
 
-dirpath = 'M_dir/'
-dirname = dirpath.strip('/').replace('_', '-')
+dirpath = 'M_dir/dt_010/'
+dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
 
 
 def read_data():
@@ -66,7 +66,7 @@ def read_data():
 
 
 def logplot_fourier(freqw, data_dir, data_ortho,
-                    xlim=(0, 30), ylim=(10e-20, 100),
+                    xlim=(0, 30), ylim=(10e-30, 10),
                     xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
                     savename='data'):
 
@@ -87,7 +87,7 @@ def logplot_fourier(freqw, data_dir, data_ortho,
     ax[0].legend(paramlegend)
     ax[1].legend(paramlegend)
     fig.suptitle(dirname)
-#    plt.show()
+    # plt.show()
     plt.savefig(savename)
 
 
@@ -100,20 +100,20 @@ if __name__ == "__main__":
     logplot_fourier(freqw, Int_E_dir, Int_ortho, ylabel=ylabel,
                     savename='Int-' + dirname)
 
-    Iw_E_dir = Idata[:, 4]
-    Iw_ortho = Idata[:, 5]
-    ylabel = r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.'
-    logplot_fourier(freqw, np.abs(Iw_E_dir), np.abs(Iw_ortho), ylabel=ylabel,
-                    savename='Iw-' + dirname)
+    # Iw_E_dir = Idata[:, 4]
+    # Iw_ortho = Idata[:, 5]
+    # ylabel = r'$[\dot P](\omega)$ (total = emitted E-field) in a.u.'
+    # logplot_fourier(freqw, np.abs(Iw_E_dir), np.abs(Iw_ortho), ylabel=ylabel,
+    #                 savename='Iw-' + dirname)
 
-    Jw_E_dir = Jdata[:, 4]
-    Jw_ortho = Jdata[:, 5]
-    ylabel = r'$[\dot P](\omega)$ (intraband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)'
-    logplot_fourier(freqw, np.abs(Jw_E_dir), np.abs(Jw_ortho), ylabel=ylabel,
-                    savename='Jw-' + dirname)
+    # Jw_E_dir = Jdata[:, 4]
+    # Jw_ortho = Jdata[:, 5]
+    # ylabel = r'$[\dot P](\omega)$ (intraband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)'
+    # logplot_fourier(freqw, np.abs(Jw_E_dir), np.abs(Jw_ortho), ylabel=ylabel,
+    #                 savename='Jw-' + dirname)
 
-    Pw_E_dir = Pdata[:, 4]
-    Pw_ortho = Pdata[:, 5]
-    ylabel = r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)'
-    logplot_fourier(freqw, np.abs(Pw_E_dir), np.abs(Pw_ortho), ylabel=ylabel,
-                    savename='Pw-' + dirname)
+    # Pw_E_dir = Pdata[:, 4]
+    # Pw_ortho = Pdata[:, 5]
+    # ylabel = r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)'
+    # logplot_fourier(freqw, np.abs(Pw_E_dir), np.abs(Pw_ortho), ylabel=ylabel,
+    #                 savename='Pw-' + dirname)
