@@ -12,7 +12,7 @@ temperature         = 0.03        # Temperature in eV
 ##########################################################################
 # Type of Brillouin zone
 # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-BZ_type = '2line'
+BZ_type = 'full'
 
 # Reciprocal lattice vectors
 b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
@@ -31,7 +31,7 @@ angle_inc_E_field   = -30        # incoming angle of the E-field in degree
 
 # Driving field parameters
 ##########################################################################
-align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 5.00        # Pulse amplitude (MV/cm)
 w                   = 25.0        # Pulse frequency (THz)
 chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
@@ -43,7 +43,7 @@ phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.p
 T2    = 1      # Phenomenological polarization damping time
 t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000   # End time
-dt    = 0.10    # Time step
+dt    = 0.01    # Time step
 
 # Unit conversion factors
 ##########################################################################
