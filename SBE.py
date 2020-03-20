@@ -704,18 +704,22 @@ def emission_exact(paths, solution, E_dir, A_field):
 #            print("bandstruct_deriv", np.shape(bandstruct_deriv))
     
             for i_k in range(np.size(kx_in_path)):
-                U_h_H_U = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_x[:,:,i_k], U[:,:,i_k]))
+                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
+                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+
 #                print("\n i_k", i_k)
 #                print("U_h_H_U", U_h_H_U)
 #                print("bandstruct_deriv", bandstruct_deriv[0,i_k], bandstruct_deriv[2,i_k])
 #                print("U_h_U", np.matmul(U_h[:,:,i_k],U[:,:,i_k]))
 #                print("h_deriv_x",h_deriv_x[:,:,i_k] )
 
-                I_E_dir += np.real(U_h_H_U[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_E_dir += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 1])
 
 
 
-    return np.real(I_E_dir), np.real(I_ortho)
+    return I_E_dir, I_ortho
 
 def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
     # t contains all time points
