@@ -674,6 +674,7 @@ def emission_exact(paths, solution, E_dir, A_field):
 
     # I_E_dir is of size (number of time steps)
     I_E_dir = np.zeros(n_time_steps)
+    I_ortho = np.zeros(n_time_steps)
 
     for i_time in range(n_time_steps):
 
@@ -717,7 +718,9 @@ def emission_exact(paths, solution, E_dir, A_field):
                 I_E_dir += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
                 I_E_dir += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 1])
 
-
+                I_ortho += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_ortho += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_ortho += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 1])
 
     return I_E_dir, I_ortho
 
