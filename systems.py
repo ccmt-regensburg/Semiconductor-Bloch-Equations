@@ -1,4 +1,4 @@
-import params
+from params import params
 
 import hfsbe.dipole
 import hfsbe.example

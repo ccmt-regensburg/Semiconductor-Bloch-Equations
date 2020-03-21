@@ -1,5 +1,5 @@
 #!/bin/python
-import params as params
+from params import params
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
@@ -164,11 +164,6 @@ def main():
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = initial_condition(e_fermi, temperature, ec)
 
-        if (debug):
-            pl.plot(y0[3::4])
-            pl.plot(y0[0::4])
-            pl.show()
-
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
             .set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase,
@@ -217,13 +212,6 @@ def main():
     solution = np.array(solution)
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
-
-    # TEST PLOT OF OCCUPATIONS
-    if (debug):
-        f_e = np.real(solution[:, 0, :, 3])
-
-        pl.imshow(f_e)
-        pl.show()
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -693,4 +681,5 @@ def BZ_plot(kpnts, a, b1, b2, paths):
 
 
 if __name__ == "__main__":
+    print(vars(params))
     main()
