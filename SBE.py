@@ -394,19 +394,28 @@ def main():
         ax_I_ortho.grid(True,axis='x')
         ax_I_ortho.set_xlim(freq_lims)
         ax_I_ortho.set_ylim(log_limits)
-        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq)
-        ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq)
-        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq)
-        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq)
+        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
+          label='$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
+        ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
+           label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
+        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  
+           label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
+        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, 
+           label='$I_{\mathrm{intra} \\bot E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_{\\bot E}\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
         ax_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_ortho.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
+        ax_I_ortho.legend(loc='upper right')
         ax_I_total.grid(True,axis='x')
         ax_I_total.set_xlim(freq_lims)
         ax_I_total.set_ylim(log_limits)
-        ax_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq)
-        ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq)
+        ax_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
+           label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
+        ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
+           label='$I_{\mathrm{i+i}}(t) = I_{\mathrm{i+i} \parallel E}(t) + I_{\mathrm{i+i} \\bot E}(t)$')
         ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax_I_total.set_ylabel(r'Total emission $I(\omega) = I_{\parallel E}(\omega) + I_{\bot E}(\omega)$')
+        ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
+        ax_I_total.legend(loc='upper right')
+
 ##########################
 
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
