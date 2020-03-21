@@ -659,13 +659,30 @@ def polarization(paths, pcv, E_dir, scale_dipole_emiss):
 
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
-    # d_E_dir = d_E_dir.T
-    # d_ortho = d_ortho.T
+
+    print("np.shape(d_ortho_swapped)",np.shape(d_ortho_swapped) )
+    print("np.shape(pcv)",np.shape(pcv) )
 
     P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))*scale_dipole_emiss
     P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))*scale_dipole_emiss
-    # P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
-    # P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
+
+    n_time_steps = np.size(P_E_dir)
+
+    for i_time in range(n_time_steps):
+        print("P_ortho_old", P_ortho[i_time])
+        P_ortho[i_time] = 0
+        for i_path, path in enumerate(paths):
+            path = np.array(path)
+            kx_in_path = path[:, 0]
+            for i_k in range(np.size(kx_in_path)):
+                P_ortho[i_time] += 2*np.real(d_ortho_swapped[i_k,i_path]*pcv[i_k, i_path, i_time])
+                if i_time == n_time_steps/2:
+                    print("POL: i_k, i_path, d, p, add, status", i_k, i_path, d_ortho_swapped[i_k,i_path], pcv[i_k, i_path, i_time], 
+                            2*np.real(d_ortho_swapped[i_k,i_path]*pcv[i_k, i_path, i_time]), P_ortho[i_time] )
+
+
+        print("OLD i_time, P_ortho_new", i_time, P_ortho[i_time], "\n")
+
 
     return P_E_dir, P_ortho
 
@@ -717,6 +734,8 @@ def emission_exact(paths, solution, E_dir, A_field, t):
     # I_E_dir is of size (number of time steps)
     I_E_dir = np.zeros(n_time_steps)
     I_ortho = np.zeros(n_time_steps)
+    I_to_diff_E_dir = np.zeros(n_time_steps)
+    I_to_diff_ortho = np.zeros(n_time_steps)
 
     dot_p = np.zeros(np.shape(solution[:,:,:,2]))
     for i_path, path in enumerate(paths):
@@ -753,13 +772,12 @@ def emission_exact(paths, solution, E_dir, A_field, t):
     
             bandstruct_deriv = np.array(sys.system.evaluate_ederivative(kx_in_path,ky_in_path))
 
-            if i_time == 0:
-               # Evaluate the dipole moments in path
-               di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+            # Evaluate the dipole moments in path
+            di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
        
-               # Append the dot product d.E
-               d_E_dir = di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1]
-               d_ortho = di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1]
+            # Append the dot product d.E
+            d_E_dir = di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1]
+            d_ortho = di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1]
 
 #            print("bandstruct_deriv", np.shape(bandstruct_deriv))
     
@@ -769,20 +787,20 @@ def emission_exact(paths, solution, E_dir, A_field, t):
                 U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
 
-                U_h_H_U_E_dir[0,0] = bandstruct_deriv[0,i_k]
-                U_h_H_U_E_dir[1,1] = bandstruct_deriv[2,i_k]
-                U_h_H_U_E_dir[0,1] = 0
-                U_h_H_U_E_dir[1,0] = 0
+#                U_h_H_U_E_dir[0,0] = bandstruct_deriv[0,i_k]
+#                U_h_H_U_E_dir[1,1] = bandstruct_deriv[2,i_k]
+#                U_h_H_U_E_dir[0,1] = 0
+#                U_h_H_U_E_dir[1,0] = 0
 
-#                U_h_H_U_E_dir[0,1] = (d_E_dir[i_k])
-#                U_h_H_U_E_dir[1,0] = np.conj(d_E_dir[i_k])
+                U_h_H_U_E_dir[0,1] = (d_E_dir[i_k])
+                U_h_H_U_E_dir[1,0] = np.conj(d_E_dir[i_k])
 
-                U_h_H_U_ortho[0,0] = bandstruct_deriv[1,i_k]
-                U_h_H_U_ortho[1,1] = bandstruct_deriv[3,i_k]
-#                U_h_H_U_ortho[0,1] = (d_ortho[i_k])
-#                U_h_H_U_ortho[1,0] = np.conj(d_ortho[i_k])
-                U_h_H_U_ortho[0,1] = 0
-                U_h_H_U_ortho[1,0] = 0
+#                U_h_H_U_ortho[0,0] = bandstruct_deriv[1,i_k]
+#                U_h_H_U_ortho[1,1] = bandstruct_deriv[3,i_k]
+                U_h_H_U_ortho[0,1] = (d_ortho[i_k])
+                U_h_H_U_ortho[1,0] = np.conj(d_ortho[i_k])
+#                U_h_H_U_ortho[0,1] = 0
+#                U_h_H_U_ortho[1,0] = 0
 
 
 #                if i_time > n_time_steps/2:
@@ -805,12 +823,25 @@ def emission_exact(paths, solution, E_dir, A_field, t):
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
 #                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
-                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*dot_p[i_k, i_path, i_time])
+#                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*dot_p[i_k, i_path, i_time])
+                I_to_diff_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 1])
 
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
 #                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
-                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*dot_p[i_k, i_path, i_time])
+#                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*dot_p[i_k, i_path, i_time])
+                I_to_diff_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 1])
+
+                if i_time == n_time_steps/2:
+                    print("i_k, i_path, d, p, add, status", i_k, i_path, U_h_H_U_ortho[0,1], solution[i_k, i_path, i_time, 1], 
+                            2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 1]), I_to_diff_ortho[i_time])
+
+        print("NEW i_time, P_ortho", i_time, I_to_diff_ortho[i_time])
+    
+
+
+    I_E_dir += diff(t, I_to_diff_E_dir)
+    I_ortho += diff(t, I_to_diff_ortho)
 
     return I_E_dir, I_ortho
 
