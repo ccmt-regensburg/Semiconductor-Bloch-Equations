@@ -290,6 +290,8 @@ def main():
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_E_dir = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_semic_E_dir = np.fft.fftshift(np.fft.fft(I_semic_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_semic_ortho = np.fft.fftshift(np.fft.fft(I_semic_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     # Emission intensity
@@ -419,6 +421,42 @@ def main():
         ax_I_total.legend(loc='upper right')
 
 ##########################
+
+        six_fig, ((sc_I_E_dir,sc_I_ortho,sc_I_total)) = pl.subplots(3,1,figsize=(10,10))
+        sc_I_E_dir.grid(True,axis='x')
+        sc_I_E_dir.set_xlim(freq_lims)
+        sc_I_E_dir.set_ylim(log_limits)
+        sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
+         label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
+        sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_semic_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
+         label='$I_{\parallel E}^\mathrm{semic}(t) = q\sum_{n}\int d\mathbf{k}\;\langle u_{n\mathbf{k}-\mathbf{A}(t)}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\mathbf{k}-\mathbf{A}(t)} \\rangle f^0_{n}(\mathbf{k})$')
+        sc_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
+        sc_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
+        sc_I_E_dir.legend(loc='upper right')
+
+        sc_I_ortho.grid(True,axis='x')
+        sc_I_ortho.set_xlim(freq_lims)
+        sc_I_ortho.set_ylim(log_limits)
+        sc_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
+         label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
+        sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_semic_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+         label='$I_{\parallel E}^\mathrm{semic}(t) = q\sum_{n}\int d\mathbf{k}\;\langle u_{n\mathbf{k}-\mathbf{A}(t)}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\mathbf{k}-\mathbf{A}(t)} \\rangle f^0_{n}(\mathbf{k})$')
+        sc_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
+        sc_I_ortho.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
+        sc_I_ortho.legend(loc='upper right')
+
+        sc_I_total.grid(True,axis='x')
+        sc_I_total.set_xlim(freq_lims)
+        sc_I_total.set_ylim(log_limits)
+        sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
+         label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
+        sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_semic_E_dir**2 + Iw_semic_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
+         label='$I^\mathrm{semic}(\omega) = I^\mathrm{semic}_{\parallel E}(\omega) + I^\mathrm{semic}_{\\bot E}(\omega)$')
+        sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
+        sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
+        sc_I_total.legend(loc='upper right')
+
+######################äää
 
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         # Countour plots of occupations and gradients of occupations
@@ -733,43 +771,16 @@ def emission_exact(paths, solution, E_dir, A_field):
             h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
             h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
  
-#            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path, ky=ky_in_path)
-#            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path, ky=ky_in_path)
-  
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
             U = sys.wf(kx=kx_in_path, ky=ky_in_path)
             U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
     
-#            print("np.shape(U)", np.shape(U))
-#            print("np.shape(h_deriv_x)", np.shape(h_deriv_x))
-    
-            bandstruct_deriv = np.array(sys.system.evaluate_ederivative(kx_in_path,ky_in_path))
-    
-#            print("bandstruct_deriv", np.shape(bandstruct_deriv))
-    
             for i_k in range(np.size(kx_in_path)):
 
                 U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
                 U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
-
-#                if i_time > n_time_steps/2:
-#
-#                   print("")
-#                   print("============================================")
-#                   print("")
-#                   print("kx, ky", kx_in_path[i_k], ky_in_path[i_k])
-#                   print("")
-#                   print("shifted: kx, ky", kx_in_path_shifted[i_k], ky_in_path_shifted[i_k])
-#                   print("")
-#                   print("U_h_H_U_y", U_h_H_U_ortho)
-#                   print("bandstruct_deriv", bandstruct_deriv[1,i_k], bandstruct_deriv[3,i_k])
-#                   print("h_deriv_y",h_deriv_y[:,:,i_k] )
-#                   print("")
-#                   print("U_h_H_U_x", U_h_H_U_E_dir)
-#                   print("bandstruct_deriv", bandstruct_deriv[0,i_k], bandstruct_deriv[2,i_k])
-#                   print("h_deriv_x",h_deriv_x[:,:,i_k] )
 
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
@@ -778,6 +789,48 @@ def emission_exact(paths, solution, E_dir, A_field):
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
                 I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
+
+    return I_E_dir, I_ortho
+
+def emission_semic(paths, solution, E_dir, A_field):
+
+    E_ort = np.array([E_dir[1], -E_dir[0]])
+
+    n_time_steps = np.size(A_field)
+
+    # I_E_dir is of size (number of time steps)
+    I_E_dir = np.zeros(n_time_steps)
+    I_ortho = np.zeros(n_time_steps)
+
+    for i_time in range(n_time_steps):
+
+        for i_path, path in enumerate(paths):
+            path = np.array(path)
+            kx_in_path = path[:, 0]
+            ky_in_path = path[:, 1]
+    
+            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
+            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+
+            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+ 
+            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+
+            U = sys.wf(kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+            U_h = sys.wf_h(kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+    
+            for i_k in range(np.size(kx_in_path)):
+
+                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
+                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, 0, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, 0, 3])
+
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, 0, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, 0, 3])
 
     return I_E_dir, I_ortho
 
