@@ -1,12 +1,14 @@
 #!/bin/python
-from params import params
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
+import pickle
 from scipy.integrate import ode
-import systems as sys
+from systems import system as sys
+from params import params
+
 
 # Flags for plotting
 user_out = params.user_out
@@ -213,6 +215,9 @@ def main():
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
+    ## Save everything to disk
+    outfile = "test"
+    np.savez(outfile, params=params.__dict__)
     # COMPUTE OBSERVABLES
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
@@ -681,5 +686,9 @@ def BZ_plot(kpnts, a, b1, b2, paths):
 
 
 if __name__ == "__main__":
-    print(vars(params))
+    np.savez("test", system=pickle.dumps(sys), params=pickle.dumps(params))
+    testfile = np.load("test.npz")
+    breakpoint()
+    print(pickle.loads(testfile["params"]))
+    print(pickle.loads(testfile["system"]))
     main()
