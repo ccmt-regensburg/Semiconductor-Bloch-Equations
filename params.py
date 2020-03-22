@@ -15,7 +15,7 @@ temperature         = 0.03        # Temperature in eV
 C0                  = 0          # Dirac point position
 C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
-R                   = 11.06       # k^3 coefficient
+R                   = 5.53        # k^3 coefficient
 k_cut               = 0.05       # Model hamiltonian cutoff
 
 # Brillouin zone parameters
@@ -65,10 +65,10 @@ scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T1    = 20    # Phenomenological damping time for diagonal occupations
+T1    = 1E3   # Phenomenological damping time for diagonal occupations
 T2    = 1     # Phenomenological damping time for off-diagonal polarizations
-t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
-tf    = 1000   # End time
+t0    = -1000 # Start time *pulse centered @ t=0, use t0 << 0
+tf    = 1000  # End time
 dt    = 0.1   # Time step
 
 # Unit conversion factors
