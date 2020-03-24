@@ -106,14 +106,6 @@ def main():
         dk, kpnts, paths = mesh(params, E_dir)
         BZ_plot(kpnts, a, b1, b2, paths)
 
-    if energy_plots:
-        sys.system.evaluate_energy(kpnts[:, 0], kpnts[:, 1])
-        sys.system.plot_bands_3d(kpnts[:, 0], kpnts[:, 1])
-        sys.system.plot_bands_contour(kpnts[:, 0], kpnts[:, 1])
-    if dipole_plots:
-        Ax, Ay = sys.dipole.evaluate(kpnts[:, 0], kpnts[:, 1])
-        sys.dipole.plot_dipoles(Ax, Ay)
-
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
     t_constructed = False
@@ -215,9 +207,16 @@ def main():
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
-    ## Save everything to disk
-    outfile = "test"
-    np.savez(outfile, params=params.__dict__)
+    # SAVE EVERYTHING TO DISK
+    ###########################################################################
+    if (save_file):
+        tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
+            .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
+        np.savez("full_" + tail,
+                 system=pickle.dumps(sys), params=pickle.dumps(params),
+                 paths=paths, time=t, solution=solution,
+                 driving_field=driving_field(E0, w, t, chirp, alpha, phase))
+
     # COMPUTE OBSERVABLES
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
@@ -261,7 +260,11 @@ def main():
     if (save_file):
         tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
             .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
-
+        Full_name = 'full_' + tail
+        np.savez(Full_name,
+                 system=pickle.dumps(sys), params=pickle.dumps(params),
+                 paths=paths, time=t, solution=solution,
+                 driving_field=driving_field(E0, w, t, chirp, alpha, phase))
         J_name = 'J_' + tail
         np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
         P_name = 'P_' + tail
@@ -686,9 +689,8 @@ def BZ_plot(kpnts, a, b1, b2, paths):
 
 
 if __name__ == "__main__":
-    np.savez("test", system=pickle.dumps(sys), params=pickle.dumps(params))
+
     testfile = np.load("test.npz")
-    breakpoint()
     print(pickle.loads(testfile["params"]))
     print(pickle.loads(testfile["system"]))
     main()
