@@ -6,21 +6,17 @@ import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
 import pickle
 from scipy.integrate import ode
-from systems import system as sys
 from params import params
 
 
 # Flags for plotting
 user_out = params.user_out
-energy_plots = params.energy_plots
-dipole_plots = params.dipole_plots
 normal_plots = params.normal_plots
 polar_plots = params.polar_plots
 save_file = params.save_file
-debug = params.debug
 
 
-def main():
+def main(sys, dipole):
     # RETRIEVE PARAMETERS
     ###########################################################################
     # Unit converstion factors
@@ -134,12 +130,12 @@ def main():
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_00x = sys.di_00xjit(kx=kx_in_path, ky=ky_in_path)
-        di_01x = sys.di_01xjit(kx=kx_in_path, ky=ky_in_path)
-        di_11x = sys.di_11xjit(kx=kx_in_path, ky=ky_in_path)
-        di_00y = sys.di_00yjit(kx=kx_in_path, ky=ky_in_path)
-        di_01y = sys.di_01yjit(kx=kx_in_path, ky=ky_in_path)
-        di_11y = sys.di_11yjit(kx=kx_in_path, ky=ky_in_path)
+        di_00x = dipole.Axfjit[0][0](kx=kx_in_path, ky=ky_in_path)
+        di_01x = dipole.Axfjit[0][1](kx=kx_in_path, ky=ky_in_path)
+        di_11x = dipole.Axfjit[1][1](kx=kx_in_path, ky=ky_in_path)
+        di_00y = dipole.Ayfjit[0][0](kx=kx_in_path, ky=ky_in_path)
+        di_01y = dipole.Ayfjit[0][1](kx=kx_in_path, ky=ky_in_path)
+        di_11y = dipole.Ayfjit[1][1](kx=kx_in_path, ky=ky_in_path)
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
@@ -150,8 +146,8 @@ def main():
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are
         # provided and a cutoff radius
-        ec = sys.ecjit(kx=kx_in_path, ky=ky_in_path)
-        ev = sys.evjit(kx=kx_in_path, ky=ky_in_path)
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)
+        ev = sys.efjit[0](kx=kx_in_path, ky=ky_in_path)
         ecv_in_path = ec - ev
 
         # Initialize the values of of each k point vector
@@ -207,23 +203,13 @@ def main():
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
-    # SAVE EVERYTHING TO DISK
-    ###########################################################################
-    if (save_file):
-        tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
-            .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
-        np.savez("full_" + tail,
-                 system=pickle.dumps(sys), params=pickle.dumps(params),
-                 paths=paths, time=t, solution=solution,
-                 driving_field=driving_field(E0, w, t, chirp, alpha, phase))
-
     # COMPUTE OBSERVABLES
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
     # Polarization (interband)
-    P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir)
+    P_E_dir, P_ortho = polarization(dipole, paths, solution[:, :, :, 1], E_dir)
     # Current (intraband)
-    J_E_dir, J_ortho = current(paths, solution[:, :, :, 0],
+    J_E_dir, J_ortho = current(sys, paths, solution[:, :, :, 0],
                                solution[:, :, :, 3], t, alpha, E_dir)
     # Emission in time
     I_E_dir = diff(t, P_E_dir)*gaussian_envelope(t, alpha) \
@@ -260,9 +246,12 @@ def main():
     if (save_file):
         tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
             .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
+
         Full_name = 'full_' + tail
         np.savez(Full_name,
-                 system=pickle.dumps(sys), params=pickle.dumps(params),
+                 system=pickle.dumps(sys),
+                 dipole=pickle.dumps(dipole),
+                 params=pickle.dumps(params),
                  paths=paths, time=t, solution=solution,
                  driving_field=driving_field(E0, w, t, chirp, alpha, phase))
         J_name = 'J_' + tail
@@ -520,7 +509,7 @@ def gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*alpha)**2)
 
 
-def polarization(paths, pcv, E_dir):
+def polarization(dip, paths, pcv, E_dir):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -534,8 +523,8 @@ def polarization(paths, pcv, E_dir):
         ky_in_path = path[:, 1]
 
         # Evaluate the dipole moments in path
-        di_01x = sys.di_01xjit(kx=kx_in_path, ky=ky_in_path)
-        di_01y = sys.di_01yjit(kx=kx_in_path, ky=ky_in_path)
+        di_01x = dip.Axfjit[0][1](kx=kx_in_path, ky=ky_in_path)
+        di_01y = dip.Ayfjit[0][1](kx=kx_in_path, ky=ky_in_path)
 
         # Append the dot product d.E
         d_E_dir.append(di_01x*E_dir[0] + di_01y*E_dir[1])
@@ -550,7 +539,7 @@ def polarization(paths, pcv, E_dir):
     return P_E_dir, P_ortho
 
 
-def current(paths, fv, fc, t, alpha, E_dir):
+def current(sys, paths, fv, fc, t, alpha, E_dir):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -565,10 +554,10 @@ def current(paths, fv, fc, t, alpha, E_dir):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
 
-        evdx = sys.evdxjit(kx=kx_in_path, ky=ky_in_path)
-        evdy = sys.evdyjit(kx=kx_in_path, ky=ky_in_path)
-        ecdx = sys.ecdxjit(kx=kx_in_path, ky=ky_in_path)
-        ecdy = sys.ecdyjit(kx=kx_in_path, ky=ky_in_path)
+        evdx = sys.ederivjit[0](kx=kx_in_path, ky=ky_in_path)
+        evdy = sys.ederivjit[1](kx=kx_in_path, ky=ky_in_path)
+        ecdx = sys.ederivjit[2](kx=kx_in_path, ky=ky_in_path)
+        ecdy = sys.ederivjit[3](kx=kx_in_path, ky=ky_in_path)
 
         # 0: v, x   1: v,y   2: c, x  3: c, y
         jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
@@ -689,8 +678,4 @@ def BZ_plot(kpnts, a, b1, b2, paths):
 
 
 if __name__ == "__main__":
-
-    testfile = np.load("test.npz")
-    print(pickle.loads(testfile["params"]))
-    print(pickle.loads(testfile["system"]))
     main()

@@ -58,9 +58,6 @@ class params:
     # Flags for testing and features
     ##########################################################################
     user_out      = True   # Set to True to get user plotting and progress output
-    energy_plots  = False  # Set to True to plot 3d energy bands and contours
-    dipole_plots  = False  # Set tp True to plot dipoles (currently not working?)
     normal_plots  = False   # Standard plots of P, J, I and w-dependency
     polar_plots   = False  # Higher harmonic polarization rotation
     save_file     = True   # Save all data files
-    debug         = False
