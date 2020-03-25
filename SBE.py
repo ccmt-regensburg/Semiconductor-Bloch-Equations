@@ -157,6 +157,12 @@ def main():
        wf_solution, t_wf, A_field_wf = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                       gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                       'wavefunction_dynamics')
+    n_time_steps = np.size(solution[0,0,:,0])
+
+    for i_time in range(n_time_steps):
+#        print("Nk_in_path/2, 0, i_time, 0:3", Nk_in_path//2, 0, i_time)
+        print("i_time, t, density matrix", i_time, t[i_time],    solution[Nk_in_path//2, 0, i_time, 0:3])
+        print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(solution[Nk_in_path//2, 0, i_time, 0])**2 + solution[Nk_in_path//2, 0, i_time, 1]*np.conj(solution[Nk_in_path//2, 0, i_time, 2]) )
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -981,6 +987,8 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
         # Energy term eband(i,k) the energy of band i at point k
         ecv = ecv_in_path[k]
+        ev = ev_in_path[k]
+        ec = ec_in_path[k]
 
         # Rabi frequency: w_R = d_12(k).E(t)
         dipole = dipole_in_path[k]
@@ -988,8 +996,12 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
         wr_c = wr.conjugate()
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        Berry_con = A_in_path[k]
-        wr_d_diag = rabi(E0, w, t, chirp, alpha, phase, Berry_con)
+        Berry_con_diff = A_in_path[k]
+        wr_d_diag      = rabi(E0, w, t, chirp, alpha, phase, Berry_con_diff)
+        Berry_con_v    = Avv_in_path[k]
+        wr_d_vv        = rabi(E0, w, t, chirp, alpha, phase, Berry_con_v)
+        Berry_con_c    = Acc_in_path[k]
+        wr_d_cc        = rabi(E0, w, t, chirp, alpha, phase, Berry_con_c)
 
         if dynamics_type == 'density_matrix_dynamics':
 
@@ -1005,11 +1017,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
            # Update each component of the solution vector
            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-           x[i] = (-1j*ecv + 1j*wr_d_diag)*y[i+1] + 1j*wr*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
-           x[i+1] = 0
-           x[i+2] = 0
-           x[i+3] = 0
-
+           x[i]   = (-1j*ev + 1j*wr_d_vv)*y[i]   + 1j*wr  *y[i+2] + D*(y[m]   - y[n])
+           x[i+1] = (-1j*ev + 1j*wr_d_vv)*y[i+1] + 1j*wr  *y[i+3] + D*(y[m+1] - y[n+1])
+           x[i+2] = (-1j*ec + 1j*wr_d_cc)*y[i+2] + 1j*wr_c*y[i]   + D*(y[m+2] - y[n+2])
+           x[i+3] = (-1j*ec + 1j*wr_d_cc)*y[i+3] + 1j*wr_c*y[i+1] + D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
