@@ -89,12 +89,14 @@ def main():
     b1 = params.b1                                        # Reciprocal lattice vectors
     b2 = params.b2
 
-    user_out = params.user_out
+    user_out          = params.user_out
     print_J_P_I_files = params.print_J_P_I_files
-    energy_plots = params.energy_plots
-    dipole_plots = params.dipole_plots
-    test = params.test                                # Testing flag for Travis
-    emission_Bcurv = params.emission_Bcurv
+    energy_plots      = params.energy_plots
+    dipole_plots      = params.dipole_plots
+    test              = params.test                       # Testing flag for Travis
+    emission_Bcurv    = params.emission_Bcurv
+    emission_wavep    = params.emission_wavep
+
 
     # USER OUTPUT
     ###############################################################################################
@@ -148,7 +150,13 @@ def main():
 
     # here,the time evolution of the density matrix is done
     solution, t, A_field = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                          gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path)
+                                          gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                          'density_matrix_dynamics')
+
+    if emission_wavep:
+       wf_solution, t_wf, A_field_wf = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+                                                      gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                                      'wavefunction_dynamics')
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -427,7 +435,7 @@ def main():
 
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
-                   E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path):
+                   E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, dynamics_type):
 
     # Solution containers
     t = []
@@ -464,17 +472,21 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         dipole_in_path = scale_dipole_eq_mot*(E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :])
         A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
             - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
+        Avv_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :]
+        Acc_in_path = E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :]
 
         # in bite.evaluate, there is also an interpolation done if b1, b2
         # are provided and a cutoff radius
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
         ecv_in_path = bandstruct[1] - bandstruct[0]
+        ev_in_path = bandstruct[0]
+        ec_in_path = bandstruct[1]
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
         for i_k, k in enumerate(path):
-            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
+            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k, dynamics_type)
 
         # append the A-field
         y0.append(0.0)
@@ -482,8 +494,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         y0_np = np.array(y0)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
-                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir, y0_np)
+        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, ev_in_path, ec_in_path, 
+                                                      dipole_in_path, A_in_path, Avv_in_path, Acc_in_path, 
+                                                      gauge, kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type)
 
         # Propagate through time
         ti = 0
@@ -912,17 +925,20 @@ def get_A_field(E0, w, t, alpha):
 
 
 def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-      ecv_in_path, dipole_in_path, A_in_path, gauge,
-      kx_in_path, ky_in_path, E_dir, y0_np):
+      ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
+      A_in_path, Avv_in_path, Acc_in_path, gauge,
+      kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type):
     return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                  ecv_in_path, dipole_in_path, A_in_path, gauge,
-                  kx_in_path, ky_in_path, E_dir, y0_np)
+                  ecv_in_path,  ev_in_path, ec_in_path, dipole_in_path, 
+                  A_in_path, Avv_in_path, Acc_in_path, gauge,
+                  kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type)
 
 
 @njit
 def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-           ecv_in_path, dipole_in_path, A_in_path, gauge,
-           kx_in_path, ky_in_path, E_dir, y0_np):
+           ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
+           A_in_path, Avv_in_path, Acc_in_path, gauge,
+           kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -975,13 +991,25 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
         Berry_con = A_in_path[k]
         wr_d_diag = rabi(E0, w, t, chirp, alpha, phase, Berry_con)
 
-        # Update each component of the solution vector
-        # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-        x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
-        x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
-            - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
-        x[i+2] = x[i+1].conjugate()
-        x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
+        if dynamics_type == 'density_matrix_dynamics':
+
+           # Update each component of the solution vector
+           # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+           x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
+           x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+               - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+           x[i+2] = x[i+1].conjugate()
+           x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
+
+        elif dynamics_type == 'wavefunction_dynamics':
+
+           # Update each component of the solution vector
+           # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+           x[i] = (-1j*ecv + 1j*wr_d_diag)*y[i+1] + 1j*wr*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+           x[i+1] = 0
+           x[i+2] = 0
+           x[i+3] = 0
+
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
@@ -1109,12 +1137,16 @@ def shift_solution(solution, A_field, dk):
     return solution
 
 
-def initial_condition(y0,e_fermi,temperature,e_c,i_k):
+def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
 
     if (temperature > 1e-5):
-      y0.extend([1.0,0.0,0.0,1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)])
+        fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
+        if dynamics_type == 'density_matrix_dynamics':
+          y0.extend([1.0,0.0,0.0,fermi_function])
+        elif dynamics_type == 'wavefunction_dynamics':
+          y0.extend([1.0,0.0,0.0,np.sqrt(fermi_function)])
     else:
-      y0.extend([1.0,0.0,0.0,0.0])
+        y0.extend([1.0,0.0,0.0,0.0])
 
 
 def BZ_plot(kpnts,a,b1,b2,E_dir,paths):

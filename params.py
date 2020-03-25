@@ -87,5 +87,5 @@ energy_plots      = False  # Set to True to plot 3d energy bands and contours
 dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)
 test              = False  # Set to True to output travis testing parameters
 matrix_method     = False  # Set to True to use old matrix method for solving
-emission_Bcurv    = False  # compute emission quasiclassically using the Berry curvature (computationally expensive)
-
+emission_Bcurv    = False  # additionally compute emission quasiclassically using the Berry curvature (computationally expensive)
+emission_wavep    = True   # additionally compute emission quasiclassically using wavepacket dynamics (
