@@ -266,11 +266,13 @@ def main():
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
     # Berry curvature current
-#    J_Bcurv_E_dir, J_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], bite, path, t, alpha, E_dir, E0, w, phase, dipole)
+#                                 def current_Bcurv(paths,fv,fc,t,alpha,E_dir,E0,w,phase,A_field):
+
+    I_Bcurv_E_dir, I_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], t, chirp, alpha, E_dir, E0, w, phase, A_field)
     # emission with exact formula
     I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
     # emission with exact formula with semiclassical formula
-    I_semic_E_dir, I_semic_ortho = emission_semic(paths, solution, E_dir, A_field) 
+#    I_semic_E_dir, I_semic_ortho = emission_semic(paths, solution, E_dir, A_field) 
 
     # Polar emission in time
     Ir = []
@@ -290,8 +292,10 @@ def main():
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_E_dir = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_semic_E_dir = np.fft.fftshift(np.fft.fft(I_semic_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_semic_ortho = np.fft.fftshift(np.fft.fft(I_semic_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+#    Iw_semic_E_dir = np.fft.fftshift(np.fft.fft(I_semic_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+#    Iw_semic_ortho = np.fft.fftshift(np.fft.fft(I_semic_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_Bcurv_E_dir = np.fft.fftshift(np.fft.fft(I_Bcurv_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_Bcurv_ortho = np.fft.fftshift(np.fft.fft(I_Bcurv_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     # Emission intensity
@@ -428,8 +432,9 @@ def main():
         sc_I_E_dir.set_ylim(log_limits)
         sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
          label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-        sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_semic_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
-         label='$I_{\parallel E}^\mathrm{semic}(t) = q\sum_{n}\int d\mathbf{k}\;\langle u_{n\mathbf{k}-\mathbf{A}(t)}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\mathbf{k}-\mathbf{A}(t)} \\rangle f^0_{n}(\mathbf{k})$')
+        sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_Bcurv_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
+#label='$I_{\parallel E}^\mathrm{semic}(t) = q\sum_{n}\int d\mathbf{k}\;\langle u_{n\mathbf{k}-\mathbf{A}(t)}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\mathbf{k}-\mathbf{A}(t)} \\rangle f^0_{n}(\mathbf{k})$')
+           label='$I_{\parallel E}^\mathrm{quasic}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E \left[\partial \\varepsilon_n/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}- \mathbf{E}(t)\\times\Omega_n(\mathbf{k}-\mathbf{A}(t)) \\right] f^0_{n}(\mathbf{k})$')
         sc_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
         sc_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
         sc_I_E_dir.legend(loc='upper right')
@@ -438,9 +443,10 @@ def main():
         sc_I_ortho.set_xlim(freq_lims)
         sc_I_ortho.set_ylim(log_limits)
         sc_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
-         label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-        sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_semic_ortho**2) / Int_tot_base_freq, linestyle='dashed',
-         label='$I_{\parallel E}^\mathrm{semic}(t) = q\sum_{n}\int d\mathbf{k}\;\langle u_{n\mathbf{k}-\mathbf{A}(t)}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\mathbf{k}-\mathbf{A}(t)} \\rangle f^0_{n}(\mathbf{k})$')
+         label='$I_{\\bot E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
+        sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_Bcurv_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+#         label='$I_{\parallel E}^\mathrm{semic}(t) = q\sum_{n}\int d\mathbf{k}\;\langle u_{n\mathbf{k}-\mathbf{A}(t)}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\mathbf{k}-\mathbf{A}(t)} \\rangle f^0_{n}(\mathbf{k})$')
+           label='$I_{\\bot E}^\mathrm{quasic}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E} \left[\partial \\varepsilon_n/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}- \mathbf{E}(t)\\times\Omega_n(\mathbf{k}-\mathbf{A}(t)) \\right] f^0_{n}(\mathbf{k})$')
         sc_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
         sc_I_ortho.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
         sc_I_ortho.legend(loc='upper right')
@@ -450,8 +456,8 @@ def main():
         sc_I_total.set_ylim(log_limits)
         sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
          label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
-        sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_semic_E_dir**2 + Iw_semic_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
-         label='$I^\mathrm{semic}(\omega) = I^\mathrm{semic}_{\parallel E}(\omega) + I^\mathrm{semic}_{\\bot E}(\omega)$')
+        sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_Bcurv_E_dir**2 + Iw_Bcurv_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
+         label='$I^\mathrm{quasic}(\omega) = I^\mathrm{quasic}_{\parallel E}(\omega) + I^\mathrm{quasic}_{\\bot E}(\omega)$')
         sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
         sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
         sc_I_total.legend(loc='upper right')
@@ -834,27 +840,19 @@ def emission_semic(paths, solution, E_dir, A_field):
 
     return I_E_dir, I_ortho
 
-def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
+def current_Bcurv(paths,fv,fc,t,chirp,alpha,E_dir,E0,w,phase,A_field):
+
     # t contains all time points
-    A_field   = get_A_field(E0, w, t, alpha)
     A_field_x = A_field*E_dir[0]
     A_field_y = A_field*E_dir[1]
-    E_field   = driving_field(E0, w, t, alpha, phase)
+    E_field   = driving_field(E0, w, t, chirp, alpha, phase)
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
     # Calculate the gradient analytically at each k-point
-    J_E_dir, J_ortho = [], []
+    I_E_dir, I_ortho = [], []
 
-    curv = sys.dipole.SymbolicCurvature(sys.dipole.Ax, sys.dipole.Ay)
-
-    #for path in paths:
-    #   path = np.array(path)
-    #   kx_in_path = path[:,0]
-    #   ky_in_path = path[:,1]
-    #   bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
-    #   curv_eval = curv.evaluate(kx_in_path, ky_in_path)
-
+    curv = hfsbe.dipole.SymbolicCurvature(sys.dipole.Ax, sys.dipole.Ay)
 
     for j_time, time in enumerate(t):
        je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
@@ -869,7 +867,7 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
            kx_in_path = np.real(np.array([x - A_field_x[j_time] for x in kx_in_path]))
            ky_in_path = np.real(np.array([y - A_field_y[j_time] for y in ky_in_path]))
 
-           bandstruc_deriv = bite.evaluate_ederivative(kx_in_path, ky_in_path)
+           bandstruc_deriv = sys.system.evaluate_ederivative(kx_in_path, ky_in_path)
 
            curv_eval = curv.evaluate(kx_in_path, ky_in_path)
 
@@ -878,8 +876,8 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
            # the cross product of Berry curvature and E-field points only in direction orthogonal to E
            cross_prod_ortho = E_field[j_time]*curv_eval
 
-           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
-           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
+#           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
+#           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
 
            #0: v, x   1: v,y   2: c, x  3: c, y
            je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
@@ -893,15 +891,11 @@ def current_Bcurv(paths,fv,fc,bite,path,t,alpha,E_dir,E0,w,phase):
        jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
 
        # we need tensordot for contracting the first two indices (2 kpoint directions)
-       J_E_dir.append(np.tensordot(je_E_dir_swapped,fc[:,:,j_time],2) + np.tensordot(jh_E_dir_swapped,fv[:,:,j_time],2))
-       J_ortho.append(np.tensordot(je_ortho_swapped,fc[:,:,j_time],2) + np.tensordot(jh_ortho_swapped,fv[:,:,j_time],2))
-
-     # we need tensordot for contracting the first two indices (2 kpoint directions)
-     #J_E_dir = np.tensordot(je_E_dir_swapped,fc,2) + np.tensordot(jh_E_dir_swapped,fv,2)
-     #J_ortho = np.tensordot(je_ortho_swapped,fc,2) + np.tensordot(jh_ortho_swapped,fv,2)
+       I_E_dir.append(np.tensordot(je_E_dir_swapped,fc[:,:,0],2) + np.tensordot(jh_E_dir_swapped,fv[:,:,0],2))
+       I_ortho.append(np.tensordot(je_ortho_swapped,fc[:,:,0],2) + np.tensordot(jh_ortho_swapped,fv[:,:,0],2))
 
     # Return the real part of each component
-    return np.real(J_E_dir), np.real(J_ortho)
+    return np.real(I_E_dir), np.real(I_ortho)
 
 
 def get_A_field(E0, w, t, alpha):
