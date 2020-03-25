@@ -1,3 +1,5 @@
+import numpy as np
+import os
 from params import params
 
 import hfsbe.dipole
@@ -10,7 +12,6 @@ from SBE import main as solver
 
 def run():
 
-    C0                  = 0           # Dirac point position
     C2                  = 5.39018     # k^2 coefficient
     A                   = 0.19732     # Fermi velocity
     R                   = 5.52658     # k^3 coefficient
@@ -22,19 +23,15 @@ def run():
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
     # ## Periodic Bismuth Teluride call
-    print("Order in params ", order)
-    print("kcut in params ", k_cut)
-    system = hfsbe.example.BiTePeriodic(C2=C2, A=A, R=R, a=params.a, m=m,
-                                        order=order)
-
-    # Get symbolic hamiltonian, energies, wavefunctions, energy derivatives
-    # h, ef, wf, ediff = system.eigensystem(gidx=1)
-    h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
-
-    # Get symbolic dipoles
-    dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
-
-    solver(system, dipole)
+    for m in np.linspace(0.0, 1.0, 0.05):
+        dirname = 'm_{:1.2f}'.format(m)
+        os.mkdir(dirname)
+        os.chdir(dirname)
+        system = hfsbe.example.BiTePeriodic(C2=C2, A=A, R=R, a=params.a, m=m,
+                                            order=order)
+        h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
+        dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
+        solver(system, dipole)
 
 
 if __name__ == "__main__":
