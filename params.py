@@ -42,6 +42,7 @@ class params:
 
     # Time scales (all units in femtoseconds)
     ##########################################################################
+    T1    = 1E3    # Phenomenological diagonal damping time
     T2    = 1      # Phenomenological polarization damping time
     t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
     tf    = 1000   # End time

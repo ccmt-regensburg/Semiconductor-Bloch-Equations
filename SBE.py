@@ -40,7 +40,9 @@ def main(sys, dipole):
     phase = params.phase                        # Carrier-envelope phase
 
     # Time scales
+    T1 = params.T1*fs_conv                      # Occupation damping time
     T2 = params.T2*fs_conv                      # Polarization damping time
+    gamma1 = 1/T1                               # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
     t0 = int(params.t0*fs_conv)                 # Initial time condition
     tf = int(params.tf*fs_conv)                 # Final time
@@ -157,8 +159,8 @@ def main(sys, dipole):
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
-            .set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase,
-                          ecv_in_path, dipole_in_path, A_in_path)
+            .set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+                          ecv_in_path, dipole_in_path, A_in_path, y0)
 
         # Propagate through time
         ti = 0
@@ -579,15 +581,15 @@ def current(sys, paths, fv, fc, t, alpha, E_dir):
     return np.real(J_E_dir), np.real(J_ortho)
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
-      dipole_in_path, A_in_path):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
-                  ecv_in_path, dipole_in_path, A_in_path)
+def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
+      dipole_in_path, A_in_path, y0):
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+                  ecv_in_path, dipole_in_path, A_in_path, y0)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
-           dipole_in_path, A_in_path):
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+           ecv_in_path, dipole_in_path, A_in_path, y0):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
