@@ -4,10 +4,11 @@ from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
-import pickle
+import dill
 from scipy.integrate import ode
 from params import params
 
+dill.settings['recurse'] = True
 
 # Flags for plotting
 user_out = params.user_out
@@ -249,9 +250,9 @@ def main(sys, dipole):
 
         Full_name = 'full_' + tail
         np.savez(Full_name,
-                 system=pickle.dumps(sys),
-                 dipole=pickle.dumps(dipole),
-                 params=pickle.dumps(params),
+                 system=dill.dumps(sys),
+                 dipole=dill.dumps(dipole),
+                 params=dill.dumps(params),
                  paths=paths, time=t, solution=solution,
                  driving_field=driving_field(E0, w, t, chirp, alpha, phase))
         J_name = 'J_' + tail
