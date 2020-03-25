@@ -146,110 +146,9 @@ def main():
         Ax, Ay = sys.dipole.evaluate(kpnts[:, 0], kpnts[:, 1])
         sys.dipole.plot_dipoles(Ax, Ay)
 
-    # Number of integration steps, time array construction flag
-    Nt = int((tf-t0)/dt)
-    t_constructed = False
-
-    # Solution containers
-    t = []
-    solution = []
-
-    # Initialize the ode solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
-
-    # SOLVING
-    ###########################################################################
-    # Iterate through each path in the Brillouin zone
-    path_num = 1
-    for path in paths:
-        if user_out:
-            print('path: ' + str(path_num))
-
-        # Solution container for the current path
-        path_solution = []
-
-        # Retrieve the set of k-points for the current path
-        kx_in_path = path[:, 0]
-        ky_in_path = path[:, 1]
-
-        # Calculate the dipole components along the path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
-
-        # Calculate the dot products E_dir.d_nm(k).
-        # To be multiplied by E-field magnitude later.
-        # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = scale_dipole_eq_mot*(E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :])
-        A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
-            - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
-
-        # in bite.evaluate, there is also an interpolation done if b1, b2
-        # are provided and a cutoff radius
-        bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
-        ecv_in_path = bandstruct[1] - bandstruct[0]
-
-        # Initialize the values of of each k point vector
-        # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        y0 = []
-        for i_k, k in enumerate(path):
-            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
-
-        # append the A-field
-        y0.append(0.0)
-
-        y0_np = np.array(y0)
-
-        # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
-                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir, y0_np)
-
-        # Propagate through time
-        ti = 0
-        while solver.successful() and ti < Nt:
-            # User output of integration progress
-            if (ti % 1000 == 0 and user_out):
-                print('{:5.2f}%'.format(ti/Nt*100))
-
-            # Integrate one integration time step
-            solver.integrate(solver.t + dt)
-
-            # Save solution each output step
-            if ti % dt_out == 0:
-                path_solution.append(solver.y)
-                # Construct time array only once
-                if not t_constructed:
-                    t.append(solver.t)
-
-            # Increment time counter
-            ti += 1
-
-        # Flag that time array has been built up
-        t_constructed = True
-        path_num += 1
-
-        # Append path solutions to the total solution arrays
-        solution.append(np.array(path_solution)[:, 0:-1])
-
-    # Convert solution and time array to numpy arrays
-    t = np.array(t)
-    solution = np.array(solution)
-    A_field = np.array(path_solution)[:, -1]
-
-    # Slice solution along each path for easier observable calculation
-    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
-        solution = np.array_split(solution, Nk1, axis=2)
-    elif BZ_type == '2line':
-        solution = np.array_split(solution, Nk_in_path, axis=2)
-
-    # Convert lists into numpy arrays
-    solution = np.array(solution)
-    # Now the solution array is structred as:
-    # first index is kx-index, second is ky-index,
-    # third is timestep, fourth is f_h, p_he, p_eh, f_e
-
-    # In case of the velocity gauge, we need to shift the time-dependent
-    # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
-    if gauge == 'velocity':
-        solution = shift_solution(solution, A_field, dk)
+    # here,the time evolution of the density matrix is done
+    solution, t, A_field = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+                                          gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path)
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -526,6 +425,116 @@ def main():
         test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
 
+
+def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
+                   E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path):
+
+    # Solution containers
+    t = []
+    solution = []
+
+    # Number of integration steps, time array construction flag
+    Nt = int((tf-t0)/dt)
+    t_constructed = False
+
+    # Initialize the ode solver
+    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
+
+    # SOLVING
+    ###########################################################################
+    # Iterate through each path in the Brillouin zone
+    path_num = 1
+    for path in paths:
+        if user_out:
+            print('path: ' + str(path_num))
+
+        # Solution container for the current path
+        path_solution = []
+
+        # Retrieve the set of k-points for the current path
+        kx_in_path = path[:, 0]
+        ky_in_path = path[:, 1]
+
+        # Calculate the dipole components along the path
+        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+
+        # Calculate the dot products E_dir.d_nm(k).
+        # To be multiplied by E-field magnitude later.
+        # A[0,1,:] means 0-1 offdiagonal element
+        dipole_in_path = scale_dipole_eq_mot*(E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :])
+        A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
+            - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
+
+        # in bite.evaluate, there is also an interpolation done if b1, b2
+        # are provided and a cutoff radius
+        bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
+        ecv_in_path = bandstruct[1] - bandstruct[0]
+
+        # Initialize the values of of each k point vector
+        # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
+        y0 = []
+        for i_k, k in enumerate(path):
+            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k)
+
+        # append the A-field
+        y0.append(0.0)
+
+        y0_np = np.array(y0)
+
+        # Set the initual values and function parameters for the current kpath
+        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
+                                                      A_in_path, gauge, kx_in_path, ky_in_path, E_dir, y0_np)
+
+        # Propagate through time
+        ti = 0
+        while solver.successful() and ti < Nt:
+            # User output of integration progress
+            if (ti % 1000 == 0 and user_out):
+                print('{:5.2f}%'.format(ti/Nt*100))
+
+            # Integrate one integration time step
+            solver.integrate(solver.t + dt)
+
+            # Save solution each output step
+            if ti % dt_out == 0:
+                path_solution.append(solver.y)
+                # Construct time array only once
+                if not t_constructed:
+                    t.append(solver.t)
+
+            # Increment time counter
+            ti += 1
+
+        # Flag that time array has been built up
+        t_constructed = True
+        path_num += 1
+
+        # Append path solutions to the total solution arrays
+        solution.append(np.array(path_solution)[:, 0:-1])
+
+    # Convert solution and time array to numpy arrays
+    t = np.array(t)
+    solution = np.array(solution)
+    A_field = np.array(path_solution)[:, -1]
+
+    # Slice solution along each path for easier observable calculation
+    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
+        solution = np.array_split(solution, Nk1, axis=2)
+    elif BZ_type == '2line':
+        solution = np.array_split(solution, Nk_in_path, axis=2)
+
+    # Convert lists into numpy arrays
+    solution = np.array(solution)
+    # Now the solution array is structred as:
+    # first index is kx-index, second is ky-index,
+    # third is timestep, fourth is f_h, p_he, p_eh, f_e
+
+    # In case of the velocity gauge, we need to shift the time-dependent
+    # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
+    if gauge == 'velocity':
+        solution = shift_solution(solution, A_field, dk)
+
+    return solution, t, A_field
 
 #################################################################################################
 # FUNCTIONS
