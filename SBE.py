@@ -485,8 +485,11 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         # are provided and a cutoff radius
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
         ecv_in_path = bandstruct[1] - bandstruct[0]
-        ev_in_path = bandstruct[0]
-        ec_in_path = bandstruct[1]
+#        ev_in_path = bandstruct[0]
+#        ec_in_path = bandstruct[1]
+        ev_in_path = -ecv_in_path/2
+        ec_in_path = ecv_in_path/2
+
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
