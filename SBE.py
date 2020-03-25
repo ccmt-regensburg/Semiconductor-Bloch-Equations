@@ -138,19 +138,6 @@ def main():
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
 
-    # Number of integration steps, time array construction flag
-    Nt = int((tf-t0)/dt)
-    t_constructed = False
-
-    # Solution containers
-    t = []
-    solution = []
-    val_band_for_print          = []
-    cond_band_for_print         = []
-
-    # Initialize the ode solver
-    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
-
     if energy_plots:
         sys.system.evaluate_energy(kpnts[:, 0], kpnts[:, 1])
         sys.system.plot_bands_3d(kpnts[:, 0], kpnts[:, 1])
@@ -158,6 +145,17 @@ def main():
     if dipole_plots:
         Ax, Ay = sys.dipole.evaluate(kpnts[:, 0], kpnts[:, 1])
         sys.dipole.plot_dipoles(Ax, Ay)
+
+    # Number of integration steps, time array construction flag
+    Nt = int((tf-t0)/dt)
+    t_constructed = False
+
+    # Solution containers
+    t = []
+    solution = []
+
+    # Initialize the ode solver
+    solver = ode(f, jac=None).set_integrator('zvode', method='bdf', max_step=dt)
 
     # SOLVING
     ###########################################################################
@@ -230,9 +228,6 @@ def main():
 
         # Append path solutions to the total solution arrays
         solution.append(np.array(path_solution)[:, 0:-1])
-
-        val_band_for_print.append(bandstruct[0])
-        cond_band_for_print.append(bandstruct[1])
 
     # Convert solution and time array to numpy arrays
     t = np.array(t)
