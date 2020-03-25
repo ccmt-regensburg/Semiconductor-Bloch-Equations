@@ -15,8 +15,8 @@ plt.rcParams['figure.figsize'] = (20, 40)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './2line/'
-parampaths = ['k_05/', 'm_00/', 'm_10/', 'm_20/'] # 'm_02/', 'm_04/', 'm_06/', 'm_08/', 'm_10/']
+orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2on/'
+parampaths = ['m_{:1.2f}/'.format(m) for m in np.arange(0, 1.1, 0.2)]
 
 # Use kcut evaluational instead
 # orderpath = './kcut/NK2_10/'
@@ -26,7 +26,7 @@ parampaths = ['k_05/', 'm_00/', 'm_10/', 'm_20/'] # 'm_02/', 'm_04/', 'm_06/', '
 # orderpath = './compare/'
 # parampaths = ['E_03/', 'E_06/', 'E_12/', 'E_20/', 'E_30/', 'E_40/']
 
-dirpath = 'M_dir/dt_010/'
+dirpath = 'K_dir/'
 dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
 
 

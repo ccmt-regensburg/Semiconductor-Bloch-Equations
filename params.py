@@ -5,7 +5,7 @@ import numpy as np
 class params:
 # System parameters
 #########################################################################
-    a                   = 8.308       # Lattice spacing in atomic units (4.395 A)
+    a                   = 8.3053      # Lattice spacing in atomic units (4.395 A)
     e_fermi             = 0.2         # Fermi energy in eV
     temperature         = 0.03        # Temperature in eV
 
@@ -14,7 +14,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = '2line'
+    BZ_type = 'full'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
@@ -33,7 +33,7 @@ class params:
 
     # Driving field parameters
     ##########################################################################
-    align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
+    align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
     E0                  = 5.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)

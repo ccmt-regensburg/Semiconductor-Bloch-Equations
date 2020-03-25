@@ -248,7 +248,7 @@ def main(sys, dipole):
         tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
             .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
 
-        Full_name = 'full_' + tail
+        Full_name = 'Full_' + tail
         np.savez(Full_name,
                  system=dill.dumps(sys),
                  dipole=dill.dumps(dipole),
