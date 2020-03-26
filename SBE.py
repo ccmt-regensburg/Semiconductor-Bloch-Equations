@@ -8,6 +8,8 @@ import dill
 from scipy.integrate import ode
 from params import params
 
+from hfsbe.utility import evaluate_njit_matrix as ev_mat
+
 dill.settings['recurse'] = True
 
 # Flags for plotting
@@ -131,7 +133,6 @@ def main(sys, dipole):
         # Solution container for the current path
         path_solution = []
 
-
         # Retrieve the set of k-points for the current path
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
@@ -186,7 +187,6 @@ def main(sys, dipole):
                     # Construct time and A_field only in first round
                     t.append(solver.t)
                     A_field.append(solver.y[-1])
-                    print(solver.y[-1])
 
             # Increment time counter
             ti += 1
@@ -231,6 +231,9 @@ def main(sys, dipole):
     I_ortho = diff(t, P_ortho)*gaussian_envelope(t, alpha) \
         + J_ortho*gaussian_envelope(t, alpha)
 
+    I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution, E_dir,
+                                                  A_field)
+
     # Polar emission in time
     Ir = []
     angles = np.linspace(0, 2.0*np.pi, 360)
@@ -247,6 +250,11 @@ def main(sys, dipole):
     Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
     Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
     Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
+    Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t,alpha),
+                                  norm='ortho'))
+    Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t,alpha),
+                                  norm='ortho'))
+
 
     # Emission intensity
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2
@@ -568,10 +576,10 @@ def current(sys, paths, fv, fc, t, alpha, E_dir):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
 
-        evdx = sys.ederivjit[0](kx=kx_in_path, ky=ky_in_path)
-        evdy = sys.ederivjit[1](kx=kx_in_path, ky=ky_in_path)
-        ecdx = sys.ederivjit[2](kx=kx_in_path, ky=ky_in_path)
-        ecdy = sys.ederivjit[3](kx=kx_in_path, ky=ky_in_path)
+        evdx = sys.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
+        evdy = sys.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
+        ecdx = sys.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
+        ecdy = sys.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
 
         # 0: v, x   1: v,y   2: c, x  3: c, y
         jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
@@ -590,6 +598,54 @@ def current(sys, paths, fv, fc, t, alpha, E_dir):
 
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
+
+
+def emission_exact(sys, paths, solution, E_dir, A_field):
+
+    E_ort = np.array([E_dir[1], -E_dir[0]])
+
+    n_time_steps = np.size(solution[0, 0, :, 0])
+
+    # I_E_dir is of size (number of time steps)
+    I_E_dir = np.zeros(n_time_steps)
+    I_ortho = np.zeros(n_time_steps)
+
+    for i_time in range(n_time_steps):
+
+        for i_path, path in enumerate(paths):
+            path = np.array(path)
+            kx_in_path = path[:, 0]
+            ky_in_path = path[:, 1]
+    
+            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
+            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+
+            h_deriv_x = ev_mat(sys.hderivfjit[0], kx=kx_in_path_shifted,
+                               ky=ky_in_path_shifted)
+            h_deriv_y = ev_mat(sys.hderivfjit[1], kx=kx_in_path_shifted,
+                               ky=ky_in_path_shifted)
+ 
+            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+
+            U = sys.Uf(kx=kx_in_path, ky=ky_in_path)
+            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path)
+    
+            for i_k in range(np.size(kx_in_path)):
+
+                U_h_H_U_E_dir = np.matmul(U_h[:, :, i_k], np.matmul(h_deriv_E_dir[:, :, i_k], U[:, :, i_k]))
+                U_h_H_U_ortho = np.matmul(U_h[:, :, i_k], np.matmul(h_deriv_ortho[:, :, i_k], U[:, :, i_k]))
+
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]*solution[i_k, i_path, i_time, 2])
+
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]*solution[i_k, i_path, i_time, 2])
+
+    return I_E_dir, I_ortho
+
 
 
 def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,

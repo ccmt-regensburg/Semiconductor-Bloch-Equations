@@ -14,7 +14,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = 'full'
+    BZ_type = '2line'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
