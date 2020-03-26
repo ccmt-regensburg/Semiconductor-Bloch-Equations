@@ -170,8 +170,8 @@ def main():
                                                                  (solution[Nk_in_path//2, 0, i_time, 2]), 
                                                                  np.abs(solution[Nk_in_path//2, 0, i_time, 3]) )
         print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(wf_solution[Nk_in_path//2, 0, i_time, 0])**2 + np.abs(wf_solution[Nk_in_path//2, 0, i_time, 1])**2 ,
-                   (wf_solution[Nk_in_path//2, 0, i_time, 1]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 0]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) ,
                    (wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 1]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 0])) ,
+                   (wf_solution[Nk_in_path//2, 0, i_time, 1]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 0]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) ,
                    np.abs(wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) )
 
     # COMPUTE OBSERVABLES
@@ -1033,10 +1033,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
            # Update each component of the solution vector
            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-           x[i]   = (-1j*ev + 1j*wr_d_vv)*y[i]   + 1j*wr  *y[i+2] + D*(y[m]   - y[n])
-           x[i+1] = (-1j*ev + 1j*wr_d_vv)*y[i+1] + 1j*wr  *y[i+3] + D*(y[m+1] - y[n+1])
-           x[i+2] = (-1j*ec + 1j*wr_d_cc)*y[i+2] + 1j*wr_c*y[i]   + D*(y[m+2] - y[n+2])
-           x[i+3] = (-1j*ec + 1j*wr_d_cc)*y[i+3] + 1j*wr_c*y[i+1] + D*(y[m+3] - y[n+3])
+           x[i]   = (-1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] + D*(y[m]   - y[n])
+           x[i+1] = (-1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] + D*(y[m+1] - y[n+1])
+           x[i+2] = (-1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   + D*(y[m+2] - y[n+2])
+           x[i+3] = (-1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] + D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
@@ -1170,12 +1170,8 @@ def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
         fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
         if dynamics_type == 'density_matrix_dynamics':
           y0.extend([1.0,0.0,0.0,fermi_function])
-          if i_k == 200:
-              print("density matrix dynamics", fermi_function)
         elif dynamics_type == 'wavefunction_dynamics':
           y0.extend([1.0,0.0,0.0,np.sqrt(fermi_function)])
-          if i_k == 200:
-              print("wavefunction dynamics", np.sqrt(fermi_function))
     else:
         y0.extend([1.0,0.0,0.0,0.0])
 
