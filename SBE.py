@@ -6,6 +6,7 @@ from matplotlib import patches
 from scipy.integrate import ode
 from scipy.special import erf
 import systems as sys
+from sys import exit
 
 import hfsbe.dipole
 import hfsbe.example
@@ -154,6 +155,9 @@ def main():
                                           'density_matrix_dynamics')
 
     if emission_wavep:
+       if gauge == 'length': 
+           print("Wavefunction dynamics only implemented for velocity gauge. Script abords.")
+           exit("")
        wf_solution, t_wf, A_field_wf = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                       gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                       'wavefunction_dynamics')
@@ -161,8 +165,14 @@ def main():
 
     for i_time in range(n_time_steps):
 #        print("Nk_in_path/2, 0, i_time, 0:3", Nk_in_path//2, 0, i_time)
-        print("i_time, t, density matrix", i_time, t[i_time],    solution[Nk_in_path//2, 0, i_time, 0:3])
-        print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(solution[Nk_in_path//2, 0, i_time, 0])**2 + solution[Nk_in_path//2, 0, i_time, 1]*np.conj(solution[Nk_in_path//2, 0, i_time, 2]) )
+        print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 0, i_time, 0]), 
+                                                                 (solution[Nk_in_path//2, 0, i_time, 1]), 
+                                                                 (solution[Nk_in_path//2, 0, i_time, 2]), 
+                                                                 np.abs(solution[Nk_in_path//2, 0, i_time, 3]) )
+        print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(wf_solution[Nk_in_path//2, 0, i_time, 0])**2 + np.abs(wf_solution[Nk_in_path//2, 0, i_time, 1])**2 ,
+                   (wf_solution[Nk_in_path//2, 0, i_time, 1]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 0]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) ,
+                   (wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 1]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 0])) ,
+                   np.abs(wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) )
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -961,7 +971,9 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
         ky_shift_path = ky_in_path+E_dir[1]*k_shift
         ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
             - sys.evjit(kx=kx_shift_path, ky=ky_shift_path)
-    
+        ev_in_path = sys.evjit(kx=kx_shift_path, ky=ky_shift_path)    
+        ec_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path)    
+
         di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
         di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
         di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
@@ -972,6 +984,8 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
         dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
         A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
             - (E_dir[0]*di_11x + E_dir[1]*di_11y)
+        Avv_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y
+        Acc_in_path = E_dir[0]*di_11x + E_dir[1]*di_11y
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
@@ -1011,8 +1025,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
            # Update each component of the solution vector
            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
            x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
-           x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
-               - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+           x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
            x[i+2] = x[i+1].conjugate()
            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
 
@@ -1157,8 +1170,12 @@ def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
         fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
         if dynamics_type == 'density_matrix_dynamics':
           y0.extend([1.0,0.0,0.0,fermi_function])
+          if i_k == 200:
+              print("density matrix dynamics", fermi_function)
         elif dynamics_type == 'wavefunction_dynamics':
           y0.extend([1.0,0.0,0.0,np.sqrt(fermi_function)])
+          if i_k == 200:
+              print("wavefunction dynamics", np.sqrt(fermi_function))
     else:
         y0.extend([1.0,0.0,0.0,0.0])
 
