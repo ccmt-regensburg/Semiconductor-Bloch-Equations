@@ -14,9 +14,11 @@ dill.settings['recurse'] = True
 
 # Flags for plotting
 user_out = params.user_out
+calc_exact = params.calc_exact
 normal_plots = params.normal_plots
 polar_plots = params.polar_plots
 save_file = params.save_file
+save_full = params.save_full
 
 
 def main(sys, dipole):
@@ -44,7 +46,7 @@ def main(sys, dipole):
     # Time scales
     T1 = params.T1*fs_conv                      # Occupation damping time
     T2 = params.T2*fs_conv                      # Polarization damping time
-    gamma1 = 1/T1                               # Occupation damping parameter
+    gamma1 = 0 # 1/T1                           # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
     t0 = int(params.t0*fs_conv)                 # Initial time condition
     tf = int(params.tf*fs_conv)                 # Final time
@@ -124,7 +126,7 @@ def main(sys, dipole):
     # SOLVING
     ###########################################################################
     # Iterate through each path in the Brillouin zone
-    
+
     path_num = 1
     for path in paths:
         if user_out:
@@ -231,9 +233,6 @@ def main(sys, dipole):
     I_ortho = diff(t, P_ortho)*gaussian_envelope(t, alpha) \
         + J_ortho*gaussian_envelope(t, alpha)
 
-    I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution, E_dir,
-                                                  A_field)
-
     # Polar emission in time
     Ir = []
     angles = np.linspace(0, 2.0*np.pi, 360)
@@ -250,10 +249,14 @@ def main(sys, dipole):
     Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
     Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
     Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
-    Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t,alpha),
-                                  norm='ortho'))
-    Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t,alpha),
-                                  norm='ortho'))
+
+    if (calc_exact):
+        I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution, E_dir,
+                                                      A_field)
+        Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t,alpha),
+                                      norm='ortho'))
+        Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t,alpha),
+                                      norm='ortho'))
 
 
     # Emission intensity
@@ -269,13 +272,14 @@ def main(sys, dipole):
         tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
             .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
 
-        Full_name = 'Full_' + tail
-        np.savez(Full_name,
-                 system=dill.dumps(sys),
-                 dipole=dill.dumps(dipole),
-                 params=dill.dumps(params),
-                 paths=paths, time=t, solution=solution,
-                 driving_field=driving_field(E0, w, t, chirp, alpha, phase))
+        if (save_full):
+            Full_name = 'Full_' + tail
+            np.savez(Full_name,
+                     system=dill.dumps(sys),
+                     dipole=dill.dumps(dipole),
+                     params=dill.dumps(params),
+                     paths=paths, time=t, solution=solution,
+                     driving_field=driving_field(E0, w, t, chirp, alpha, phase))
         J_name = 'J_' + tail
         np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
         P_name = 'P_' + tail

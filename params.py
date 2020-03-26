@@ -14,14 +14,14 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = '2line'
+    BZ_type = 'full'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
     b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
     # full BZ parametes
-    Nk1                 = 400         # Number of kpoints in b1 direction
+    Nk1                 = 800         # Number of kpoints in b1 direction
     Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
@@ -33,7 +33,7 @@ class params:
 
     # Driving field parameters
     ##########################################################################
-    align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+    align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
     E0                  = 5.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
@@ -59,6 +59,9 @@ class params:
     # Flags for testing and features
     ##########################################################################
     user_out      = True   # Set to True to get user plotting and progress output
-    normal_plots  = False   # Standard plots of P, J, I and w-dependency
+    calc_exact    = False  # Calculate exact emission (Careful takes long!)
+    normal_plots  = False  # Standard plots of P, J, I and w-dependency
     polar_plots   = False  # Higher harmonic polarization rotation
     save_file     = True   # Save all data files
+    save_full     = False  # Save full information
+

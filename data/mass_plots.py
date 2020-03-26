@@ -15,7 +15,7 @@ plt.rcParams['figure.figsize'] = (20, 40)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2on/'
+orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2on_Nk1-400/'
 parampaths = ['m_{:1.2f}/'.format(m) for m in np.arange(0, 1.1, 0.2)]
 
 # Use kcut evaluational instead
@@ -39,28 +39,33 @@ def read_data():
     for i, massp in enumerate(parampaths):
         totalpath = orderpath + dirpath + massp
         filelist = os.listdir(totalpath)
-        filelist.sort()
 
-        # Read electric field only once
-        if (i == 0):
-            print("Reading electric field:")
-            print(filelist[0], end='\n\n')
+        for filename in filelist:
+            # Read electric field only once
+            if (i == 0):
+                print("Reading electric field:")
+                print(filelist[0], end='\n\n')
 
-        # Emissions I
-        # [t, I_E_dir, I_ortho, freq/w, abs(Iw_E_dir), abs(Iw_ortho),
-        # Int_E_dir, Int_ortho]
-        print("Reading :", massp, filelist[1])
-        Idata.append(np.load(totalpath + filelist[1]))
+            # Emissions I
+            # [t, I_E_dir, I_ortho, freq/w, abs(Iw_E_dir), abs(Iw_ortho),
+            # Int_E_dir, Int_ortho]
+            if ('I_' in filename):
+                print("Reading :", massp, filename)
+                Idata.append(np.load(totalpath + filename))
 
-        # Currents J
-        # [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_Ortho]
-        print("Reading :", massp, filelist[2])
-        Jdata.append(np.load(totalpath + filelist[2]))
+            # Currents J
+            # [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_Ortho]
+            if ('J_' in filename):
+                print("Reading :", massp, filename)
+                Jdata.append(np.load(totalpath + filename))
 
-        # Polarizations P
-        # [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho]
-        print("Reading :", massp, filelist[3], end='\n\n')
-        Pdata.append(np.load(totalpath + filelist[3]))
+            # Polarizations P
+            # [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho]
+            if ('P_' in filename):
+                print("Reading :", massp, filename)
+                Pdata.append(np.load(totalpath + filename))
+
+        print('\n')
 
     return np.array(Idata), np.array(Jdata), np.array(Pdata)
 
