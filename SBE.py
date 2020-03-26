@@ -116,10 +116,13 @@ def main(sys, dipole):
     # Initialize the ode solver
     solver = ode(f, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
-    # Initialize sympy bandstructure, energies/derivatives, dipoles
+
+    # Vector field
+    A_field = []
     # SOLVING
     ###########################################################################
     # Iterate through each path in the Brillouin zone
+    
     path_num = 1
     for path in paths:
         if user_out:
@@ -127,7 +130,7 @@ def main(sys, dipole):
 
         # Solution container for the current path
         path_solution = []
-        A_field = []
+
 
         # Retrieve the set of k-points for the current path
         kx_in_path = path[:, 0]
@@ -183,6 +186,7 @@ def main(sys, dipole):
                     # Construct time and A_field only in first round
                     t.append(solver.t)
                     A_field.append(solver.y[-1])
+                    print(solver.y[-1])
 
             # Increment time counter
             ti += 1
@@ -199,6 +203,7 @@ def main(sys, dipole):
     t = np.array(t)
     solution = np.array(solution)
     A_field = np.array(A_field)
+
     # Slice solution along each path for easier observable calculation
     # Split the last index into 100 subarrays, corresponding to kx
     # Consquently the new last axis becomes 4.

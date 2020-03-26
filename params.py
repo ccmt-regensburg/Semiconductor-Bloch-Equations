@@ -59,6 +59,6 @@ class params:
     # Flags for testing and features
     ##########################################################################
     user_out      = True   # Set to True to get user plotting and progress output
-    normal_plots  = True # Standard plots of P, J, I and w-dependency
+    normal_plots  = False   # Standard plots of P, J, I and w-dependency
     polar_plots   = False  # Higher harmonic polarization rotation
-    save_file     = False # Save all data files
+    save_file     = True   # Save all data files
