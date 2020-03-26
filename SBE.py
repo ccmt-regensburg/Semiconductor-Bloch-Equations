@@ -1024,19 +1024,20 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
            # Update each component of the solution vector
            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+           # wr -> d_vc, wr_c -> d_vc
            x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
-           x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+           x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
            x[i+2] = x[i+1].conjugate()
            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
 
         elif dynamics_type == 'wavefunction_dynamics':
 
            # Update each component of the solution vector
-           # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-           x[i]   = (-1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] + D*(y[m]   - y[n])
-           x[i+1] = (-1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] + D*(y[m+1] - y[n+1])
-           x[i+2] = (-1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   + D*(y[m+2] - y[n+2])
-           x[i+3] = (-1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] + D*(y[m+3] - y[n+3])
+           # i = U_vv, i+1 = U_vc, i+2 = U_cv, i+3 = U_cc
+           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] + D*(y[m]   - y[n])
+           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] + D*(y[m+1] - y[n+1])
+           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   + D*(y[m+2] - y[n+2])
+           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] + D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
