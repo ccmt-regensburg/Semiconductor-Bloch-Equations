@@ -499,6 +499,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
     # Solution containers
     t = []
     solution = []
+    fermi_function = []
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
@@ -543,6 +544,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
 
+        ec = bandstruct[1]
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
@@ -573,6 +575,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
             # Save solution each output step
             if ti % dt_out == 0:
                 path_solution.append(solver.y)
+                fermi_function.append( 1/(np.exp((ec[Nk_in_path//2]-e_fermi)/temperature)+1) )
+
                 # Construct time array only once
                 if not t_constructed:
                     t.append(solver.t)
@@ -611,19 +615,26 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
     n_time_steps = np.size(solution[0,0,:,0])
 
+    fermi_function = np.array(fermi_function)
+
     for i_time in range(n_time_steps):
         if dynamics_type == 'density_matrix_dynamics':
            print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 1, i_time, 0]), 
                                                                     (solution[Nk_in_path//2, 1, i_time, 1]), 
                                                                     (solution[Nk_in_path//2, 1, i_time, 2]), 
-                                                                    np.abs(solution[Nk_in_path//2, 1, i_time, 3]) )
+                                                                    np.abs(solution[Nk_in_path//2, 1, i_time, 3]), 
+                                                                    fermi_function[i_time])
         elif dynamics_type == 'wavefunction_dynamics':
-           ec = bandstruct[1]
-           fermi_function = 1/(np.exp((ec[Nk_in_path//2]-e_fermi)/temperature)+1)
-           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
-              (fermi_function*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
-              (fermi_function*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
-              fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) )
+           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + fermi_function[i_time]*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
+              (fermi_function[i_time]*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
+              (fermi_function[i_time]*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
+              np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + fermi_function[i_time]*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2, 
+              fermi_function[i_time])
+
+    for i_time in range(n_time_steps):
+        if dynamics_type == 'wavefunction_dynamics':
+           print("i_time, t, U MATRIX from wavef dyn", i_time, t[i_time], solution[Nk_in_path//2, 1, i_time, 0], solution[Nk_in_path//2, 1, i_time, 1], 
+                                                                          solution[Nk_in_path//2, 1, i_time, 2], solution[Nk_in_path//2, 1, i_time, 3])
 
     return solution, t, A_field
 
