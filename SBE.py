@@ -95,8 +95,8 @@ def main():
     energy_plots      = params.energy_plots
     dipole_plots      = params.dipole_plots
     test              = params.test                       # Testing flag for Travis
-    emission_Bcurv    = params.emission_Bcurv
-    emission_wavep    = params.emission_wavep
+    do_emission_Bcurvg    = params.emission_Bcurv
+    do_emission_wavep    = params.emission_wavep
 
 
     # USER OUTPUT
@@ -154,10 +154,7 @@ def main():
                                           gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                           'density_matrix_dynamics')
 
-    if emission_wavep:
-       if gauge == 'length': 
-           print("Wavefunction dynamics only implemented for velocity gauge. Script abords.")
-           exit("")
+    if do_emission_wavep:
        wf_solution, t_wf, A_field_wf = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                       gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                       'wavefunction_dynamics')
@@ -184,13 +181,13 @@ def main():
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
-    if emission_Bcurv:
+    if do_emission_Bcurvg:
        # Berry curvature current
        I_Bcurv_E_dir, I_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], t, chirp, alpha, E_dir, E0, w, phase, A_field)
     # emission with exact formula
     I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
     # emission with exact formula with semiclassical formula
-#    I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, E_dir, A_field) 
+    I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field) 
 
     # Polar emission in time
     Ir = []
@@ -210,9 +207,9 @@ def main():
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_E_dir = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-#    Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-#    Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    if emission_Bcurv:
+    Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    if do_emission_Bcurvg:
        Iw_Bcurv_E_dir = np.fft.fftshift(np.fft.fft(I_Bcurv_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_Bcurv_ortho = np.fft.fftshift(np.fft.fft(I_Bcurv_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
@@ -345,7 +342,7 @@ def main():
 
 ##########################
 
-        if emission_Bcurv:
+        if do_emission_Bcurvg:
 
            six_fig, ((sc_I_E_dir,sc_I_ortho,sc_I_total)) = pl.subplots(3,1,figsize=(10,10))
            sc_I_E_dir.grid(True,axis='x')
@@ -377,6 +374,42 @@ def main():
             label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
            sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_Bcurv_E_dir**2 + Iw_Bcurv_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
             label='$I^\mathrm{quasic}(\omega) = I^\mathrm{quasic}_{\parallel E}(\omega) + I^\mathrm{quasic}_{\\bot E}(\omega)$')
+           sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
+           sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
+           sc_I_total.legend(loc='upper right')
+
+        if do_emission_wavep:
+
+           six_fig, ((sc_I_E_dir,sc_I_ortho,sc_I_total)) = pl.subplots(3,1,figsize=(10,10))
+           sc_I_E_dir.grid(True,axis='x')
+           sc_I_E_dir.set_xlim(freq_lims)
+           sc_I_E_dir.set_ylim(log_limits)
+           sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
+            label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
+           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
+              label='$I_{\parallel E}^\mathrm{wavep}(t) $')
+           sc_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
+           sc_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
+           sc_I_E_dir.legend(loc='upper right')
+   
+           sc_I_ortho.grid(True,axis='x')
+           sc_I_ortho.set_xlim(freq_lims)
+           sc_I_ortho.set_ylim(log_limits)
+           sc_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
+            label='$I_{\\bot E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
+           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+              label='$I_{\\bot E}^\mathrm{wavep}(t)$')
+           sc_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
+           sc_I_ortho.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
+           sc_I_ortho.legend(loc='upper right')
+   
+           sc_I_total.grid(True,axis='x')
+           sc_I_total.set_xlim(freq_lims)
+           sc_I_total.set_ylim(log_limits)
+           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
+            label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
+           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_E_dir**2 + Iw_wavep_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
+            label='$I^\mathrm{wavep}(\omega) = I^\mathrm{wavep}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
            sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
            sc_I_total.legend(loc='upper right')
@@ -452,6 +485,15 @@ def main():
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
                    E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, dynamics_type):
+
+    if dynamics_type == 'density_matrix_dynamics' and user_out:
+       print("Enter density matrix dynamics.")
+    elif dynamics_type == 'wavefunction_dynamics' and user_out:
+       print("Enter wavefunction dynamics.")
+
+    if gauge == 'length': 
+        print("Wavefunction dynamics only implemented for velocity gauge. Script abords.")
+        exit("")
 
     # Solution containers
     t = []
@@ -835,7 +877,7 @@ def emission_exact(paths, solution, E_dir, A_field):
 
     return I_E_dir, I_ortho
 
-def emission_wavep(paths, solution, E_dir, A_field):
+def emission_wavep(paths, solution, wf_solution, E_dir, A_field):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -861,13 +903,16 @@ def emission_wavep(paths, solution, E_dir, A_field):
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
-            U = sys.wf(kx=kx_in_path_shifted, ky=ky_in_path_shifted)
-            U_h = sys.wf_h(kx=kx_in_path_shifted, ky=ky_in_path_shifted)
-    
             for i_k in range(np.size(kx_in_path)):
 
-                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
-                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+                U = np.matrix([[0+0*1j, 0+0*1j], [0+0*1j, 0+0*1j]])
+                U[0,0] = wf_solution[i_k, i_path, i_time, 0]
+                U[0,1] = wf_solution[i_k, i_path, i_time, 1]
+                U[1,0] = wf_solution[i_k, i_path, i_time, 2]
+                U[1,1] = wf_solution[i_k, i_path, i_time, 3]
+
+                U_h_H_U_E_dir = np.matmul(U.H[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:]))
+                U_h_H_U_ortho = np.matmul(U.H[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:]))
 
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, 0, 0])
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, 0, 3])
@@ -1034,10 +1079,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
            # Update each component of the solution vector
            # i = U_vv, i+1 = U_vc, i+2 = U_cv, i+3 = U_cc
-           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] + D*(y[m]   - y[n])
-           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] + D*(y[m+1] - y[n+1])
-           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   + D*(y[m+2] - y[n+2])
-           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] + D*(y[m+3] - y[n+3])
+           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] #+ D*(y[m]   - y[n])
+           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
+           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
+           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
