@@ -160,16 +160,17 @@ def main():
                                                       'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
-    for i_time in range(n_time_steps):
-#        print("Nk_in_path/2, 0, i_time, 0:3", Nk_in_path//2, 0, i_time)
-        print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 0, i_time, 0]), 
-                                                                 (solution[Nk_in_path//2, 0, i_time, 1]), 
-                                                                 (solution[Nk_in_path//2, 0, i_time, 2]), 
-                                                                 np.abs(solution[Nk_in_path//2, 0, i_time, 3]) )
-        print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(wf_solution[Nk_in_path//2, 0, i_time, 0])**2 + np.abs(wf_solution[Nk_in_path//2, 0, i_time, 1])**2 ,
-                   (wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 1]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 0])) ,
-                   (wf_solution[Nk_in_path//2, 0, i_time, 1]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 0]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) ,
-                   np.abs(wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) )
+#    for i_time in range(n_time_steps):
+##        print("Nk_in_path/2, 0, i_time, 0:3", Nk_in_path//2, 0, i_time)
+#        print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 0, i_time, 0]), 
+#                                                                 (solution[Nk_in_path//2, 0, i_time, 1]), 
+#                                                                 (solution[Nk_in_path//2, 0, i_time, 2]), 
+#                                                                 np.abs(solution[Nk_in_path//2, 0, i_time, 3]) )
+#        fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
+#        print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(wf_solution[Nk_in_path//2, 0, i_time, 0])**2 + np.abs(wf_solution[Nk_in_path//2, 0, i_time, 1])**2 ,
+#                   (wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 1]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 0])) ,
+#                   (wf_solution[Nk_in_path//2, 0, i_time, 1]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 0]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) ,
+#                   np.abs(wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) )
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -608,6 +609,22 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
     if gauge == 'velocity':
         solution = shift_solution(solution, A_field, dk)
 
+    n_time_steps = np.size(solution[0,0,:,0])
+
+    for i_time in range(n_time_steps):
+        if dynamics_type == 'density_matrix_dynamics':
+           print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 1, i_time, 0]), 
+                                                                    (solution[Nk_in_path//2, 1, i_time, 1]), 
+                                                                    (solution[Nk_in_path//2, 1, i_time, 2]), 
+                                                                    np.abs(solution[Nk_in_path//2, 1, i_time, 3]) )
+        elif dynamics_type == 'wavefunction_dynamics':
+           ec = bandstruct[1]
+           fermi_function = 1/(np.exp((ec[Nk_in_path//2]-e_fermi)/temperature)+1)
+           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
+              (fermi_function*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
+              (fermi_function*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
+              fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) )
+
     return solution, t, A_field
 
 #################################################################################################
@@ -909,10 +926,15 @@ def emission_wavep(paths, solution, wf_solution, E_dir, A_field):
                 U[0,0] = wf_solution[i_k, i_path, i_time, 0]
                 U[0,1] = wf_solution[i_k, i_path, i_time, 1]
                 U[1,0] = wf_solution[i_k, i_path, i_time, 2]
+#                U[0,1] = wf_solution[i_k, i_path, i_time, 2]
+#                U[1,0] = wf_solution[i_k, i_path, i_time, 1]
                 U[1,1] = wf_solution[i_k, i_path, i_time, 3]
 
                 U_h_H_U_E_dir = np.matmul(U.H[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:]))
                 U_h_H_U_ortho = np.matmul(U.H[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:]))
+
+#                U_h_H_U_E_dir = np.matmul(U[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U.H[:,:]))
+#                U_h_H_U_ortho = np.matmul(U[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U.H[:,:]))
 
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, 0, 0])
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, 0, 3])
@@ -1211,15 +1233,14 @@ def shift_solution(solution, A_field, dk):
 
 
 def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
-
-    if (temperature > 1e-5):
-        fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
-        if dynamics_type == 'density_matrix_dynamics':
-          y0.extend([1.0,0.0,0.0,fermi_function])
-        elif dynamics_type == 'wavefunction_dynamics':
-          y0.extend([1.0,0.0,0.0,np.sqrt(fermi_function)])
-    else:
-        y0.extend([1.0,0.0,0.0,0.0])
+    if dynamics_type == 'density_matrix_dynamics':
+        if (temperature > 1e-5):
+            fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
+            y0.extend([1.0,0.0,0.0,fermi_function])
+        else:
+            y0.extend([1.0,0.0,0.0,0.0])
+    elif dynamics_type == 'wavefunction_dynamics':
+        y0.extend([1.0,0.0,0.0,1.0])
 
 
 def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
