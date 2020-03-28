@@ -931,27 +931,28 @@ def emission_wavep(paths, solution, wf_solution, E_dir, A_field):
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
+            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
+            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
+
             for i_k in range(np.size(kx_in_path)):
 
-                U = np.matrix([[0+0*1j, 0+0*1j], [0+0*1j, 0+0*1j]])
-                U[0,0] = wf_solution[i_k, i_path, i_time, 0]
-                U[0,1] = wf_solution[i_k, i_path, i_time, 1]
-                U[1,0] = wf_solution[i_k, i_path, i_time, 2]
-#                U[0,1] = wf_solution[i_k, i_path, i_time, 2]
-#                U[1,0] = wf_solution[i_k, i_path, i_time, 1]
-                U[1,1] = wf_solution[i_k, i_path, i_time, 3]
+                U_wf_dynamics = np.matrix([[0+0*1j, 0+0*1j], [0+0*1j, 0+0*1j]])
+                U_wf_dynamics[0,0] = wf_solution[i_k, i_path, i_time, 0]
+                U_wf_dynamics[0,1] = wf_solution[i_k, i_path, i_time, 1]
+                U_wf_dynamics[1,0] = wf_solution[i_k, i_path, i_time, 2]
+                U_wf_dynamics[1,1] = wf_solution[i_k, i_path, i_time, 3]
 
-                U_h_H_U_E_dir = np.matmul(U.H[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:]))
-                U_h_H_U_ortho = np.matmul(U.H[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:]))
+                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
+                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
-#                U_h_H_U_E_dir = np.matmul(U[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U.H[:,:]))
-#                U_h_H_U_ortho = np.matmul(U[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U.H[:,:]))
+                U_h_wf_H_U_wf_E_dir = np.matmul(U_wf_dynamics.H[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_wf_dynamics[:,:]))
+                U_h_wf_H_U_wf_ortho = np.matmul(U_wf_dynamics.H[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U_wf_dynamics[:,:]))
 
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, 0, 0])
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, 0, 3])
+                I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[0,0])*np.real(solution[i_k, i_path, 0, 0])
+                I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[1,1])*np.real(solution[i_k, i_path, 0, 3])
 
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, 0, 0])
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, 0, 3])
+                I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[0,0])*np.real(solution[i_k, i_path, 0, 0])
+                I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(solution[i_k, i_path, 0, 3])
 
     return I_E_dir, I_ortho
 
