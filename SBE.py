@@ -188,7 +188,9 @@ def main():
     # emission with exact formula
     I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
     # emission with exact formula with semiclassical formula
-    I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field) 
+    if do_emission_wavep:
+#       I_wavep_E_dir, I_wavep_ortho = emission_wavep_test_old_formula_density_matrix(paths, solution, wf_solution, E_dir, A_field) 
+       I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field) 
 
     # Polar emission in time
     Ir = []
@@ -518,6 +520,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
         # Solution container for the current path
         path_solution = []
+        path_fermi_function = []
 
         # Retrieve the set of k-points for the current path
         kx_in_path = path[:, 0]
@@ -575,7 +578,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
             # Save solution each output step
             if ti % dt_out == 0:
                 path_solution.append(solver.y)
-                fermi_function.append( 1/(np.exp((ec[Nk_in_path//2]-e_fermi)/temperature)+1) )
+                if dynamics_type == 'wavefunction_dynamics':
+                    path_fermi_function.append( 1/(np.exp((ec[:]-e_fermi)/temperature)+1) )
 
                 # Construct time array only once
                 if not t_constructed:
@@ -590,17 +594,24 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
         # Append path solutions to the total solution arrays
         solution.append(np.array(path_solution)[:, 0:-1])
-
+        if dynamics_type == 'wavefunction_dynamics':
+           fermi_function.append(np.array(path_fermi_function)[:, :])
+   
     # Convert solution and time array to numpy arrays
     t = np.array(t)
-    solution = np.array(solution)
-    A_field = np.array(path_solution)[:, -1]
+    solution       = np.array(solution)
+    fermi_function = np.array(fermi_function)
+    A_field        = np.array(path_solution)[:, -1]
 
     # Slice solution along each path for easier observable calculation
     if BZ_type == 'full' or BZ_type == 'full_for_velocity':
         solution = np.array_split(solution, Nk1, axis=2)
+        if dynamics_type == 'wavefunction_dynamics':
+           fermi_function = np.array_split(fermi_function, Nk1, axis=2)
     elif BZ_type == '2line':
         solution = np.array_split(solution, Nk_in_path, axis=2)
+        if dynamics_type == 'wavefunction_dynamics':
+           fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
 
     # Convert lists into numpy arrays
     solution = np.array(solution)
@@ -608,28 +619,51 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
     # first index is kx-index, second is ky-index,
     # third is timestep, fourth is f_h, p_he, p_eh, f_e
 
+    if dynamics_type == 'wavefunction_dynamics':
+        fermi_function = np.array(fermi_function)
+
+    print( "intial occupation size:", np.shape(y0_np) )
+
     # In case of the velocity gauge, we need to shift the time-dependent
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
     if gauge == 'velocity':
         solution = shift_solution(solution, A_field, dk)
+        if dynamics_type == 'wavefunction_dynamics':
+#            shifted_initial_density_mat = shift_occupation(solution, A_field, dk)
+            fermi_function = shift_solution(fermi_function, A_field, dk)
+
+            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+            # Countour plots of occupations and gradients of occupations
+            fig5 = pl.figure()
+            X, Y = np.meshgrid(t,kp_array)
+            pl.contourf(X, Y, np.real(fermi_function[:,0,:,0]), 100)
+            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
+            pl.xlim([-5*alpha,10*alpha])
+            pl.xlabel(r'$t\;(fs)$')
+            pl.ylabel(r'$k$')
+            pl.tight_layout()
+            pl.show()
+
+
+
 
     n_time_steps = np.size(solution[0,0,:,0])
 
-    fermi_function = np.array(fermi_function)
+#    fermi_function = np.array(fermi_function)
 
     for i_time in range(n_time_steps):
         if dynamics_type == 'density_matrix_dynamics':
            print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 1, i_time, 0]), 
                                                                     (solution[Nk_in_path//2, 1, i_time, 1]), 
                                                                     (solution[Nk_in_path//2, 1, i_time, 2]), 
-                                                                    np.abs(solution[Nk_in_path//2, 1, i_time, 3]), 
-                                                                    fermi_function[i_time])
+                                                                    np.abs(solution[Nk_in_path//2, 1, i_time, 3]))
         elif dynamics_type == 'wavefunction_dynamics':
-           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + fermi_function[i_time]*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
-              (fermi_function[i_time]*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
-              (fermi_function[i_time]*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
-              np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + fermi_function[i_time]*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2, 
-              fermi_function[i_time])
+           fermi_function = shifted_initial_density_mat[Nk_in_path//2, 1, i_time, 3]
+           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
+              (fermi_function*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
+              (fermi_function*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
+              np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2, 
+              fermi_function)
 
     for i_time in range(n_time_steps):
         if dynamics_type == 'wavefunction_dynamics':
@@ -904,6 +938,59 @@ def emission_exact(paths, solution, E_dir, A_field):
                 I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
 
     return I_E_dir, I_ortho
+
+
+#def emission_wavep_test_old_formula_density_matrix(paths, solution, wf_solution, E_dir, A_field):
+#
+#    E_ort = np.array([E_dir[1], -E_dir[0]])
+#
+#    n_time_steps = np.size(solution[0,0,:,0])
+#
+#    # I_E_dir is of size (number of time steps)
+#    I_E_dir = np.zeros(n_time_steps)
+#    I_ortho = np.zeros(n_time_steps)
+#
+#    for i_time in range(n_time_steps):
+#
+#        for i_path, path in enumerate(paths):
+#            path = np.array(path)
+#            kx_in_path = path[:, 0]
+#            ky_in_path = path[:, 1]
+#    
+#            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
+#            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+#
+#            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+#            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+# 
+#            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+#            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+#
+#            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
+#            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
+#    
+#            for i_k in range(np.size(kx_in_path)):
+#
+#                density_matrix = np.matrix([[0+0*1j, 0+0*1j], [0+0*1j, 0+0*1j]])
+#
+#                density_matrix[0] = np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + *np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2
+#                density_matrix[1] = solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])
+#                density_matrix[2] = solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])
+#                density_matrix[4] = np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + fermi_function[i_time]*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2
+#
+#                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
+#                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+#
+#                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+#                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+#                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
+#
+#                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+#                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+#                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
+#
+#    return I_E_dir, I_ortho
+
 
 def emission_wavep(paths, solution, wf_solution, E_dir, A_field):
 
@@ -1242,6 +1329,27 @@ def shift_solution(solution, A_field, dk):
                                     weight_2*np.roll(solution[:,:,i_time,:], k_index_shift_2, axis=0)
 
     return solution
+
+
+def shift_occupation(solution, A_field, dk):
+
+    shifted_initial_density_mat = np.zeros(np.shape(solution))
+
+    for i_time in range(np.size(A_field)):
+        # shift of k index in the direction of the E-field 
+        # (direction is already included in the paths)
+        k_shift = (A_field[i_time]/dk).real
+        k_index_shift_1 = int(int(np.abs(k_shift))*np.sign(k_shift))
+        if(k_shift < 0): 
+            k_index_shift_1 = k_index_shift_1 - 1
+        k_index_shift_2 = k_index_shift_1 + 1
+        weight_1      = k_index_shift_2 - k_shift
+        weight_2      = 1-weight_1
+
+        shifted_initial_density_mat[:, :, i_time, :] = weight_1*np.roll(solution[:,:,0,:], k_index_shift_1, axis=0) + \
+                                                       weight_2*np.roll(solution[:,:,0,:], k_index_shift_2, axis=0)
+
+    return shifted_initial_density_mat
 
 
 def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
