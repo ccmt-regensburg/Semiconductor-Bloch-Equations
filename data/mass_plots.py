@@ -15,8 +15,8 @@ plt.rcParams['figure.figsize'] = (20, 40)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2on_Nk1-400/'
-parampaths = ['m_{:1.2f}/'.format(m) for m in np.arange(0, 1.1, 0.2)]
+orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2off_Nk1-20_Nk2-400/'
+parampaths = ['m_{:1.2f}/'.format(m) for m in np.arange(0, 0.5, 0.2)]
 
 # Use kcut evaluational instead
 # orderpath = './kcut/NK2_10/'

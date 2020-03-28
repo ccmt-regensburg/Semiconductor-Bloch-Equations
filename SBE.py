@@ -6,24 +6,24 @@ import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
 import dill
 from scipy.integrate import ode
-from params import params
 
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
 dill.settings['recurse'] = True
 
 # Flags for plotting
-user_out = params.user_out
-calc_exact = params.calc_exact
-normal_plots = params.normal_plots
-polar_plots = params.polar_plots
-save_file = params.save_file
-save_full = params.save_full
 
-
-def main(sys, dipole):
+def main(sys, dipole, params):
     # RETRIEVE PARAMETERS
     ###########################################################################
+    # Flag evaluation
+    user_out = params.user_out
+    calc_exact = params.calc_exact
+    normal_plots = params.normal_plots
+    polar_plots = params.polar_plots
+    save_file = params.save_file
+    save_full = params.save_full
+    
     # Unit converstion factors
     fs_conv = params.fs_conv
     E_conv = params.E_conv
@@ -46,7 +46,7 @@ def main(sys, dipole):
     # Time scales
     T1 = params.T1*fs_conv                      # Occupation damping time
     T2 = params.T2*fs_conv                      # Polarization damping time
-    gamma1 = 0 # 1/T1                           # Occupation damping parameter
+    gamma1 = 1/T1                           # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
     t0 = int(params.t0*fs_conv)                 # Initial time condition
     tf = int(params.tf*fs_conv)                 # Final time
@@ -103,6 +103,7 @@ def main(sys, dipole):
         elif align == 'M':
             E_dir = np.array([np.cos(np.radians(-30)),
                              np.sin(np.radians(-30))])
+        BZ_plot(kpnts, a, b1, b2, paths)
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
