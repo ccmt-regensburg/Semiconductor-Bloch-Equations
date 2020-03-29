@@ -243,7 +243,7 @@ def main():
         real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
-        log_limits = (1e-9,1e1)
+        log_limits = (1e-7,1e1)
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv,driving_field(E0,w,t,chirp,alpha,phase)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
@@ -393,40 +393,41 @@ def main():
            sc_I_E_dir.set_xlim(freq_lims)
            sc_I_E_dir.set_ylim(log_limits)
            sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
-            label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
-              label='$I_{\parallel E}^\mathrm{wavep}(t) $')
-           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
-              label='$I_{\parallel E}^\mathrm{wavep check}(t) $')
+            label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
+           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
+#              label='$I_{\parallel E}^\mathrm{wavep}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\tilde{\\rho}_{nn\'}(\mathbf{k},t)$ with $\\tilde{\\rho}_{nn\'}(\mathbf{k}(t),t)=\sum_{underline{n}}u^*_{n\underline{n}}(\mathbf{k}(t),t) u_{n\'\underline{n}}(\mathbf{k}(t),t) f_{\underline{n}}(\mathbf{k}(t),t)$ from wf.~dyn.')
+             label='$I_{\parallel E}^\mathrm{wavep}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\tilde{\\rho}_{nn\'}(\mathbf{k},t)$ with $\\tilde{\\rho}_{nn\'}(\mathbf{k}(t),t)$ from wf.~dyn.')
+           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_E_dir**2) / Int_tot_base_freq, linestyle='dotted',
+              label='$I_{\parallel E}^\mathrm{wavep check}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\mathbf{k}(t),t|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|n\mathbf{k}(t),t \\rangle f_{n}(\mathbf{k}(t)) $')
            sc_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
-           sc_I_E_dir.legend(loc='upper right')
+           sc_I_E_dir.legend(loc='lower right')
    
            sc_I_ortho.grid(True,axis='x')
            sc_I_ortho.set_xlim(freq_lims)
            sc_I_ortho.set_ylim(log_limits)
            sc_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
             label='$I_{\\bot E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_ortho**2) / Int_tot_base_freq, linestyle='dashed',
-              label='$I_{\\bot E}^\mathrm{wavep}(t)$')
            sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+              label='$I_{\\bot E}^\mathrm{wavep}(t)$')
+           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_ortho**2) / Int_tot_base_freq, linestyle='dotted',
               label='$I_{\\bot E}^\mathrm{wavep check}(t)$')
            sc_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_ortho.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
-           sc_I_ortho.legend(loc='upper right')
+           sc_I_ortho.legend(loc='lower right')
    
            sc_I_total.grid(True,axis='x')
            sc_I_total.set_xlim(freq_lims)
            sc_I_total.set_ylim(log_limits)
            sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
             label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
-           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_E_dir**2 + Iw_wavep_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
-            label='$I^\mathrm{wavep}(\omega) = I^\mathrm{wavep}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
            sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_check_E_dir**2 + Iw_wavep_check_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
+            label='$I^\mathrm{wavep}(\omega) = I^\mathrm{wavep}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
+           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_E_dir**2 + Iw_wavep_ortho**2)) / Int_tot_base_freq, linestyle='dotted',
             label='$I^\mathrm{wavep check}(\omega) = I^\mathrm{wavep check}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
            sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
-           sc_I_total.legend(loc='upper right')
+           sc_I_total.legend(loc='lower right')
 
 ######################äää
 
@@ -440,18 +441,6 @@ def main():
         pl.xlabel(r'$t\;(fs)$')
         pl.ylabel(r'$k$')
         pl.tight_layout()
-
-##        print("")
-##        print("freq          emis E_dir           emis E_ort")
-##        print("")
-##        for i_index in range(np.size(freq)):
-##            print(freq[i_index]/w, np.abs(Jw_E_dir[i_index]), np.abs(Jw_ortho[i_index]))
-#
-#        print("")
-#        print("freq          emis")
-#        print("")
-#        for i_index in range(np.size(freq)):
-#            print(freq[i_index]/w, np.sqrt(Int_E_dir[i_index]**2 + Int_ortho[i_index]**2)   )
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
@@ -553,8 +542,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         # are provided and a cutoff radius
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
         ecv_in_path = bandstruct[1] - bandstruct[0]
-#        ev_in_path = bandstruct[0]
-#        ec_in_path = bandstruct[1]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
 
@@ -633,102 +620,12 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
     if dynamics_type == 'wavefunction_dynamics':
         fermi_function = np.array(fermi_function)
 
-#    print( "intial occupation size:", np.shape(y0_np) )
-#
-#    if dynamics_type == 'density_matrix_dynamics':
-#            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-#            # Countour plots of occupations and gradients of occupations
-#            fig5 = pl.figure()
-#            X, Y = np.meshgrid(t,kp_array)
-#            pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
-#            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
-#            pl.xlim([-5*alpha,10*alpha])
-#            pl.xlabel(r'$t\;(fs)$')
-#            pl.ylabel(r'$k$')
-#            pl.tight_layout()
-#            pl.show()
-#
-#    if dynamics_type == 'wavefunction_dynamics':
-#            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-#            # Countour plots of occupations and gradients of occupations
-#            fig5 = pl.figure()
-#            X, Y = np.meshgrid(t,kp_array)
-#            pl.contourf(X, Y, np.real(   np.abs(solution[:, 1, :, 2])**2 + fermi_function[:,1,:,0]*np.abs(solution[:, 1, :, 3])**2           ), 100)
-#            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
-#            pl.xlim([-5*alpha,10*alpha])
-#            pl.xlabel(r'$t\;(fs)$')
-#            pl.ylabel(r'$k$')
-#            pl.tight_layout()
-#            pl.show()
-
     # In case of the velocity gauge, we need to shift the time-dependent
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
     if gauge == 'velocity':
         solution = shift_solution(solution, A_field, dk)
         if dynamics_type == 'wavefunction_dynamics':
             fermi_function = shift_solution(fermi_function, A_field, dk)
-
-#            density_matrix = np.array(np.shape(fermi_function))
-#            density_matrix = np.abs(solution[:, :, :, 2:3])**2 + fermi_function[:,:,:,0:1]*np.abs(solution[:, :, :, 3:4])**2
-#
-#            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-#            # Countour plots of occupations and gradients of occupations
-#            fig5 = pl.figure()
-#            X, Y = np.meshgrid(t,kp_array)
-#            pl.contourf(X, Y, np.real(fermi_function[:,0,:,0]), 100)
-#            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
-#            pl.xlim([-5*alpha,10*alpha])
-#            pl.xlabel(r'$t\;(fs)$')
-#            pl.ylabel(r'$k$')
-#            pl.tight_layout()
-#            pl.show()
-
-    n_time_steps = np.size(solution[0,0,:,0])
-
-    for i_time in range(n_time_steps):
-        if dynamics_type == 'density_matrix_dynamics':
-           print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 1, i_time, 0]), 
-                                                                    (solution[Nk_in_path//2, 1, i_time, 1]), 
-                                                                    (solution[Nk_in_path//2, 1, i_time, 2]), 
-                                                                    np.abs(solution[Nk_in_path//2, 1, i_time, 3]))
-        elif dynamics_type == 'wavefunction_dynamics':
-           ff = fermi_function[Nk_in_path//2, 1, i_time, 0]
-           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + ff*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
-              (ff*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
-              (ff*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
-              np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + ff*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2, 
-              ff)
-
-    if dynamics_type == 'density_matrix_dynamics':
-            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-            # Countour plots of occupations and gradients of occupations
-            fig5 = pl.figure()
-            X, Y = np.meshgrid(t,kp_array)
-            pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
-            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
-            pl.xlim([-5*alpha,10*alpha])
-            pl.xlabel(r'$t\;(fs)$')
-            pl.ylabel(r'$k$')
-            pl.tight_layout()
-            pl.show()
-
-    if dynamics_type == 'wavefunction_dynamics':
-            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-            # Countour plots of occupations and gradients of occupations
-            fig5 = pl.figure()
-            X, Y = np.meshgrid(t,kp_array)
-            pl.contourf(X, Y, np.real(   np.abs(solution[:, 1, :, 2])**2 + fermi_function[:,1,:,0]*np.abs(solution[:, 1, :, 3])**2           ), 100)
-            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
-            pl.xlim([-5*alpha,10*alpha])
-            pl.xlabel(r'$t\;(fs)$')
-            pl.ylabel(r'$k$')
-            pl.tight_layout()
-            pl.show()
-
-    for i_time in range(n_time_steps):
-        if dynamics_type == 'wavefunction_dynamics':
-           print("i_time, t, U MATRIX from wavef dyn", i_time, t[i_time], solution[Nk_in_path//2, 1, i_time, 0], solution[Nk_in_path//2, 1, i_time, 1], 
-                                                                          solution[Nk_in_path//2, 1, i_time, 2], solution[Nk_in_path//2, 1, i_time, 3])
 
     return solution, t, A_field, fermi_function
 
@@ -1051,16 +948,6 @@ def check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_fun
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
                 I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
 
-                if i_time == n_time_steps//2 and i_path == 0 and i_k == (np.size(kx_in_path))//2:
-                    print("\n\nU_h_H_U_E_dir", U_h_H_U_E_dir)
-                    print("\n\ndensity matrix wf dyn", solution[i_k, i_path, i_time, :])
-                    print("\n\nFermi function", ff)
-                    print("\n\ncontribution 0,0",  np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0]))
-                    print("\n\ncontribution 1,1",  np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3]))
-                    print("\n\ncontribution ofd",  2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2]) )
-                    print("\n\nsum contribution", np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0]) + np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3]) +
-                                                  2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2]))
-
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
                 I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
@@ -1108,29 +995,14 @@ def emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function)
                 U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
                 U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
-                U_h_wf_H_U_wf_E_dir = np.matmul(U_wf_dynamics.H[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_wf_dynamics[:,:]))
-                U_h_wf_H_U_wf_ortho = np.matmul(U_wf_dynamics.H[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U_wf_dynamics[:,:]))
+                U_h_wf_H_U_wf_E_dir = np.matmul(U_wf_dynamics.T[:,:], np.matmul(U_h_H_U_E_dir, np.conj(U_wf_dynamics[:,:])))
+                U_h_wf_H_U_wf_ortho = np.matmul(U_wf_dynamics.T[:,:], np.matmul(U_h_H_U_ortho, np.conj(U_wf_dynamics[:,:])))
 
                 I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[0,0])
                 I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0])
 
                 I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[0,0])
                 I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0])
-
-                if i_time == n_time_steps//2 and i_path == 0 and i_k == (np.size(kx_in_path))//2:
-                    print("\n\nU_h_H_U_E_dir", U_h_H_U_E_dir)
-                    print("\n\nU_wf_dynamics", U_wf_dynamics)
-                    print("\n\nU_wf_dynamics.H", U_wf_dynamics.H)
-                    h_deriv_E_dir[0,0,i_k] = 1
-                    h_deriv_E_dir[0,1,i_k] = 0
-                    h_deriv_E_dir[1,0,i_k] = 0
-                    h_deriv_E_dir[1,1,i_k] = np.real(fermi_function[i_k, i_path, i_time, 0])
-                    print("\n\nfaked density matrix", np.matmul(U_wf_dynamics[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_wf_dynamics.H[:,:])))
-                    print("\n\nmatrix and contribution 0,0",  np.real(U_h_wf_H_U_wf_E_dir[0,0]))
-                    print("\n\nmatrix 1,1", np.real(U_h_wf_H_U_wf_E_dir[1,1]))
-                    print("\n\nfermi function", np.real(fermi_function[i_k, i_path, i_time, 0]))
-                    print("\n\ncontribution 1,1", np.real(U_h_wf_H_U_wf_E_dir[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0]))
-                    print("\n\nsum contribution", np.real(U_h_wf_H_U_wf_ortho[0,0]) + np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0]))
 
     return I_E_dir, I_ortho
 
@@ -1291,10 +1163,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
            # Update each component of the solution vector
            # i = U_vv, i+1 = U_vc, i+2 = U_cv, i+3 = U_cc
-           x[i]   = (-1j*ev + 1j*wr_d_vv)*y[i]   + 1j*wr  *y[i+2] #+ D*(y[m]   - y[n])
-           x[i+1] = (-1j*ev + 1j*wr_d_vv)*y[i+1] + 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
-           x[i+2] = (-1j*ec + 1j*wr_d_cc)*y[i+2] + 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
-           x[i+3] = (-1j*ec + 1j*wr_d_cc)*y[i+3] + 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
+           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] #+ D*(y[m]   - y[n])
+           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
+           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
+           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
