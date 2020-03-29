@@ -1051,6 +1051,16 @@ def check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_fun
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
                 I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
 
+                if i_time == n_time_steps//2 and i_path == 0 and i_k == (np.size(kx_in_path))//2:
+                    print("\n\nU_h_H_U_E_dir", U_h_H_U_E_dir)
+                    print("\n\ndensity matrix wf dyn", solution[i_k, i_path, i_time, :])
+                    print("\n\nFermi function", ff)
+                    print("\n\ncontribution 0,0",  np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0]))
+                    print("\n\ncontribution 1,1",  np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3]))
+                    print("\n\ncontribution ofd",  2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2]) )
+                    print("\n\nsum contribution", np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0]) + np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3]) +
+                                                  2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2]))
+
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
                 I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
@@ -1106,6 +1116,21 @@ def emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function)
 
                 I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[0,0])
                 I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0])
+
+                if i_time == n_time_steps//2 and i_path == 0 and i_k == (np.size(kx_in_path))//2:
+                    print("\n\nU_h_H_U_E_dir", U_h_H_U_E_dir)
+                    print("\n\nU_wf_dynamics", U_wf_dynamics)
+                    print("\n\nU_wf_dynamics.H", U_wf_dynamics.H)
+                    h_deriv_E_dir[0,0,i_k] = 1
+                    h_deriv_E_dir[0,1,i_k] = 0
+                    h_deriv_E_dir[1,0,i_k] = 0
+                    h_deriv_E_dir[1,1,i_k] = np.real(fermi_function[i_k, i_path, i_time, 0])
+                    print("\n\nfaked density matrix", np.matmul(U_wf_dynamics[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_wf_dynamics.H[:,:])))
+                    print("\n\nmatrix and contribution 0,0",  np.real(U_h_wf_H_U_wf_E_dir[0,0]))
+                    print("\n\nmatrix 1,1", np.real(U_h_wf_H_U_wf_E_dir[1,1]))
+                    print("\n\nfermi function", np.real(fermi_function[i_k, i_path, i_time, 0]))
+                    print("\n\ncontribution 1,1", np.real(U_h_wf_H_U_wf_E_dir[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0]))
+                    print("\n\nsum contribution", np.real(U_h_wf_H_U_wf_ortho[0,0]) + np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0]))
 
     return I_E_dir, I_ortho
 
@@ -1266,10 +1291,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
            # Update each component of the solution vector
            # i = U_vv, i+1 = U_vc, i+2 = U_cv, i+3 = U_cc
-           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] #+ D*(y[m]   - y[n])
-           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
-           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
-           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
+           x[i]   = (-1j*ev + 1j*wr_d_vv)*y[i]   + 1j*wr  *y[i+2] #+ D*(y[m]   - y[n])
+           x[i+1] = (-1j*ev + 1j*wr_d_vv)*y[i+1] + 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
+           x[i+2] = (-1j*ec + 1j*wr_d_cc)*y[i+2] + 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
+           x[i+3] = (-1j*ec + 1j*wr_d_cc)*y[i+3] + 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
