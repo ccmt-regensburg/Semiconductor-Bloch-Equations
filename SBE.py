@@ -90,14 +90,14 @@ def main():
     b1 = params.b1                                        # Reciprocal lattice vectors
     b2 = params.b2
 
-    user_out          = params.user_out
-    print_J_P_I_files = params.print_J_P_I_files
-    energy_plots      = params.energy_plots
-    dipole_plots      = params.dipole_plots
-    test              = params.test                       # Testing flag for Travis
-    do_emission_Bcurvg    = params.emission_Bcurv
-    do_emission_wavep    = params.emission_wavep
-
+    user_out            = params.user_out
+    print_J_P_I_files   = params.print_J_P_I_files
+    energy_plots        = params.energy_plots
+    dipole_plots        = params.dipole_plots
+    test                = params.test                       # Testing flag for Travis
+    do_emission_Bcurv   = params.emission_Bcurv
+    do_emission_wavep   = params.emission_wavep
+    store_all_timesteps = params.store_all_timesteps
 
     # USER OUTPUT
     ###############################################################################################
@@ -149,6 +149,9 @@ def main():
         Ax, Ay = sys.dipole.evaluate(kpnts[:, 0], kpnts[:, 1])
         sys.dipole.plot_dipoles(Ax, Ay)
 
+    if store_all_timesteps:
+        dt_out = 1
+
     # here,the time evolution of the density matrix is done
     solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                           gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
@@ -182,15 +185,15 @@ def main():
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
-    if do_emission_Bcurvg:
+    if do_emission_Bcurv:
        # Berry curvature current
        I_Bcurv_E_dir, I_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], t, chirp, alpha, E_dir, E0, w, phase, A_field)
     # emission with exact formula
     I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
     # emission with exact formula with semiclassical formula
     if do_emission_wavep:
-#       I_wavep_E_dir, I_wavep_ortho = emission_wavep_test_old_formula_density_matrix(paths, solution, wf_solution, E_dir, A_field) 
        I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+       I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
 
     # Polar emission in time
     Ir = []
@@ -212,7 +215,9 @@ def main():
     Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    if do_emission_Bcurvg:
+    Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    if do_emission_Bcurv:
        Iw_Bcurv_E_dir = np.fft.fftshift(np.fft.fft(I_Bcurv_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_Bcurv_ortho = np.fft.fftshift(np.fft.fft(I_Bcurv_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
@@ -345,7 +350,7 @@ def main():
 
 ##########################
 
-        if do_emission_Bcurvg:
+        if do_emission_Bcurv:
 
            six_fig, ((sc_I_E_dir,sc_I_ortho,sc_I_total)) = pl.subplots(3,1,figsize=(10,10))
            sc_I_E_dir.grid(True,axis='x')
@@ -391,6 +396,8 @@ def main():
             label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
            sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
               label='$I_{\parallel E}^\mathrm{wavep}(t) $')
+           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
+              label='$I_{\parallel E}^\mathrm{wavep check}(t) $')
            sc_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
            sc_I_E_dir.legend(loc='upper right')
@@ -402,6 +409,8 @@ def main():
             label='$I_{\\bot E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
            sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_ortho**2) / Int_tot_base_freq, linestyle='dashed',
               label='$I_{\\bot E}^\mathrm{wavep}(t)$')
+           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+              label='$I_{\\bot E}^\mathrm{wavep check}(t)$')
            sc_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_ortho.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
            sc_I_ortho.legend(loc='upper right')
@@ -413,6 +422,8 @@ def main():
             label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
            sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_E_dir**2 + Iw_wavep_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
             label='$I^\mathrm{wavep}(\omega) = I^\mathrm{wavep}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
+           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_check_E_dir**2 + Iw_wavep_check_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
+            label='$I^\mathrm{wavep check}(\omega) = I^\mathrm{wavep check}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
            sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
            sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
            sc_I_total.legend(loc='upper right')
@@ -989,56 +1000,62 @@ def emission_exact(paths, solution, E_dir, A_field):
     return I_E_dir, I_ortho
 
 
-#def emission_wavep_test_old_formula_density_matrix(paths, solution, wf_solution, E_dir, A_field):
-#
-#    E_ort = np.array([E_dir[1], -E_dir[0]])
-#
-#    n_time_steps = np.size(solution[0,0,:,0])
-#
-#    # I_E_dir is of size (number of time steps)
-#    I_E_dir = np.zeros(n_time_steps)
-#    I_ortho = np.zeros(n_time_steps)
-#
-#    for i_time in range(n_time_steps):
-#
-#        for i_path, path in enumerate(paths):
-#            path = np.array(path)
-#            kx_in_path = path[:, 0]
-#            ky_in_path = path[:, 1]
-#    
-#            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
-#            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
-#
-#            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
-#            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
-# 
-#            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
-#            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
-#
-#            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
-#            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
-#    
-#            for i_k in range(np.size(kx_in_path)):
-#
-#                density_matrix = np.matrix([[0+0*1j, 0+0*1j], [0+0*1j, 0+0*1j]])
-#
-#                density_matrix[0] = np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + *np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2
-#                density_matrix[1] = solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])
-#                density_matrix[2] = solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])
-#                density_matrix[4] = np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + fermi_function[i_time]*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2
-#
-#                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
-#                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
-#
-#                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
-#                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
-#                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
-#
-#                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
-#                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
-#                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
-#
-#    return I_E_dir, I_ortho
+def check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function):
+
+    E_ort = np.array([E_dir[1], -E_dir[0]])
+
+    n_time_steps = np.size(A_field)
+
+    # I_E_dir is of size (number of time steps)
+    I_E_dir = np.zeros(n_time_steps)
+    I_ortho = np.zeros(n_time_steps)
+
+    for i_time in range(n_time_steps):
+
+        for i_path, path in enumerate(paths):
+            path = np.array(path)
+            kx_in_path = path[:, 0]
+            ky_in_path = path[:, 1]
+    
+            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
+            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+
+            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+ 
+            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+
+            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
+            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
+
+            for i_k in range(np.size(kx_in_path)):
+
+                U_wf_dynamics = np.matrix([[0+0*1j, 0+0*1j], [0+0*1j, 0+0*1j]])
+                U_wf_dynamics[0,0] = wf_solution[i_k, i_path, i_time, 0]
+                U_wf_dynamics[0,1] = wf_solution[i_k, i_path, i_time, 1]
+                U_wf_dynamics[1,0] = wf_solution[i_k, i_path, i_time, 2]
+                U_wf_dynamics[1,1] = wf_solution[i_k, i_path, i_time, 3]
+
+                #HACK TO CHECK THE DENSITY MATRIX
+                ff = fermi_function[i_k, i_path, i_time, 0]
+                solution[i_k, i_path, i_time, 0] = np.abs(wf_solution[i_k, i_path, i_time, 0])**2 + ff*np.abs(wf_solution[i_k, i_path, i_time, 1])**2
+                solution[i_k, i_path, i_time, 1] = ff*wf_solution[i_k, i_path, i_time, 3]*np.conj(wf_solution[i_k, i_path, i_time, 1]) + wf_solution[i_k, i_path, i_time, 2]*np.conj(wf_solution[i_k, i_path, i_time, 0])
+                solution[i_k, i_path, i_time, 2] = ff*wf_solution[i_k, i_path, i_time, 1]*np.conj(wf_solution[i_k, i_path, i_time, 3]) + wf_solution[i_k, i_path, i_time, 0]*np.conj(wf_solution[i_k, i_path, i_time, 2])
+                solution[i_k, i_path, i_time, 3] = np.abs(wf_solution[i_k, i_path, i_time, 2])**2 + ff*np.abs(wf_solution[i_k, i_path, i_time, 3])**2
+
+                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
+                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
+
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
+
+    return I_E_dir, I_ortho
 
 
 def emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function):
@@ -1084,11 +1101,11 @@ def emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function)
                 U_h_wf_H_U_wf_E_dir = np.matmul(U_wf_dynamics.H[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_wf_dynamics[:,:]))
                 U_h_wf_H_U_wf_ortho = np.matmul(U_wf_dynamics.H[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U_wf_dynamics[:,:]))
 
-                I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[0,0])*np.real(solution[i_k, i_path, 0, 0])
-                I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[1,1])*np.real(solution[i_k, i_path, 0, 3])
+                I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[0,0])
+                I_E_dir[i_time] += np.real(U_h_wf_H_U_wf_E_dir[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0])
 
-                I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[0,0])*np.real(solution[i_k, i_path, 0, 0])
-                I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(solution[i_k, i_path, 0, 3])
+                I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[0,0])
+                I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0])
 
     return I_E_dir, I_ortho
 
