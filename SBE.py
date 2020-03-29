@@ -624,6 +624,32 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
     print( "intial occupation size:", np.shape(y0_np) )
 
+    if dynamics_type == 'density_matrix_dynamics':
+            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+            # Countour plots of occupations and gradients of occupations
+            fig5 = pl.figure()
+            X, Y = np.meshgrid(t,kp_array)
+            pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
+            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
+            pl.xlim([-5*alpha,10*alpha])
+            pl.xlabel(r'$t\;(fs)$')
+            pl.ylabel(r'$k$')
+            pl.tight_layout()
+            pl.show()
+
+    if dynamics_type == 'wavefunction_dynamics':
+            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+            # Countour plots of occupations and gradients of occupations
+            fig5 = pl.figure()
+            X, Y = np.meshgrid(t,kp_array)
+            pl.contourf(X, Y, np.real(   np.abs(solution[:, 1, :, 2])**2 + fermi_function[:,1,:,0]*np.abs(solution[:, 1, :, 3])**2           ), 100)
+            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
+            pl.xlim([-5*alpha,10*alpha])
+            pl.xlabel(r'$t\;(fs)$')
+            pl.ylabel(r'$k$')
+            pl.tight_layout()
+            pl.show()
+
     # In case of the velocity gauge, we need to shift the time-dependent
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
     if gauge == 'velocity':
@@ -631,6 +657,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         if dynamics_type == 'wavefunction_dynamics':
 #            shifted_initial_density_mat = shift_occupation(solution, A_field, dk)
             fermi_function = shift_solution(fermi_function, A_field, dk)
+
+            density_matrix = np.array(np.shape(fermi_function))
+            density_matrix = np.abs(solution[:, :, :, 2:3])**2 + fermi_function[:,:,:,0:1]*np.abs(solution[:, :, :, 3:4])**2
 
             kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
             # Countour plots of occupations and gradients of occupations
@@ -644,12 +673,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
             pl.tight_layout()
             pl.show()
 
-
-
-
     n_time_steps = np.size(solution[0,0,:,0])
-
-#    fermi_function = np.array(fermi_function)
 
     for i_time in range(n_time_steps):
         if dynamics_type == 'density_matrix_dynamics':
@@ -658,12 +682,41 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
                                                                     (solution[Nk_in_path//2, 1, i_time, 2]), 
                                                                     np.abs(solution[Nk_in_path//2, 1, i_time, 3]))
         elif dynamics_type == 'wavefunction_dynamics':
-           fermi_function = shifted_initial_density_mat[Nk_in_path//2, 1, i_time, 3]
-           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
-              (fermi_function*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
-              (fermi_function*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
-              np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + fermi_function*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2, 
-              fermi_function)
+           ff = fermi_function[Nk_in_path//2, 1, i_time, 0]
+           print("i_time, t, from wavef dyn", i_time, t[i_time], np.abs(solution[Nk_in_path//2, 1, i_time, 0])**2 + ff*np.abs(solution[Nk_in_path//2, 1, i_time, 1])**2 ,
+              (ff*solution[Nk_in_path//2, 1, i_time, 3]*np.conj(solution[Nk_in_path//2, 1, i_time, 1]) + solution[Nk_in_path//2, 1, i_time, 2]*np.conj(solution[Nk_in_path//2, 1, i_time, 0])) ,
+              (ff*solution[Nk_in_path//2, 1, i_time, 1]*np.conj(solution[Nk_in_path//2, 1, i_time, 3]) + solution[Nk_in_path//2, 1, i_time, 0]*np.conj(solution[Nk_in_path//2, 1, i_time, 2])) ,
+              np.abs(solution[Nk_in_path//2, 1, i_time, 2])**2 + ff*np.abs(solution[Nk_in_path//2, 1, i_time, 3])**2, 
+              ff)
+
+    if dynamics_type == 'density_matrix_dynamics':
+            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+            # Countour plots of occupations and gradients of occupations
+            fig5 = pl.figure()
+            X, Y = np.meshgrid(t,kp_array)
+            pl.contourf(X, Y, np.real(solution[:,1,:,3]), 100)
+            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
+            pl.xlim([-5*alpha,10*alpha])
+            pl.xlabel(r'$t\;(fs)$')
+            pl.ylabel(r'$k$')
+            pl.tight_layout()
+            pl.show()
+
+    if dynamics_type == 'wavefunction_dynamics':
+            kp_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+            # Countour plots of occupations and gradients of occupations
+            fig5 = pl.figure()
+            X, Y = np.meshgrid(t,kp_array)
+            pl.contourf(X, Y, np.real(   np.abs(solution[:, 1, :, 2])**2 + fermi_function[:,1,:,0]*np.abs(solution[:, 1, :, 3])**2           ), 100)
+            pl.colorbar().set_label(r'$f_e^0(k(t))$ in path 0')
+            pl.xlim([-5*alpha,10*alpha])
+            pl.xlabel(r'$t\;(fs)$')
+            pl.ylabel(r'$k$')
+            pl.tight_layout()
+            pl.show()
+
+
+
 
     for i_time in range(n_time_steps):
         if dynamics_type == 'wavefunction_dynamics':
@@ -1325,8 +1378,17 @@ def shift_solution(solution, A_field, dk):
         weight_1      = k_index_shift_2 - k_shift
         weight_2      = 1-weight_1
 
-        solution[:, :, i_time, :] = weight_1*np.roll(solution[:,:,i_time,:], k_index_shift_1, axis=0) + \
-                                    weight_2*np.roll(solution[:,:,i_time,:], k_index_shift_2, axis=0)
+        # transfer to polar coordinates
+        r   = np.abs(solution[:,:,i_time,:])
+        phi = np.arctan2(np.imag(solution[:,:,i_time,:]), np.real(solution[:,:,i_time,:]))
+
+        r   = weight_1*np.roll(r,   k_index_shift_1, axis=0) + weight_2*np.roll(r,   k_index_shift_2, axis=0)
+        phi = weight_1*np.roll(phi, k_index_shift_1, axis=0) + weight_2*np.roll(phi, k_index_shift_2, axis=0)
+
+#        solution[:, :, i_time, :] = weight_1*np.roll(solution[:,:,i_time,:], k_index_shift_1, axis=0) + \
+#                                    weight_2*np.roll(solution[:,:,i_time,:], k_index_shift_2, axis=0)
+
+        solution[:, :, i_time, :] = r*np.cos(phi) + 1j*r*np.sin(phi)
 
     return solution
 
