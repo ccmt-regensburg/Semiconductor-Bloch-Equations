@@ -23,16 +23,15 @@ def run():
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
     # Sweep Wilson mass
-    for m_pre in np.arange(0, 2.5, 0.5):
+    for T1 in [500, 1000, 2000]:
+        params.T1 = T1
         print("Current C2: ", C2)
-        print("Current mass: ", m_pre*mb)
-        print("Current E-field: ", params.E0)
-        dirname = 'mb_{:.0f}meV'.format(m_pre*10)
+        dirname = 'T1_{:4.0f}'.format(params.T1)
         os.mkdir(dirname)
         os.chdir(dirname)
-        system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, mb=m_pre*mb, kcut=k_cut)
+        system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, mb=mb, kcut=k_cut)
         # system = hfsbe.example.BiTePeriodic(C2=C2, A=A, R=R, a=params.a,
-        #                                     mw=mw, mb=0, order=order)
+        #                                     mw=mw, mb=mb, order=order)
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)

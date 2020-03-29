@@ -23,7 +23,7 @@ def run():
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
     # Sweep Wilson mass
-    for E in np.arange(2.00, 5.10, 0.50):
+    for E in np.arange(2.00, 4.10, 0.50):
         mw = 0
         print("Current C2: ", C2)
         print("Current mass: ", mw)

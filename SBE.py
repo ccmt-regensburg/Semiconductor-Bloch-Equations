@@ -46,7 +46,7 @@ def main(sys, dipole, params):
     # Time scales
     T1 = params.T1*fs_conv                      # Occupation damping time
     T2 = params.T2*fs_conv                      # Polarization damping time
-    gamma1 = 1/T1                           # Occupation damping parameter
+    gamma1 = 1/T1                               # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
     t0 = int(params.t0*fs_conv)                 # Initial time condition
     tf = int(params.tf*fs_conv)                 # Final time
@@ -252,13 +252,14 @@ def main(sys, dipole, params):
     Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
 
     if (calc_exact):
-        I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution, E_dir,
-                                                      A_field)
-        Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t,alpha),
+        I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution,
+                                                      E_dir, A_field)
+        Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                       norm='ortho'))
-        Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t,alpha),
+        Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t, alpha),
                                       norm='ortho'))
-
+        Int_exact_E_dir = (freq**2)*np.abs(Iw_exact_E_dir)**2
+        Int_exact_ortho = (freq**2)*np.abs(Iw_exact_ortho)**2
 
     # Emission intensity
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2
@@ -272,6 +273,12 @@ def main(sys, dipole, params):
     if (save_file):
         tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
             .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
+
+        if (calc_exact):
+            I_exact_name = 'Iexact_' + tail
+            np.save(I_exact_name, [t, I_exact_E_dir, I_exact_ortho, freq/w,
+                    Iw_exact_E_dir, Iw_exact_ortho,
+                    Int_exact_E_dir, Int_exact_ortho])
 
         if (save_full):
             Full_name = 'Full_' + tail
