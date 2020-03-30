@@ -26,7 +26,7 @@ parampaths = ['T1_{:1.0f}/'.format(T1) for T1 in [500, 1000, 2000]]
 # orderpath = './compare/'
 # parampaths = ['E_03/', 'E_06/', 'E_12/', 'E_20/', 'E_30/', 'E_40/']
 
-dirpath = 'K_dir/'
+dirpath = 'M_dir/'
 dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
 
 

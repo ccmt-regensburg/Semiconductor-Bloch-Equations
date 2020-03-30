@@ -30,11 +30,12 @@ def run():
         params.E0 = E
         print("Current E-field: ", params.E0)
         dirname = 'E_{:1.2f}'.format(params.E0)
-        os.mkdir(dirname)
+        if (not os.path.exists(dirname)):
+            os.mkdir(dirname)
         os.chdir(dirname)
-        system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, mb=mb, kcut=k_cut)
-        # system = hfsbe.example.BiTePeriodic(C2=C2, A=A, R=R, a=params.a,
-        #                                     mw=mw, mb=mb, order=order)
+        # system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, mb=mb, kcut=k_cut)
+        system = hfsbe.example.BiTePeriodic(C2=C2, A=A, R=R, a=params.a,
+                                            mw=mw, mb=mb, order=order)
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)

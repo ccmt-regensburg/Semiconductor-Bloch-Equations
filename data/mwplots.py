@@ -15,7 +15,7 @@ plt.rcParams['figure.figsize'] = (20, 10)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2on_Nk1-400/'
+orderpath = './order_sweep_complete_bz/E5MV_order4_dt0.01_C2off_Nk1-400/'
 parampaths = ['mw_{:1.2f}/'.format(m) for m in np.arange(0, 0.5, 0.2)]
 
 # Use kcut evaluational instead
@@ -26,7 +26,7 @@ parampaths = ['mw_{:1.2f}/'.format(m) for m in np.arange(0, 0.5, 0.2)]
 # orderpath = './compare/'
 # parampaths = ['E_03/', 'E_06/', 'E_12/', 'E_20/', 'E_30/', 'E_40/']
 
-dirpath = 'M_dir/'
+dirpath = 'K_dir/'
 dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
 
 
@@ -75,9 +75,7 @@ def read_data():
 
         print('\n')
 
-    return np.array(Idata), np.array(Iexactdata), np.array(Jdata),
-           np.array(Pdata)
-
+    return np.array(Idata), np.array(Iexactdata), np.array(Jdata), np.array(Pdata)
 
 
 def logplot_fourier(freqw, data_dir, data_ortho,

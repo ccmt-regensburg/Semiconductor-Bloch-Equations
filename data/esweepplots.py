@@ -11,12 +11,12 @@ eV_conv = 0.03674932176                # (1eV    = 0.036749322176 a.u.)
 
 
 plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.figsize'] = (20, 40)
+plt.rcParams['figure.figsize'] = (20, 10)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
 orderpath = './order_sweep_complete_bz/Esweep_kcut_dt0.01_C2on_Nk1-400_mb10meV_T1on/'
-parampaths = ['E_{:1.2f}/'.format(E) for E in np.arange(2, 5.5, 0.5)]
+parampaths = ['E_{:1.2f}/'.format(E) for E in np.arange(2.0, 4.1, 0.5)]
 
 # Use kcut evaluational instead
 # orderpath = './kcut/NK2_10/'
@@ -32,6 +32,7 @@ dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
 
 def read_data():
     Idata = []
+    Iexactdata = []
     Jdata = []
     Pdata = []
 
@@ -53,6 +54,13 @@ def read_data():
                 print("Reading :", massp, filename)
                 Idata.append(np.load(totalpath + filename))
 
+            # Emissions Iexact
+            # [t, I_exact_E_dir, I_exact_ortho, freq/w, Iw_exact_E_dir,
+            # Iw_exact_ortho, Int_exact_E_dir, Int_exact_ortho]
+            if ('Iexact_' in filename):
+                print("Reading :", massp, filename)
+                Iexactdata.append(np.load(totalpath + filename))
+
             # Currents J
             # [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_Ortho]
             if ('J_' in filename):
@@ -67,11 +75,11 @@ def read_data():
 
         print('\n')
 
-    return np.array(Idata), np.array(Jdata), np.array(Pdata)
+    return np.array(Idata), np.array(Iexactdata), np.array(Jdata), np.array(Pdata)
 
 
 def logplot_fourier(freqw, data_dir, data_ortho,
-                    xlim=(0, 30), ylim=(10e-30, 10),
+                    xlim=(0, 30), ylim=(10e-15, 10),
                     xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
                     savename='data'):
 
@@ -79,11 +87,12 @@ def logplot_fourier(freqw, data_dir, data_ortho,
     for a in ax:
         a.set_xlim(xlim)
         a.set_ylim(ylim)
-        a.grid(True, axis='x')
-        a.set_xlabel(xlabel)
+        a.set_xticks(np.arange(31))
+        a.grid(True, axis='x', ls='--')
         a.set_ylabel(ylabel)
     ax[0].set_title(r'$\mathbf{E}$ parallel')
     ax[1].set_title(r'$\mathbf{E}$ orthogonal')
+    ax[1].set_xlabel(xlabel)
 
     for freq, data_d, data_o in zip(freqw, data_dir, data_ortho):
         ax[0].semilogy(freq, data_d)
@@ -97,13 +106,21 @@ def logplot_fourier(freqw, data_dir, data_ortho,
 
 
 if __name__ == "__main__":
-    Idata, Jdata, Pdata = read_data()
+    Idata, Iexactdata, Jdata, Pdata = read_data()
     freqw = Idata[:, 3]
     Int_E_dir = Idata[:, 6]
     Int_ortho = Idata[:, 7]
     ylabel = r'$[I](\omega)$ intensity in a.u.'
     logplot_fourier(freqw, Int_E_dir, Int_ortho, ylabel=ylabel,
                     savename='Int-' + dirname)
+
+    freqw = Iexactdata[:, 3]
+    Int_exact_E_dir = Iexactdata[:, 6]
+    Int_exact_ortho = Iexactdata[:, 7]
+    ylabel = r'$[I_\mathrm{exact}](\omega)$ intensity in a.u.'
+    logplot_fourier(freqw, Int_exact_E_dir, Int_exact_ortho, ylabel=ylabel,
+                    savename='Int-exact-' + dirname)
+
 
     # Iw_E_dir = Idata[:, 4]
     # Iw_ortho = Idata[:, 5]
