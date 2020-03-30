@@ -22,7 +22,7 @@ class params:
 
     # full BZ parametes
     Nk1                 = 800         # Number of kpoints in b1 direction
-    Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
+    Nk2                 = 40          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
     Nk_in_path          = 40        # Number of kpoints in each of the two paths
@@ -63,5 +63,5 @@ class params:
     normal_plots  = False  # Standard plots of P, J, I and w-dependency
     polar_plots   = False  # Higher harmonic polarization rotation
     save_file     = True   # Save all data files
-    save_full     = False  # Save full information
+    save_full     = True   # Save full information
 
