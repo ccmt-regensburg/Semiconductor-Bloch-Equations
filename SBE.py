@@ -281,13 +281,16 @@ def main(sys, dipole, params):
                     Int_exact_E_dir, Int_exact_ortho])
 
         if (save_full):
-            Full_name = 'Full_' + tail
-            np.savez(Full_name,
-                     system=dill.dumps(sys),
-                     dipole=dill.dumps(dipole),
-                     params=dill.dumps(params),
-                     paths=paths, time=t, solution=solution,
+            S_name = 'Sol_' + tail
+            np.savez(S_name, t=t, solution=solution, paths=paths,
                      driving_field=driving_field(E0, w, t, chirp, alpha, phase))
+            # Full_name = 'Full_' + tail
+            # np.savez(Full_name,
+            #          system=dill.dumps(sys),
+            #          dipole=dill.dumps(dipole),
+            #          params=dill.dumps(params),
+            #          paths=paths, time=t, solution=solution,
+            #          driving_field=driving_field(E0, w, t, chirp, alpha, phase))
         J_name = 'J_' + tail
         np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
         P_name = 'P_' + tail
