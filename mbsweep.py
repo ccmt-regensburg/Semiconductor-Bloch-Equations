@@ -28,7 +28,8 @@ def run():
         print("Current mass: ", m_pre*mb)
         print("Current E-field: ", params.E0)
         dirname = 'mb_{:.0f}meV'.format(m_pre*10)
-        os.mkdir(dirname)
+        if (not os.path.exists(dirname)):
+            os.mkdir(dirname)
         os.chdir(dirname)
         system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, mb=m_pre*mb, kcut=k_cut)
         # system = hfsbe.example.BiTePeriodic(C2=C2, A=A, R=R, a=params.a,
