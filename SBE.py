@@ -163,18 +163,6 @@ def main():
                                                                       'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
-#    for i_time in range(n_time_steps):
-##        print("Nk_in_path/2, 0, i_time, 0:3", Nk_in_path//2, 0, i_time)
-#        print("i_time, t, density matrix", i_time, t[i_time],    np.abs(solution[Nk_in_path//2, 0, i_time, 0]), 
-#                                                                 (solution[Nk_in_path//2, 0, i_time, 1]), 
-#                                                                 (solution[Nk_in_path//2, 0, i_time, 2]), 
-#                                                                 np.abs(solution[Nk_in_path//2, 0, i_time, 3]) )
-#        fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
-#        print("i_time, t, from wavef dyn", i_time, t_wf[i_time], np.abs(wf_solution[Nk_in_path//2, 0, i_time, 0])**2 + np.abs(wf_solution[Nk_in_path//2, 0, i_time, 1])**2 ,
-#                   (wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 1]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 0])) ,
-#                   (wf_solution[Nk_in_path//2, 0, i_time, 1]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 0]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) ,
-#                   np.abs(wf_solution[Nk_in_path//2, 0, i_time, 3]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 3]) + wf_solution[Nk_in_path//2, 0, i_time, 2]*np.conj(wf_solution[Nk_in_path//2, 0, i_time, 2])) )
-
     # COMPUTE OBSERVABLES
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
@@ -394,7 +382,7 @@ def main():
            sc_I_E_dir.set_ylim(log_limits)
            sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
             label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
-           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
+           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_E_dir**2) / Int_tot_base_freq, linestyle='dotted', 
 #              label='$I_{\parallel E}^\mathrm{wavep}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\tilde{\\rho}_{nn\'}(\mathbf{k},t)$ with $\\tilde{\\rho}_{nn\'}(\mathbf{k}(t),t)=\sum_{underline{n}}u^*_{n\underline{n}}(\mathbf{k}(t),t) u_{n\'\underline{n}}(\mathbf{k}(t),t) f_{\underline{n}}(\mathbf{k}(t),t)$ from wf.~dyn.')
              label='$I_{\parallel E}^\mathrm{wavep}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\tilde{\\rho}_{nn\'}(\mathbf{k},t)$ with $\\tilde{\\rho}_{nn\'}(\mathbf{k}(t),t)$ from wf.~dyn.')
            sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_E_dir**2) / Int_tot_base_freq, linestyle='dotted',
@@ -408,7 +396,7 @@ def main():
            sc_I_ortho.set_ylim(log_limits)
            sc_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
             label='$I_{\\bot E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_ortho**2) / Int_tot_base_freq, linestyle='dotted',
               label='$I_{\\bot E}^\mathrm{wavep}(t)$')
            sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_wavep_ortho**2) / Int_tot_base_freq, linestyle='dotted',
               label='$I_{\\bot E}^\mathrm{wavep check}(t)$')
@@ -421,7 +409,7 @@ def main():
            sc_I_total.set_ylim(log_limits)
            sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
             label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
-           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_check_E_dir**2 + Iw_wavep_check_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
+           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_check_E_dir**2 + Iw_wavep_check_ortho**2)) / Int_tot_base_freq, linestyle='dotted',
             label='$I^\mathrm{wavep}(\omega) = I^\mathrm{wavep}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
            sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_wavep_E_dir**2 + Iw_wavep_ortho**2)) / Int_tot_base_freq, linestyle='dotted',
             label='$I^\mathrm{wavep check}(\omega) = I^\mathrm{wavep check}_{\parallel E}(\omega) + I^\mathrm{wavep}_{\\bot E}(\omega)$')
@@ -623,9 +611,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
     # In case of the velocity gauge, we need to shift the time-dependent
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
     if gauge == 'velocity':
-        solution = shift_solution(solution, A_field, dk)
+        solution = shift_solution(solution, A_field, dk, dynamics_type)
         if dynamics_type == 'wavefunction_dynamics':
-            fermi_function = shift_solution(fermi_function, A_field, dk)
+            fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
     return solution, t, A_field, fermi_function
 
@@ -1023,8 +1011,6 @@ def current_Bcurv(paths,fv,fc,t,chirp,alpha,E_dir,E0,w,phase,A_field):
     for j_time, time in enumerate(t):
        je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
 
-       print("j_time =", j_time, "/", np.shape(fc[0,0,:]))
-
        for path in paths:
            path = np.array(path)
            kx_in_path = path[:,0]
@@ -1037,13 +1023,8 @@ def current_Bcurv(paths,fv,fc,t,chirp,alpha,E_dir,E0,w,phase,A_field):
 
            curv_eval = curv.evaluate(kx_in_path, ky_in_path)
 
-           #print("shape curv_eval =", np.shape(curv_eval))
-
            # the cross product of Berry curvature and E-field points only in direction orthogonal to E
            cross_prod_ortho = E_field[j_time]*curv_eval
-
-#           print("shape bandstruc_deriv =", np.shape(bandstruc_deriv))
-#           print("shaoe cross_prod      =", np.shape(cross_prod_ortho))
 
            #0: v, x   1: v,y   2: c, x  3: c, y
            je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
@@ -1133,8 +1114,8 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
 
         # Energy term eband(i,k) the energy of band i at point k
         ecv = ecv_in_path[k]
-        ev = ev_in_path[k]
-        ec = ec_in_path[k]
+        ev = -ecv_in_path[k]/2
+        ec = ecv_in_path[k]/2
 
         # Rabi frequency: w_R = d_12(k).E(t)
         dipole = dipole_in_path[k]
@@ -1275,7 +1256,7 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
     return svec
 
 
-def shift_solution(solution, A_field, dk):
+def shift_solution(solution, A_field, dk, dynamics_type):
 
     for i_time in range(np.size(A_field)):
         # shift of k index in the direction of the E-field 
@@ -1287,6 +1268,16 @@ def shift_solution(solution, A_field, dk):
         k_index_shift_2 = k_index_shift_1 + 1
         weight_1      = k_index_shift_2 - k_shift
         weight_2      = 1-weight_1
+
+        if dynamics_type == 'wavefunction_dynamics':
+            if weight_1 > weight_2:
+                weight_1 = 1
+                weight_2 = 0
+            else:
+                weight_2 = 1
+                weight_1 = 0
+
+        n_kpoints = np.size(solution[:,0,0,0])
 
         # transfer to polar coordinates
         r   = np.abs(solution[:,:,i_time,:])
