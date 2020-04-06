@@ -5,8 +5,8 @@ import numpy as np
 class params:
 # System parameters
 #########################################################################
-    a                   = 8.3053      # Lattice spacing in atomic units (4.395 A)
-    e_fermi             = 0.2         # Fermi energy in eV
+    a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
+    e_fermi             = 0.0         # Fermi energy in eV
     temperature         = 0.03        # Temperature in eV
 
     # Model Hamiltonian parameters
@@ -21,8 +21,8 @@ class params:
     b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
     # full BZ parametes
-    Nk1                 = 800         # Number of kpoints in b1 direction
-    Nk2                 = 40          # Number of kpoints in b2 direction (number of paths)
+    Nk1                 = 400         # Number of kpoints in b1 direction
+    Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
     Nk_in_path          = 40        # Number of kpoints in each of the two paths
@@ -33,7 +33,7 @@ class params:
 
     # Driving field parameters
     ##########################################################################
-    align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
+    align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
     E0                  = 2.50        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
@@ -63,5 +63,5 @@ class params:
     normal_plots  = False  # Standard plots of P, J, I and w-dependency
     polar_plots   = False  # Higher harmonic polarization rotation
     save_file     = True   # Save all data files
-    save_full     = True   # Save full information
+    save_full     = False  # Save full information
 
