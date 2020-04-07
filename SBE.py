@@ -1110,16 +1110,20 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
 
-        i = 4*k
+        num_time_functions = 4
+        if do_B_field:
+            num_time_functions = 6
+
+        i = num_time_functions*k
         if k == 0:
-            m = 4*(k+1)
-            n = 4*(Nk_path-1)
+            m = num_time_functions*(k+1)
+            n = num_time_functions*(Nk_path-1)
         elif k == Nk_path-1:
             m = 0
-            n = 4*(k-1)
+            n = num_time_functions*(k-1)
         else:
-            m = 4*(k+1)
-            n = 4*(k-1)
+            m = num_time_functions*(k+1)
+            n = num_time_functions*(k-1)
 
         # Energy term eband(i,k) the energy of band i at point k
         ecv = ecv_in_path[k]
@@ -1148,6 +1152,14 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
            x[i+2] = x[i+1].conjugate()
            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
+
+#           if do_B_field:
+#               # use the unnecessary entry i+2 to compute the k-point shift 
+#               # k_x
+#               x[i+5] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] \
+#                        - driving_field(B0, w, t, chirp, alpha, phase)*E_dir[0]*
+#               # k_y
+#               x[i+6] = 
 
         elif dynamics_type == 'wavefunction_dynamics':
 
