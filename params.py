@@ -39,14 +39,14 @@ Nk1                 = 100       # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
+Nk_in_path          = 100       # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
+length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-gauge               = 'length'
-#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+#gauge               = 'length'
+gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -54,6 +54,7 @@ gauge               = 'length'
 align               = 'K'          # E-field direction (gamma-'K' or gamma-'M'), 
                                    # or angle (30 for 30 degrees, only works with velocity gauge) 
 E0                  = 5.0          # Pulse amplitude (MV/cm)
+B0                  = 1.0          # B-Field strength (T)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
@@ -65,27 +66,29 @@ scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T1    = 1E3   # Phenomenological damping time for diagonal occupations
-T2    = 1     # Phenomenological damping time for off-diagonal polarizations
+T1    = 1E3  # Phenomenological damping time for diagonal occupations
+T2    = 1       # Phenomenological damping time for off-diagonal polarizations
 t0    = -1000 # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 1000  # End time
-dt    = 0.1   # Time step
+dt    = 0.1  # Time step
 
 # Unit conversion factors
 ##########################################################################
 fs_conv = 41.34137335                  #(1fs    = 41.341473335 a.u.)
 E_conv = 0.0001944690381               #(1MV/cm = 1.944690381*10^-4 a.u.)
+B_conv = 4.25531E-6                    #(1T     = 4.25531*10^-6 a.u.)
 THz_conv = 0.000024188843266           #(1THz   = 2.4188843266*10^-5 a.u.)
 amp_conv = 150.97488474                #(1A     = 150.97488474)
 eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 
 # Flags for testing and features
 ##########################################################################
-user_out          = True  # Set to True to get user plotting and progress output
-print_J_P_I_files = True   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
-energy_plots      = False  # Set to True to plot 3d energy bands and contours
-dipole_plots      = False  # Set tp True to plot dipoles (currently not working?)
-test              = False  # Set to True to output travis testing parameters
-matrix_method     = False  # Set to True to use old matrix method for solving
-emission_Bcurv    = False  # additionally compute emission quasiclassically using the Berry curvature (computationally expensive)
-emission_wavep    = True   # additionally compute emission quasiclassically using wavepacket dynamics (
+user_out            = True  # Set to True to get user plotting and progress output
+print_J_P_I_files   = False  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
+energy_plots        = False  # Set to True to plot 3d energy bands and contours
+dipole_plots        = False  # Set tp True to plot dipoles (currently not working?)
+test                = False  # Set to True to output travis testing parameters
+matrix_method       = False  # Set to True to use old matrix method for solving
+emission_Bcurv      = False  # additionally compute emission quasiclassically using the Berry curvature (computationally expensive)
+emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
+store_all_timesteps = True

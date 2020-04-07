@@ -21,11 +21,12 @@ def main():
     # RETRIEVE PARAMETERS
     ###############################################################################################
     # Unit converstion factors
-    fs_conv = params.fs_conv
-    E_conv = params.E_conv
+    fs_conv  = params.fs_conv
+    E_conv   = params.E_conv
+    B_conv   = params.B_conv
     THz_conv = params.THz_conv
     amp_conv = params.amp_conv
-    eV_conv = params.eV_conv
+    eV_conv  = params.eV_conv
 
     # Set BZ type independent parameters
     # Hamiltonian parameters
@@ -42,6 +43,7 @@ def main():
 
     # Driving field parameters
     E0    = params.E0*E_conv                          # Driving pulse field amplitude
+    B0    = params.B0*B_conv                          # Driving pulse magnetic field amplitude
     w     = params.w*THz_conv                         # Driving pulse frequency
     chirp = params.chirp*THz_conv                     # Pulse chirp frequency
     alpha = params.alpha*fs_conv                      # Gaussian pulse width
@@ -152,14 +154,19 @@ def main():
     if store_all_timesteps:
         dt_out = 1
 
+    if B0 > 1e-15:
+        do_B_field = True
+    else: 
+        do_B_field = False
+
     # here,the time evolution of the density matrix is done
     solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                          gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                           'density_matrix_dynamics')
 
     if do_emission_wavep:
        wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                                      gamma1, gamma2, E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                                       'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
@@ -201,10 +208,11 @@ def main():
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_E_dir = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_ortho = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    if do_emission_wavep:
+       Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+       Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+       Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+       Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     if do_emission_Bcurv:
        Iw_Bcurv_E_dir = np.fft.fftshift(np.fft.fft(I_Bcurv_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_Bcurv_ortho = np.fft.fftshift(np.fft.fft(I_Bcurv_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
@@ -475,7 +483,7 @@ def main():
 
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
-                   E0, w, chirp, alpha, phase, gauge, dt_out, BZ_type, Nk1, Nk_in_path, dynamics_type):
+                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, dynamics_type):
 
     if dynamics_type == 'density_matrix_dynamics' and user_out:
        print("Enter density matrix dynamics.")
@@ -547,7 +555,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         y0_np = np.array(y0)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, ev_in_path, ec_in_path, 
+        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+                                                      ecv_in_path, ev_in_path, ec_in_path, 
                                                       dipole_in_path, A_in_path, Avv_in_path, Acc_in_path, 
                                                       gauge, kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type)
 
@@ -1053,18 +1062,18 @@ def get_A_field(E0, w, t, alpha):
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
-def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+def f(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
       ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
       A_in_path, Avv_in_path, Acc_in_path, gauge,
       kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type):
-    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
                   ecv_in_path,  ev_in_path, ec_in_path, dipole_in_path, 
                   A_in_path, Avv_in_path, Acc_in_path, gauge,
                   kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
            ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
            A_in_path, Avv_in_path, Acc_in_path, gauge,
            kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type):
