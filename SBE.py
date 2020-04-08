@@ -1110,9 +1110,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
 
-        num_time_functions = 4
-        if do_B_field:
-            num_time_functions = 6
+        num_time_functions = 6
 
         i = num_time_functions*k
         if k == 0:
@@ -1152,6 +1150,8 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
            x[i+2] = x[i+1].conjugate()
            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
+           x[i+4] = 0
+           x[i+5] = 0
 
 #           if do_B_field:
 #               # use the unnecessary entry i+2 to compute the k-point shift 
@@ -1169,6 +1169,8 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
            x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
            x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
+           x[i+4] = 0
+           x[i+5] = 0
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
@@ -1319,11 +1321,11 @@ def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
     if dynamics_type == 'density_matrix_dynamics':
         if (temperature > 1e-5):
             fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
-            y0.extend([1.0,0.0,0.0,fermi_function])
+            y0.extend([1.0,0.0,0.0,fermi_function,0.0,0.0])
         else:
-            y0.extend([1.0,0.0,0.0,0.0])
+            y0.extend([1.0,0.0,0.0,0.0,0.0,0.0])
     elif dynamics_type == 'wavefunction_dynamics':
-        y0.extend([1.0,0.0,0.0,1.0])
+        y0.extend([1.0,0.0,0.0,1.0,0.0,0.0])
 
 
 def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
