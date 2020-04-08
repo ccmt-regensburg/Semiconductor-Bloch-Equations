@@ -37,6 +37,12 @@ evjit, ecjit = system.efjit[0], system.efjit[1]
 # for improved emission formula, we need derivative of the Hamiltonian 
 h_deriv = system.hderivfjit
 
+# for B-field dynamics, we need fast bandstructure derivative
+ev_dx = system.ederivfjit[0]
+ev_dy = system.ederivfjit[1]
+ec_dx = system.ederivfjit[2]
+ec_dy = system.ederivfjit[3]
+
 # 
 wf = system.Uf
 wf_h = system.Uf_h

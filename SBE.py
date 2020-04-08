@@ -1106,6 +1106,16 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
         Avv_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y
         Acc_in_path = E_dir[0]*di_11x + E_dir[1]*di_11y
 
+        if do_B_field:
+#            ev_dx = sys.e_deriv[0](kx=kx_shift_path, ky=ky_shift_path)
+#            ev_dy = sys.e_deriv[1](kx=kx_shift_path, ky=ky_shift_path)
+#            ec_dx = sys.e_deriv[2](kx=kx_shift_path, ky=ky_shift_path)
+#            ec_dy = sys.e_deriv[3](kx=kx_shift_path, ky=ky_shift_path)
+            ev_dx = sys.ev_dx(kx=kx_shift_path, ky=ky_shift_path)
+            ev_dy = sys.ev_dy(kx=kx_shift_path, ky=ky_shift_path)
+            ec_dx = sys.ec_dx(kx=kx_shift_path, ky=ky_shift_path)
+            ec_dy = sys.ec_dy(kx=kx_shift_path, ky=ky_shift_path)
+
     # Update the solution vector
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
@@ -1153,13 +1163,14 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+4] = 0
            x[i+5] = 0
 
-#           if do_B_field:
-#               # use the unnecessary entry i+2 to compute the k-point shift 
-#               # k_x
-#               x[i+5] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] \
-#                        - driving_field(B0, w, t, chirp, alpha, phase)*E_dir[0]*
-#               # k_y
-#               x[i+6] = 
+           if do_B_field:
+               # use the unnecessary entry i+2 to compute the k-point shift 
+               # k_x
+               B_z = driving_field(B0, w, t, chirp, alpha, phase)
+               x[i+4] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] \
+                        - B_z
+               # k_y
+               x[i+5] = 0
 
         elif dynamics_type == 'wavefunction_dynamics':
 
