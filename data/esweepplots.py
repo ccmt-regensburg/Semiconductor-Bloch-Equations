@@ -15,7 +15,7 @@ plt.rcParams['figure.figsize'] = (20, 10)
 plt.rcParams['font.size'] = 20
 
 # # Mass evaluation
-orderpath = './order_sweep_complete_bz/Esweep_kcut_dt0.01_C2on_Nk1-400_mb10meV_T1on/'
+orderpath = './resummed_hamiltonian/Esweep_dt0.01_Nk1-800_Nk2-80_mb10meV_T1on/'
 parampaths = ['E_{:1.2f}/'.format(E) for E in np.arange(2.0, 4.1, 0.5)]
 
 # Use kcut evaluational instead
@@ -26,7 +26,7 @@ parampaths = ['E_{:1.2f}/'.format(E) for E in np.arange(2.0, 4.1, 0.5)]
 # orderpath = './compare/'
 # parampaths = ['E_03/', 'E_06/', 'E_12/', 'E_20/', 'E_30/', 'E_40/']
 
-dirpath = 'K_dir/'
+dirpath = 'M_dir/'
 dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
 
 
