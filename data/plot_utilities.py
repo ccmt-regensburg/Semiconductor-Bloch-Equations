@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 
 
@@ -54,7 +55,7 @@ def read_data(orderpath, dirpath, parampaths):
 def logplot_fourier(freqw, data_dir, data_ortho,
                     xlim=(0, 30), ylim=(10e-15, 100),
                     xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
-                    dirname, savename='data'):
+                    paramlegend=None, dirname='dir', savename='data'):
 
     fig, ax = plt.subplots(2)
     for a in ax:
@@ -69,7 +70,6 @@ def logplot_fourier(freqw, data_dir, data_ortho,
     for freq, data_d, data_o in zip(freqw, data_dir, data_ortho):
         ax[0].semilogy(freq, data_d)
         ax[1].semilogy(freq, data_o)
-    paramlegend = [m.strip('/').replace('_', '=') for m in parampaths]
     ax[0].legend(paramlegend)
     ax[1].legend(paramlegend)
     fig.suptitle(dirname)
