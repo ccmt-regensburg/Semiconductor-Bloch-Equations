@@ -23,7 +23,7 @@ def run():
     # Initialize sympy bandstructure, energies/derivatives, dipoles
 
     # Sweep gap
-    for m_pre in np.arange(0, 2.5, 1.0):
+    for m_pre in np.arange(3.0, 5.5, 1.0):
         print("Current mass: ", m_pre*mb)
         dirname = 'mb_{:.0f}meV'.format(m_pre*10)
         if (not os.path.exists(dirname)):
