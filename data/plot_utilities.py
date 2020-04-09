@@ -2,6 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
+freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
+Int_tot_base_freq = Int_E_dir[freq_index_base_freq] + Int_ortho[freq_index_base_freq]
+
+
 
 def read_data(orderpath, dirpath, parampaths):
 
