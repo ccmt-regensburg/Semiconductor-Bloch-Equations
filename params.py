@@ -54,7 +54,7 @@ gauge               = 'velocity'    # 'length': use length gauge with gradient_k
 align               = 'K'          # E-field direction (gamma-'K' or gamma-'M'), 
                                    # or angle (30 for 30 degrees, only works with velocity gauge) 
 E0                  = 5.0          # Pulse amplitude (MV/cm)
-B0                  = 1.0          # B-Field strength (T)
+B0                  = 1.0E-5       # B-Field strength (T)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
