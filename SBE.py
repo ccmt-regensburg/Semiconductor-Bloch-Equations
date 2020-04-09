@@ -100,6 +100,7 @@ def main():
     do_emission_Bcurv   = params.emission_Bcurv
     do_emission_wavep   = params.emission_wavep
     store_all_timesteps = params.store_all_timesteps
+    Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics
 
     # USER OUTPUT
     ###############################################################################################
@@ -1213,6 +1214,9 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                x[i+6] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] - B_z*(ec_dy + Bcurv_c*E_x) / (1 - Bcurv_c*B_z)
                # k_v_y
                x[i+7] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[1] + B_z*(ec_dx - Bcurv_c*E_y) / (1 - Bcurv_c*B_z)
+
+               if np.abs(1 - Bcurv_c*B_z) < 1.0E-5:
+                   print("t, 1 - Bcurv_c*B_z", t, 1 - Bcurv_c*B_z)
 
         elif dynamics_type == 'wavefunction_dynamics':
 
