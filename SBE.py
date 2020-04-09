@@ -163,12 +163,12 @@ def main():
     # here,the time evolution of the density matrix is done
     solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                           gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                          'density_matrix_dynamics')
+                                                          Bcurv_in_B_dynamics, 'density_matrix_dynamics')
 
     if do_emission_wavep:
        wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                                       gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                      'wavefunction_dynamics')
+                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
     # COMPUTE OBSERVABLES
@@ -484,7 +484,7 @@ def main():
 
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
-                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, dynamics_type):
+                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, dynamics_type):
 
     if dynamics_type == 'density_matrix_dynamics' and user_out:
        print("Enter density matrix dynamics.")
@@ -559,7 +559,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
                                                       ecv_in_path, ev_in_path, ec_in_path, 
                                                       dipole_in_path, A_in_path, Avv_in_path, Acc_in_path, 
-                                                      gauge, kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type)
+                                                      gauge, kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, dynamics_type)
 
         # Propagate through time
         ti = 0
@@ -1066,18 +1066,18 @@ def get_A_field(E0, w, t, alpha):
 def f(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
       ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
       A_in_path, Avv_in_path, Acc_in_path, gauge,
-      kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type):
+      kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, dynamics_type):
     return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
                   ecv_in_path,  ev_in_path, ec_in_path, dipole_in_path, 
                   A_in_path, Avv_in_path, Acc_in_path, gauge,
-                  kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type)
+                  kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, dynamics_type)
 
 
 @njit
 def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
            ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
            A_in_path, Avv_in_path, Acc_in_path, gauge,
-           kx_in_path, ky_in_path, E_dir, y0_np, dynamics_type):
+           kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, dynamics_type):
 
     # x != y(t+dt)
     x = np.empty(np.shape(y), dtype=np.dtype('complex'))
@@ -1127,7 +1127,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
         # Energy term eband(i,k) the energy of band i at point k
         ecv = ecv_in_path[k]
         ev = -ecv_in_path[k]/2
-        ec = ecv_in_path[k]/2
+        ec =  ecv_in_path[k]/2
 
         # Rabi frequency: w_R = d_12(k).E(t)
         dipole = dipole_in_path[k]
@@ -1181,7 +1181,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                wr_d_diag_v      = rabi(E0, w, t, chirp, alpha, phase, A_in_v_path)
                ecv_in_v_path    = sys.ecjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v) \
                                 - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-               Bcurv_v          = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               if Bcurv_in_B_dynamics: 
+                  Bcurv_v = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               else:
+                  Bcurv_v = 0
 
                di_00x_B_field   = sys.di_00xjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
                di_01x_B_field   = sys.di_01xjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
@@ -1196,7 +1199,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                wr_d_diag_c      = rabi(E0, w, t, chirp, alpha, phase, A_in_c_path)
                ecv_in_c_path    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
                                 - sys.evjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-               Bcurv_c          = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               if Bcurv_in_B_dynamics: 
+                  Bcurv_c = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               else:
+                  Bcurv_c = 0
 
                # use the unnecessary entry i+2 to compute the k-point shift 
                B_z = driving_field(B0, w, t, chirp, alpha, phase)
@@ -1214,9 +1220,6 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                x[i+6] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] - B_z*(ec_dy + Bcurv_c*E_x) / (1 - Bcurv_c*B_z)
                # k_v_y
                x[i+7] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[1] + B_z*(ec_dx - Bcurv_c*E_y) / (1 - Bcurv_c*B_z)
-
-               if np.abs(1 - Bcurv_c*B_z) < 1.0E-5:
-                   print("t, 1 - Bcurv_c*B_z", t, 1 - Bcurv_c*B_z)
 
         elif dynamics_type == 'wavefunction_dynamics':
 
