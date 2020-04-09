@@ -1106,21 +1106,11 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
         Avv_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y
         Acc_in_path = E_dir[0]*di_11x + E_dir[1]*di_11y
 
-        if do_B_field:
-#            ev_dx = sys.e_deriv[0](kx=kx_shift_path, ky=ky_shift_path)
-#            ev_dy = sys.e_deriv[1](kx=kx_shift_path, ky=ky_shift_path)
-#            ec_dx = sys.e_deriv[2](kx=kx_shift_path, ky=ky_shift_path)
-#            ec_dy = sys.e_deriv[3](kx=kx_shift_path, ky=ky_shift_path)
-            ev_dx = sys.ev_dx(kx=kx_shift_path, ky=ky_shift_path)
-            ev_dy = sys.ev_dy(kx=kx_shift_path, ky=ky_shift_path)
-            ec_dx = sys.ec_dx(kx=kx_shift_path, ky=ky_shift_path)
-            ec_dy = sys.ec_dy(kx=kx_shift_path, ky=ky_shift_path)
-
     # Update the solution vector
     Nk_path = kpath.shape[0]
     for k in range(Nk_path):
 
-        num_time_functions = 6
+        num_time_functions = 8
 
         i = num_time_functions*k
         if k == 0:
@@ -1162,15 +1152,67 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
            x[i+4] = 0
            x[i+5] = 0
+           x[i+6] = 0
+           x[i+7] = 0
 
            if do_B_field:
+
+               kx_shifted_path_v = kx_in_path[k] + y[i+4]
+               ky_shifted_path_v = ky_in_path[k] + y[i+5]
+               kx_shifted_path_c = kx_in_path[k] + y[i+6]
+               ky_shifted_path_c = ky_in_path[k] + y[i+7]
+        
+               ev_dx = sys.ev_dx(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               ev_dy = sys.ev_dy(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               ec_dx = sys.ec_dx(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               ec_dy = sys.ec_dy(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+
+               di_00x_B_field   = sys.di_00xjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               di_01x_B_field   = sys.di_01xjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               di_11x_B_field   = sys.di_11xjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               di_00y_B_field   = sys.di_00yjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               di_01y_B_field   = sys.di_01yjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               di_11y_B_field   = sys.di_11yjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               dipole_in_v_path = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
+               A_in_v_path      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
+               wr_v             = rabi(E0, w, t, chirp, alpha, phase, dipole_in_v_path)
+               wr_v_c           = wr_v.conjugate()
+               wr_d_diag_v      = rabi(E0, w, t, chirp, alpha, phase, A_in_v_path)
+               ecv_in_v_path    = sys.ecjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v) \
+                                - sys.evjit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+
+               di_00x_B_field   = sys.di_00xjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               di_01x_B_field   = sys.di_01xjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               di_11x_B_field   = sys.di_11xjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               di_00y_B_field   = sys.di_00yjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               di_01y_B_field   = sys.di_01yjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               di_11y_B_field   = sys.di_11yjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+               dipole_in_c_path = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
+               A_in_c_path      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
+               wr_c             = rabi(E0, w, t, chirp, alpha, phase, dipole_in_c_path)
+               wr_c_c           = wr_v.conjugate()
+               wr_d_diag_c      = rabi(E0, w, t, chirp, alpha, phase, A_in_c_path)
+               ecv_in_c_path    = sys.ecjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
+                                - sys.evjit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+
                # use the unnecessary entry i+2 to compute the k-point shift 
-               # k_x
                B_z = driving_field(B0, w, t, chirp, alpha, phase)
+               x[i]   = 2*(wr_v*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
+               x[i+1] = (1j*ecv_in_v_path - gamma2 + 1j*wr_d_diag_v)*y[i+1] - 1j*wr_v_c*(y[i]-0) 
+               x[i+2] = (1j*ecv_in_c_path - gamma2 + 1j*wr_d_diag_c)*y[i+2] - 1j*wr_c_c*(1-y[i+3]) 
+               x[i+3] = -2*(wr_c*y[i+2]).imag - gamma1*(y[i+3]-y0_np[i+3])
+               # k_v_x
                x[i+4] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] \
-                        - B_z
-               # k_y
-               x[i+5] = 0
+                        - B_z*ev_dy
+               # k_v_y
+               x[i+5] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[1] \
+                        + B_z*ev_dx
+               # k_c_x
+               x[i+6] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] \
+                        - B_z*ec_dy
+               # k_v_y
+               x[i+7] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[1] \
+                        + B_z*ec_dx
 
         elif dynamics_type == 'wavefunction_dynamics':
 
@@ -1182,6 +1224,8 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
            x[i+4] = 0
            x[i+5] = 0
+           x[i+6] = 0
+           x[i+7] = 0
 
     # last component of x is the E-field to obtain the vector potential A(t)
     x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
@@ -1332,11 +1376,11 @@ def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
     if dynamics_type == 'density_matrix_dynamics':
         if (temperature > 1e-5):
             fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
-            y0.extend([1.0,0.0,0.0,fermi_function,0.0,0.0])
+            y0.extend([1.0,0.0,0.0,fermi_function,0.0,0.0,0.0,0.0])
         else:
-            y0.extend([1.0,0.0,0.0,0.0,0.0,0.0])
+            y0.extend([1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0])
     elif dynamics_type == 'wavefunction_dynamics':
-        y0.extend([1.0,0.0,0.0,1.0,0.0,0.0])
+        y0.extend([1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0])
 
 
 def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
