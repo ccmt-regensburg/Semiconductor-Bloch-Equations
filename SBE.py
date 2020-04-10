@@ -1195,7 +1195,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                dipole_in_c_path = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
                A_in_c_path      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
                wr_c             = rabi(E0, w, t, chirp, alpha, phase, dipole_in_c_path)
-               wr_c_c           = wr_v.conjugate()
+               wr_c_c           = wr_c.conjugate()
                wr_d_diag_c      = rabi(E0, w, t, chirp, alpha, phase, A_in_c_path)
                ecv_in_c_path    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
                                 - sys.evjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
