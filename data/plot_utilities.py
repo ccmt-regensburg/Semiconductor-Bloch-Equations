@@ -2,14 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
-freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
-Int_tot_base_freq = Int_E_dir[freq_index_base_freq] + Int_ortho[freq_index_base_freq]
-
-
 
 def read_data(orderpath, dirpath, parampaths):
-
+    """
+    Read data saved by SBE.py
+    """
     Idata = []
     Iexactdata = []
     Jdata = []
@@ -21,11 +18,6 @@ def read_data(orderpath, dirpath, parampaths):
         filelist = os.listdir(totalpath)
 
         for filename in filelist:
-            # Read electric field only once
-            if (i == 0):
-                print("Reading electric field:")
-                print(filelist[0], end='\n\n')
-
             # Emissions I
             # [t, I_E_dir, I_ortho, freq/w, abs(Iw_E_dir), abs(Iw_ortho),
             # Int_E_dir, Int_ortho]
@@ -54,13 +46,14 @@ def read_data(orderpath, dirpath, parampaths):
 
         print('\n')
 
-    return np.array(Idata), np.array(Iexactdata), np.array(Jdata), np.array(Pdata)
+    return np.array(Idata), np.array(Iexactdata), np.array(Jdata), \
+        np.array(Pdata)
 
 
-def logplot_fourier(freqw, data_dir, data_ortho,
-                    xlim=(0, 30), ylim=(10e-15, 100),
-                    xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
-                    paramlegend=None, dirname='dir', savename='data'):
+def dir_ortho_fourier(freqw, data_dir, data_ortho,
+                      xlim=(0, 30), ylim=(10e-15, 1),
+                      xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
+                      paramlegend=None, dirname='dir', savename='data'):
 
     fig, ax = plt.subplots(2)
     for a in ax:
@@ -78,5 +71,39 @@ def logplot_fourier(freqw, data_dir, data_ortho,
     ax[0].legend(paramlegend)
     ax[1].legend(paramlegend)
     fig.suptitle(dirname)
-    # plt.show()
     plt.savefig(savename)
+
+
+def total_fourier(freqw, data_dir, data_ortho,
+                  xlim=(0, 30), ylim=(10e-15, 1),
+                  xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
+                  paramlegend=None, dirname='dir', savename='data'):
+    fig, ax = plt.subplots(1)
+
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_xticks(np.arange(31))
+    ax.grid(True, axis='x', ls='--')
+    ax.set_ylabel(ylabel)
+    ax.set_title(r'Total Intensity')
+    ax.set_xlabel(xlabel)
+    for freq, data in zip(freqw, data_dir+data_ortho):
+        ax.semilogy(freq, data)
+    ax.legend(paramlegend)
+    fig.suptitle(dirname)
+    plt.savefig(savename)
+
+
+def find_base_freq(freqw, data_dir, data_ortho):
+    """
+    Find the amplitude at the base frequency for every data set
+    for normalizations
+    """
+
+    base_frequency = []
+    for i, freq in enumerate(freqw):
+        # Closest frequency index to 1
+        idx = np.abs(freqw - 1).argmin()
+        base_frequency.append(data_dir[i, idx] + data_ortho[i, idx])
+
+    return np.array(base_frequency)

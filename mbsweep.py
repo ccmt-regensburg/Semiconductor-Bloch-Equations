@@ -4,8 +4,6 @@ from params import params
 
 import hfsbe.dipole
 from hfsbe.example import BiTeResummed
-import hfsbe.utility
-
 
 from SBE import main as solver
 
