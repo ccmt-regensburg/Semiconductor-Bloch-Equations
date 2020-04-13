@@ -21,8 +21,8 @@ class params:
     b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
     # full BZ parametes
-    Nk1                 = 800         # Number of kpoints in b1 direction
-    Nk2                 = 80          # Number of kpoints in b2 direction (number of paths)
+    Nk1                 = 100         # Number of kpoints in b1 direction
+    Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
     Nk_in_path          = 40        # Number of kpoints in each of the two paths
