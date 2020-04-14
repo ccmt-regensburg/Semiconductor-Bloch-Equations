@@ -91,4 +91,5 @@ test                = False  # Set to True to output travis testing parameters
 matrix_method       = False  # Set to True to use old matrix method for solving
 emission_Bcurv      = False  # additionally compute emission quasiclassically using the Berry curvature (computationally expensive)
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
+Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
