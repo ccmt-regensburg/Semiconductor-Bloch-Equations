@@ -1,5 +1,4 @@
 import params
-import analytical
 import numpy as np
 from numba import njit
 import matplotlib.pyplot as pl
@@ -11,6 +10,11 @@ import systems as sys
 import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
+
+import analytical
+#import numerical_impl_halbl_bloch_dipol_aprox as tlm
+from scipy import interpolate
+
 
 '''
 TO DO:
@@ -78,13 +82,12 @@ def main():
 
     b1 = params.b1                                        # Reciprocal lattice vectors
     b2 = params.b2
-
+    
     user_out = params.user_out
     print_J_P_I_files = params.print_J_P_I_files
     energy_plots = params.energy_plots
     dipole_plots = params.dipole_plots
     test = params.test                                # Testing flag for Travis
-
 
     # USER OUTPUT
     ###############################################################################################
@@ -159,14 +162,15 @@ def main():
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+        di_x = np.ones(kx_in_path.size, dtype=np.complex128)
+        di_y = np.ones(kx_in_path.size, dtype=np.complex128)
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :]
-        A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
-            - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
+        dipole_in_path = E_dir[0]*di_x + E_dir[1]*di_y
+        A_in_path = E_dir[0]*di_x + E_dir[1]*di_y \
+            - (E_dir[0]*di_x + E_dir[1]*di_y)
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are provided and a cutoff radius
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
@@ -182,7 +186,8 @@ def main():
         y0.append(0.0)
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase, ecv_in_path, dipole_in_path,\
+        solver.set_initial_value(y0, t0).set_f_params(path, dk, gamma2, E0, w, chirp, alpha, phase, delta_min, delta_d, length_path_in_BZ,\
+                                                      ecv_in_path, dipole_in_path,\
                                                       A_in_path, gauge, kx_in_path, ky_in_path, E_dir)
 
         # Propagate through time
@@ -239,11 +244,16 @@ def main():
 
     # COMPUTE OBSERVABLES
     ###########################################################################
+    analytics   = analytical.emission()
+
+    
+    # COMPUTE OBSERVABLES
+    ###########################################################################
     # Calculate parallel and orthogonal components of observables
     # Polarization (interband)
     P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir)
     # Current (intraband)
-    J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+    J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, delta_d, length_path_in_BZ)
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
@@ -267,10 +277,14 @@ def main():
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
+    
 
     # Emission intensity
-    Int_E_dir = (freq**2)*np.abs(freq*Pw_E_dir + 1j*Jw_E_dir)**2.0
-    Int_ortho = (freq**2)*np.abs(freq*Pw_ortho + 1j*Jw_ortho)**2.0
+    Int_E_dir = (freq**2)*np.abs(Pw_E_dir + 1j*Jw_E_dir)**2.0
+    Int_ortho = (freq**2)*np.abs(Pw_ortho + 1j*Jw_ortho)**2.0
+
+    Int_E_dir /= max(Int_E_dir)
+    #Int_ortho /= max(Int_ortho)*10
 
     # Save observables to file
     if (BZ_type == '2line'):
@@ -314,6 +328,8 @@ def main():
         axJ.plot(t/fs_conv,J_ortho)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        pl.clf()
+        pl.close()
 
         four_fig, ((axPw,axJw),(axIw,axInt)) = pl.subplots(2,2,figsize=(10,10))
         axPw.grid(True,axis='x')
@@ -340,13 +356,15 @@ def main():
         axInt.grid(True,axis='x')
         axInt.set_xlim(freq_lims)
         axInt.set_ylim(log_limits)
-        axInt.semilogy(freq/w,np.abs(Int_E_dir))
+        axInt.semilogy(freq/w,np.abs(Int_E_dir), label="band numerics")
         axInt.semilogy(freq/w,np.abs(Int_ortho))
         axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
 
-        analytics = analytical.emission()
-        axInt.plot(analytics[:,0], analytics[:,1] )
+        axInt.plot(analytics[:,0], analytics[:,1], label="analytical solution" )
+        #axInt.plot(secAnalytics[:,0], secAnalytics[:,1], label="alternativ analytical solution" )
+        pl.legend()
+        pl.show()
 
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         # Countour plots of occupations and gradients of occupations
@@ -385,7 +403,7 @@ def main():
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
 
-        pl.show()
+        #pl.show()
 
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -406,6 +424,8 @@ def main():
 #################################################################################################
 # FUNCTIONS
 ################################################################################################
+
+ 
 def mesh(params, E_dir):
     Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
@@ -530,7 +550,7 @@ def rabi(E0, w, t, chirp, alpha, phase, dipole):
     Rabi frequency of the transition.
     Calculated from dipole element and driving field
     '''
-    return 1*driving_field(E0, w, t, chirp, alpha, phase)
+    return dipole*driving_field(E0, w, t, chirp, alpha, phase)
 
 
 def diff(x, y):
@@ -552,7 +572,8 @@ def Gaussian_envelope(t, alpha):
     Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
+    return np.ones(len(t))
+    #return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
 def polarization(paths, pcv, E_dir):
@@ -569,11 +590,12 @@ def polarization(paths, pcv, E_dir):
         ky_in_path = path[:, 1]
 
         # Evaluate the dipole moments in path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+        di_x = np.ones(kx_in_path.size, dtype=np.complex128)
+        di_y = np.zeros(kx_in_path.size, dtype=np.complex128)
 
         # Append the dot product d.E
-        d_E_dir.append(di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1])
-        d_ortho.append(di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1])
+        d_E_dir.append(di_x*E_dir[0] + di_y*E_dir[1])
+        d_ortho.append(di_x*E_ort[0] + di_y*E_ort[1])
 
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
@@ -588,7 +610,7 @@ def polarization(paths, pcv, E_dir):
     return P_E_dir, P_ortho
 
 
-def current(paths, fv, fc, t, alpha, E_dir):
+def current(paths, fv, fc, t, alpha, E_dir, delta_d, length_path_in_BZ):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -602,8 +624,8 @@ def current(paths, fv, fc, t, alpha, E_dir):
         path = np.array(path)
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
-        bandstruct_deriv = sys.system.evaluate_ederivative(kx_in_path,
-                                                           ky_in_path)
+        bandstruct_deriv = np.zeros((4, kx_in_path.size) )
+
         # 0: v, x   1: v,y   2: c, x  3: c, y
         jc_E_dir.append(bandstruct_deriv[2]*E_dir[0]
                         + bandstruct_deriv[3]*E_dir[1])
@@ -705,16 +727,16 @@ def get_A_field(E0, w, t, alpha):
     return np.real(-alpha*E0*np.sqrt(np.pi)/2*np.exp(-w_eff**2/4)*(2+erf(t/2/alpha-1j*w_eff/2)-erf(-t/2/alpha-1j*w_eff/2)))
 
 
-def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
+def f(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, delta_min, delta_d, length_path_in_BZ,
       ecv_in_path, dipole_in_path, A_in_path, gauge,
       kx_in_path, ky_in_path, E_dir):
-    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
+    return fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, delta_min, delta_d, length_path_in_BZ,
                   ecv_in_path, dipole_in_path, A_in_path, gauge,
                   kx_in_path, ky_in_path, E_dir)
 
 
 @njit
-def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
+def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase, delta_min, delta_d, length_path_in_BZ,
            ecv_in_path, dipole_in_path, A_in_path, gauge,
            kx_in_path, ky_in_path, E_dir):
 
@@ -728,15 +750,18 @@ def fnumba(t, y, kpath, dk, gamma2, E0, w, chirp, alpha, phase,
         k_shift = (y[-1]).real
         kx_shift_path = kx_in_path+E_dir[0]*k_shift
         ky_shift_path = ky_in_path+E_dir[1]*k_shift
-        ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
-            - sys.evjit(kx=kx_shift_path, ky=ky_shift_path)
+        dim = kx_shift_path.size
+        ecv_in_path = delta_min + delta_d*np.sin(kx_shift_path*np.pi/length_path_in_BZ)**2
+
     
-        di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_00y = sys.di_00yjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
+        di_00x = np.zeros(dim, dtype=np.complex128)
+        di_01x = np.ones(dim, dtype=np.complex128)
+        di_11x = np.zeros(dim, dtype=np.complex128)
+        di_00y = np.zeros(dim, dtype=np.complex128)
+        di_01y = np.zeros(dim, dtype=np.complex128)
+        di_11y = np.zeros(dim, dtype=np.complex128)
+        
+
         # found that the dipole needs a complex conjugate
         dipole_in_path = np.conj(E_dir[0]*di_01x + E_dir[1]*di_01y)
         A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
