@@ -35,7 +35,7 @@ Nk2_vel             = 10          # Number of kpoints in b2 direction
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # full BZ parametes
-Nk1                 = 100       # Number of kpoints in b1 direction
+Nk1                 = 200       # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
@@ -54,7 +54,7 @@ gauge               = 'velocity'    # 'length': use length gauge with gradient_k
 align               = 'K'          # E-field direction (gamma-'K' or gamma-'M'), 
                                    # or angle (30 for 30 degrees, only works with velocity gauge) 
 E0                  = 5.0          # Pulse amplitude (MV/cm)
-B0                  = 1.0E-5       # B-Field strength (T)
+B0                  = 0            # B-Field strength (T)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
@@ -93,3 +93,4 @@ emission_Bcurv      = False  # additionally compute emission quasiclassically us
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
+parallel_transport  = True   # if true, insert condiction for parallel transport: E(t) * A_n(k(t)) = 0
