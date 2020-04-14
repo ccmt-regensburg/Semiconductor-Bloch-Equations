@@ -118,8 +118,9 @@ def main(sys, dipole, params):
     t = []
     solution = []
 
-    # Initialize the ode solver
-    solver = ode(f, jac=None)\
+    # Initialize the ode solver and create fnumba
+    fnumba = make_fnumba(sys, dipole)
+    solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
     # Vector field
@@ -140,36 +141,16 @@ def main(sys, dipole, params):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
 
-        # Calculate the dipole components along the path
-        di_00x = dipole.Axfjit[0][0](kx=kx_in_path, ky=ky_in_path)
-        di_01x = dipole.Axfjit[0][1](kx=kx_in_path, ky=ky_in_path)
-        di_11x = dipole.Axfjit[1][1](kx=kx_in_path, ky=ky_in_path)
-        di_00y = dipole.Ayfjit[0][0](kx=kx_in_path, ky=ky_in_path)
-        di_01y = dipole.Ayfjit[0][1](kx=kx_in_path, ky=ky_in_path)
-        di_11y = dipole.Ayfjit[1][1](kx=kx_in_path, ky=ky_in_path)
-
-        # Calculate the dot products E_dir.d_nm(k).
-        # To be multiplied by E-field magnitude later.
-        # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
-        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
-            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
-
-        # in bite.evaluate, there is also an interpolation done if b1, b2 are
-        # provided and a cutoff radius
-        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)
-        ev = sys.efjit[0](kx=kx_in_path, ky=ky_in_path)
-        ecv_in_path = ec - ev
-
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path, mb=0)
         y0 = initial_condition(e_fermi, temperature, ec)
         y0 = np.append(y0, [0.0])
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
             .set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                          ecv_in_path, dipole_in_path, A_in_path, y0)
+                          E_dir, y0) 
 
         # Propagate through time
         ti = 0
@@ -392,18 +373,10 @@ def driving_field(E0, w, t, chirp, alpha, phase):
         * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
 
-def diff(x, y):
-    '''
-    Takes the derivative of y w.r.t. x
-    '''
-    if (len(x) != len(y)):
-        raise ValueError('Vectors have different lengths')
-    elif len(y) == 1:
-        return 0
-    else:
-        dx = np.gradient(x)
-        dy = np.gradient(y)
-        return dy/dx
+@njit
+def zeeman_field(t):
+    mb = 0.000373195 
+    return mb
 
 
 def gaussian_envelope(t, alpha):
@@ -461,65 +434,97 @@ def emission_exact(sys, paths, solution, E_dir, A_field):
     return I_E_dir, I_ortho
 
 
+def make_fnumba(sys, dipole):
+    # Wire the energies
+    evf = sys.efjit[0]
+    ecf = sys.efjit[1]
 
-def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
-      dipole_in_path, A_in_path, y0):
-    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                  ecv_in_path, dipole_in_path, A_in_path, y0)
+    # Wire the dipoles
+    di_00xf = dipole.Axfjit[0][0]
+    di_01xf = dipole.Axfjit[0][1]
+    di_11xf = dipole.Axfjit[1][1]
+    di_00yf = dipole.Ayfjit[0][0]
+    di_01yf = dipole.Ayfjit[0][1]
+    di_11yf = dipole.Ayfjit[1][1]
 
+    @njit
+    def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+               E_dir, y0):
 
-@njit
-def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-           ecv_in_path, dipole_in_path, A_in_path, y0):
+        # Preparing system parameters, energies, dipoles
+        mb = zeeman_field(t)
+        kx = kpath[:, 0]
+        ky = kpath[:, 1]
+        ev = evf(kx=kx, ky=ky, mb=mb)
+        ec = ecf(kx=kx, ky=ky, mb=mb)
+        ecv_in_path = ec - ev
 
-    # x != y(t+dt)
-    x = np.empty(np.shape(y), dtype=np.dtype('complex'))
+        di_00x = di_00xf(kx=kx, ky=ky, mb=mb)
+        di_01x = di_01xf(kx=kx, ky=ky, mb=mb)
+        di_11x = di_11xf(kx=kx, ky=ky, mb=mb)
+        di_00y = di_00yf(kx=kx, ky=ky, mb=mb)
+        di_01y = di_01yf(kx=kx, ky=ky, mb=mb)
+        di_11y = di_11yf(kx=kx, ky=ky, mb=mb)
 
-    # Gradient term coefficient
-    driving_f = driving_field(E0, w, t, chirp, alpha, phase)
-    D = driving_f/(2*dk)
+        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
+        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
+            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
 
-    # Update the solution vector
-    Nk_path = kpath.shape[0]
-    for k in range(Nk_path):
-        i = 4*k
-        if k == 0:
-            m = 4*(k+1)
-            n = 4*(Nk_path-1)
-        elif k == Nk_path-1:
-            m = 0
-            n = 4*(k-1)
-        else:
-            m = 4*(k+1)
-            n = 4*(k-1)
+        # x != y(t+dt)
+        x = np.empty(np.shape(y), dtype=np.dtype('complex'))
 
-        # Energy term eband(i,k) the energy of band i at point k
-        ecv = ecv_in_path[k]
+        # Gradient term coefficient
+        driving_f = driving_field(E0, w, t, chirp, alpha, phase)
+        D = driving_f/(2*dk)
 
-        # Rabi frequency: w_R = d_12(k).E(t)
-        # Rabi frequency conjugate
-        wr = dipole_in_path[k]*driving_f
-        wr_c = wr.conjugate()
+        # Update the solution vector
+        Nk_path = kpath.shape[0]
+        for k in range(Nk_path):
+            i = 4*k
+            if k == 0:
+                m = 4*(k+1)
+                n = 4*(Nk_path-1)
+            elif k == Nk_path-1:
+                m = 0
+                n = 4*(k-1)
+            else:
+                m = 4*(k+1)
+                n = 4*(k-1)
 
-        # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        # wr_d_diag   = A_in_path[k]*D
-        wr_d_diag = A_in_path[k]*driving_f
+            # Energy term eband(i,k) the energy of band i at point k
+            ecv = ecv_in_path[k]
 
-        # Update each component of the solution vector
-        # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-        x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) \
-            - gamma1*(y[i]-y0[i])
+            # Rabi frequency: w_R = d_12(k).E(t)
+            # Rabi frequency conjugate
+            wr = dipole_in_path[k]*driving_f
+            wr_c = wr.conjugate()
 
-        x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
-            - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+            # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
+            # wr_d_diag   = A_in_path[k]*D
+            wr_d_diag = A_in_path[k]*driving_f
 
-        x[i+2] = x[i+1].conjugate()
+            # Update each component of the solution vector
+            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+            x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) \
+                - gamma1*(y[i]-y0[i])
 
-        x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) \
-            - gamma1*(y[i+3]-y0[i+3])
+            x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+                - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
 
-    x[-1] = -driving_f
-    return x
+            x[i+2] = x[i+1].conjugate()
+
+            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) \
+                - gamma1*(y[i+3]-y0[i+3])
+
+        x[-1] = -driving_f
+        return x
+
+    def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+          E_dir, y0):
+        return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha,
+                      phase, E_dir, y0)
+
+    return f
 
 
 def initial_condition(e_fermi, temperature, e_c):
