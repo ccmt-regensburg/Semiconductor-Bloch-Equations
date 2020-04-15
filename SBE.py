@@ -12,7 +12,6 @@ import hfsbe.example
 import hfsbe.utility
 
 import analytical
-#import numerical_impl_halbl_bloch_dipol_aprox as tlm
 from scipy import interpolate
 
 
@@ -244,7 +243,8 @@ def main():
 
     # COMPUTE OBSERVABLES
     ###########################################################################
-    analytics   = analytical.emission()
+    analytics       = analytical.emission()
+    secAnalytics    = analytical.alternativEmission()
 
     
     # COMPUTE OBSERVABLES
@@ -362,7 +362,7 @@ def main():
         axInt.set_ylabel(r'$[I](\omega)$ intensity in a.u.')
 
         axInt.plot(analytics[:,0], analytics[:,1], label="analytical solution" )
-        #axInt.plot(secAnalytics[:,0], secAnalytics[:,1], label="alternativ analytical solution" )
+        axInt.plot(secAnalytics[:,0], secAnalytics[:,1], label="alternativ analytical solution" )
         pl.legend()
         pl.show()
 

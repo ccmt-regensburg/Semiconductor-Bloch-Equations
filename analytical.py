@@ -37,5 +37,36 @@ def hilfsfct(h, w):
 
     return erg*summe
 
+def alternativEmission():
+    samplingPoints = 5000
+    factor = int(2*delta_min/omega)+1
+    maxOrder = int(factor/2)+1
+    frequencies = np.linspace(0.4*omega, factor*omega, samplingPoints)
+    erg = np.zeros(samplingPoints, dtype=complex)
+    for h in range(maxOrder+1):
+        erg += alternativHilfsfct(h, frequencies)
+    erg = frequencies**2*erg
+    erg = np.real(erg*np.conj(erg) )
+    erg = erg/max(erg)
+    erg = np.maximum(erg, np.ones_like(erg)*1e-17)
+
+    return np.transpose([frequencies/omega, erg])
+ 
+def alternativHilfsfct(h, w):
+    summe = np.zeros(len(w), dtype=complex)
+    erg = delta_min/(np.power(delta_min,2)+np.power(damping_off+1j*w,2))*np.power(-1,h)*np.power(2*amplitude_elec,2*h+1)*width_gaussian/2/np.sqrt(2*h+1)
+    
+    phaseFactor = 1
+    for k in range(0, h):
+        phaseFactor *= H(k)
+    phaseFactor *= np.power(1j/(8*omega), h)/sp.special.factorial(h)
+
+    summe += phaseFactor*np.exp(-np.power(width_gaussian*(w-(2*h+1)*omega), 2)/(2*(2*h+1) ) )*np.exp(-1j*(2*h+1)*phase)
+
+    return erg*summe
+
+def H(k):
+    return (damping_off-1j*(2*k+1)*omega)/(delta_min**2+(damping_off-1j*(2*k+1)*omega)**2)
+
 
 

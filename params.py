@@ -50,7 +50,7 @@ gauge               = 'velocity'    # 'length': use length gauge with gradient_k
 ##########################################################################
 align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
 E0                  = 20.0         # Pulse amplitude (MV/cm)
-w                   = 25.0        # Pulse frequency (THz)
+w                   = 35.0        # Pulse frequency (THz)
 chirp               = 0.0        # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
 phase               = (0/2)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
