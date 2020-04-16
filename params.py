@@ -35,7 +35,7 @@ Nk2_vel             = 10          # Number of kpoints in b2 direction
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # full BZ parametes
-Nk1                 = 200       # Number of kpoints in b1 direction
+Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
