@@ -48,7 +48,7 @@ wf = system.Uf
 wf_h = system.Uf_h
 
 # Get symbolic dipoles
-dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
+dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym, offdiagonal_k=True)
 
 
 # Assign all dipole moment functions
@@ -60,7 +60,7 @@ di_00yjit = dipole.Ayfjit[0][0]
 di_01yjit = dipole.Ayfjit[0][1]
 di_11yjit = dipole.Ayfjit[1][1]
 
-curv = hfsbe.dipole.SymbolicCurvature(dipole.Ax, dipole.Ay)
+curv = hfsbe.dipole.SymbolicCurvature(h_sym, dipole.Ax, dipole.Ay)
 cu_00jit = curv.Bfjit[0][0]
 cu_01jit = curv.Bfjit[0][1]
 cu_11jit = curv.Bfjit[1][1]

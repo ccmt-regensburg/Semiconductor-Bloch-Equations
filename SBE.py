@@ -821,7 +821,7 @@ def current(paths, fv, fc, t, alpha, E_dir):
     where j_n(k) != (d/dk) E_n(k)
     '''
     E_ort = np.array([E_dir[1], -E_dir[0]])
-
+    
     # Calculate the gradient analytically at each k-point
     J_E_dir, J_ortho = [], []
     jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
@@ -829,29 +829,67 @@ def current(paths, fv, fc, t, alpha, E_dir):
         path = np.array(path)
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
-        bandstruct_deriv = sys.system.evaluate_ederivative(kx_in_path,
-                                                           ky_in_path)
-        # 0: v, x   1: v,y   2: c, x  3: c, y
-        jc_E_dir.append(bandstruct_deriv[2]*E_dir[0]
-                        + bandstruct_deriv[3]*E_dir[1])
-        jc_ortho.append(bandstruct_deriv[2]*E_ort[0]
-                        + bandstruct_deriv[3]*E_ort[1])
-        jv_E_dir.append(bandstruct_deriv[0]*E_dir[0]
-                        + bandstruct_deriv[1]*E_dir[1])
-        jv_ortho.append(bandstruct_deriv[0]*E_ort[0]
-                        + bandstruct_deriv[1]*E_ort[1])
-
-    jc_E_dir = np.array(jc_E_dir).T
-    jc_ortho = np.array(jc_ortho).T
-    jv_E_dir = np.array(jv_E_dir).T
-    jv_ortho = np.array(jv_ortho).T
-
+        
+        evdx = sys.systems.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
+        evdy = sys.systems.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
+        ecdx = sys.systems.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
+        ecdy = sys.systems.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
+    
+        # 0: v, x 1: v,y 2: c, x 3: c, y
+        jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
+        jc_ortho.append(ecdx*E_ort[0] + ecdy*E_ort[1])
+        jv_E_dir.append(evdx*E_dir[0] + evdy*E_dir[1])
+        jv_ortho.append(evdx*E_ort[0] + evdy*E_ort[1])
+    
+    jc_E_dir = np.swapaxes(jc_E_dir, 0, 1)
+    jc_ortho = np.swapaxes(jc_ortho, 0, 1)
+    jv_E_dir = np.swapaxes(jv_E_dir, 0, 1)
+    jv_ortho = np.swapaxes(jv_ortho, 0, 1)
+    
     # tensordot for contracting the first two indices (2 kpoint directions)
     J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
     J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
-
+    
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
+
+#def current(paths, fv, fc, t, alpha, E_dir):
+#    '''
+#    Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
+#    where j_n(k) != (d/dk) E_n(k)
+#    '''
+#    E_ort = np.array([E_dir[1], -E_dir[0]])
+#
+#    # Calculate the gradient analytically at each k-point
+#    J_E_dir, J_ortho = [], []
+#    jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
+#    for path in paths:
+#        path = np.array(path)
+#        kx_in_path = path[:, 0]
+#        ky_in_path = path[:, 1]
+#        bandstruct_deriv = sys.system.evaluate_ederivative(kx_in_path,
+#                                                           ky_in_path)
+#        # 0: v, x   1: v,y   2: c, x  3: c, y
+#        jc_E_dir.append(bandstruct_deriv[2]*E_dir[0]
+#                        + bandstruct_deriv[3]*E_dir[1])
+#        jc_ortho.append(bandstruct_deriv[2]*E_ort[0]
+#                        + bandstruct_deriv[3]*E_ort[1])
+#        jv_E_dir.append(bandstruct_deriv[0]*E_dir[0]
+#                        + bandstruct_deriv[1]*E_dir[1])
+#        jv_ortho.append(bandstruct_deriv[0]*E_ort[0]
+#                        + bandstruct_deriv[1]*E_ort[1])
+#
+#    jc_E_dir = np.array(jc_E_dir).T
+#    jc_ortho = np.array(jc_ortho).T
+#    jv_E_dir = np.array(jv_E_dir).T
+#    jv_ortho = np.array(jv_ortho).T
+#
+#    # tensordot for contracting the first two indices (2 kpoint directions)
+#    J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
+#    J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
+#
+#    # Return the real part of each component
+#    return np.real(J_E_dir), np.real(J_ortho)
 
 def emission_exact(paths, solution, E_dir, A_field):
 
