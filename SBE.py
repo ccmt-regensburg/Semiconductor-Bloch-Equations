@@ -1229,13 +1229,13 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                print("np.shape(di_00x_B_field)", np.shape(di_00x_B_field))
                print("np.shape(dipole_in_path)", np.shape(dipole_in_path))
 
-               dipole_in_path = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
-               A_in_path      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
-               wr             = rabi(E0, w, t, chirp, alpha, phase, dipole_in_path)
-               wr_c           = wr.conjugate()
-               wr_d_diag      = rabi(E0, w, t, chirp, alpha, phase, A_in_path)
-               ecv_in_path    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
-                              - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+               dipole_in_path_B = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
+               A_in_path_B      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
+               wr_B             = rabi(E0, w, t, chirp, alpha, phase, dipole_in_path_B)
+               wr_B_c           = wr_B.conjugate()
+               wr_d_diag_B      = rabi(E0, w, t, chirp, alpha, phase, A_in_path_B)
+               ecv_in_path_B    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
+                                - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                if Bcurv_in_B_dynamics: 
                   Bcurv_v = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                   Bcurv_c = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
@@ -1247,10 +1247,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                B_z = driving_field(B0, w, t, chirp, alpha, phase)
                E_x = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[0]
                E_y = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[1]
-               x[i]   = 2*(wr*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
-               x[i+1] = (1j*ecv_in_path - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-0) 
-               x[i+2] = (1j*ecv_in_path - gamma2 + 1j*wr_d_diag)*y[i+2] - 1j*wr_c*(1-y[i+3]) 
-               x[i+3] = -2*(wr*y[i+2]).imag - gamma1*(y[i+3]-y0_np[i+3])
+               x[i]   = 2*(wr_B*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
+               x[i+1] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+1] - 1j*wr_B_c*(y[i]-0) 
+               x[i+2] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+2] - 1j*wr_B_c*(1-y[i+3]) 
+               x[i+3] = -2*(wr_B*y[i+2]).imag - gamma1*(y[i+3]-y0_np[i+3])
                # k_v_x
                x[i+4] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] - B_z*(ev_dy + Bcurv_v*E_x) / (1 - Bcurv_v*B_z)
                # k_v_y
