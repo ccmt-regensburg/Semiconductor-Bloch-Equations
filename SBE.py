@@ -1115,7 +1115,6 @@ def f(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_fiel
                   kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, 
                   parallel_transport, dynamics_type)
 
-
 @njit
 def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
            ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
@@ -1150,6 +1149,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
             - (E_dir[0]*di_11x + E_dir[1]*di_11y)
         Avv_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y
         Acc_in_path = E_dir[0]*di_11x + E_dir[1]*di_11y
+        D = 0
 
     # Update the solution vector
     Nk_path = kpath.shape[0]
@@ -1262,10 +1262,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
            # Update each component of the solution vector
            # i = U_vv, i+1 = U_vc, i+2 = U_cv, i+3 = U_cc
-           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] #+ D*(y[m]   - y[n])
-           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] #+ D*(y[m+1] - y[n+1])
-           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   #+ D*(y[m+2] - y[n+2])
-           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] #+ D*(y[m+3] - y[n+3])
+           x[i]   = (1j*ev - 1j*wr_d_vv)*y[i]   - 1j*wr  *y[i+2] 
+           x[i+1] = (1j*ev - 1j*wr_d_vv)*y[i+1] - 1j*wr  *y[i+3] 
+           x[i+2] = (1j*ec - 1j*wr_d_cc)*y[i+2] - 1j*wr_c*y[i]   
+           x[i+3] = (1j*ec - 1j*wr_d_cc)*y[i+3] - 1j*wr_c*y[i+1] 
            x[i+4] = 0
            x[i+5] = 0
            x[i+6] = 0
