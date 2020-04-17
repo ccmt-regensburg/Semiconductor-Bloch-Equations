@@ -1218,9 +1218,11 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
                di_00x_B_field = sys.di_00xjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_01x_B_field = sys.di_01xjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
+#               di_01x_B_field = sys.di_01xjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_11x_B_field = sys.di_11xjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
                di_00y_B_field = sys.di_00yjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_01y_B_field = sys.di_01yjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
+#               di_01y_B_field = sys.di_01yjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_11y_B_field = sys.di_11yjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
                print("np.shape(di_01x_B_field)", np.shape(di_01x_B_field))
                print("np.shape(di_01y_B_field)", np.shape(di_01y_B_field))
