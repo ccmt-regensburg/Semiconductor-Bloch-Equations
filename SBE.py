@@ -830,10 +830,10 @@ def current(paths, fv, fc, t, alpha, E_dir):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
         
-        evdx = sys.systems.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
-        evdy = sys.systems.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
-        ecdx = sys.systems.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
-        ecdy = sys.systems.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
+        evdx = sys.system.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
+        evdy = sys.system.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
+        ecdx = sys.system.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
+        ecdy = sys.system.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
     
         # 0: v, x 1: v,y 2: c, x 3: c, y
         jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
@@ -1218,16 +1218,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
                di_00x_B_field = sys.di_00xjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_01x_B_field = sys.di_01xjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
-#               di_01x_B_field = sys.di_01xjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_11x_B_field = sys.di_11xjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
                di_00y_B_field = sys.di_00yjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_01y_B_field = sys.di_01yjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
-#               di_01y_B_field = sys.di_01yjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                di_11y_B_field = sys.di_11yjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-               print("np.shape(di_01x_B_field)", np.shape(di_01x_B_field))
-               print("np.shape(di_01y_B_field)", np.shape(di_01y_B_field))
-               print("np.shape(di_00x_B_field)", np.shape(di_00x_B_field))
-               print("np.shape(dipole_in_path)", np.shape(dipole_in_path))
 
                dipole_in_path_B = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
                A_in_path_B      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
