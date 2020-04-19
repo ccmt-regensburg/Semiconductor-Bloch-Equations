@@ -186,7 +186,10 @@ def main():
        # Berry curvature current
        I_Bcurv_E_dir, I_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], t, chirp, alpha, E_dir, E0, w, phase, A_field)
     # emission with exact formula
-    I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
+    if do_B_field:
+       I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
+    else:
+       I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
     # emission with exact formula with semiclassical formula
     if do_emission_wavep:
        I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
@@ -623,7 +626,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
     # In case of the velocity gauge, we need to shift the time-dependent
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
-    if gauge == 'velocity':
+    if gauge == 'velocity' and do_B_field == False:
         solution = shift_solution(solution, A_field, dk, dynamics_type)
         if dynamics_type == 'wavefunction_dynamics':
             fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
@@ -853,44 +856,6 @@ def current(paths, fv, fc, t, alpha, E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
-#def current(paths, fv, fc, t, alpha, E_dir):
-#    '''
-#    Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
-#    where j_n(k) != (d/dk) E_n(k)
-#    '''
-#    E_ort = np.array([E_dir[1], -E_dir[0]])
-#
-#    # Calculate the gradient analytically at each k-point
-#    J_E_dir, J_ortho = [], []
-#    jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
-#    for path in paths:
-#        path = np.array(path)
-#        kx_in_path = path[:, 0]
-#        ky_in_path = path[:, 1]
-#        bandstruct_deriv = sys.system.evaluate_ederivative(kx_in_path,
-#                                                           ky_in_path)
-#        # 0: v, x   1: v,y   2: c, x  3: c, y
-#        jc_E_dir.append(bandstruct_deriv[2]*E_dir[0]
-#                        + bandstruct_deriv[3]*E_dir[1])
-#        jc_ortho.append(bandstruct_deriv[2]*E_ort[0]
-#                        + bandstruct_deriv[3]*E_ort[1])
-#        jv_E_dir.append(bandstruct_deriv[0]*E_dir[0]
-#                        + bandstruct_deriv[1]*E_dir[1])
-#        jv_ortho.append(bandstruct_deriv[0]*E_ort[0]
-#                        + bandstruct_deriv[1]*E_ort[1])
-#
-#    jc_E_dir = np.array(jc_E_dir).T
-#    jc_ortho = np.array(jc_ortho).T
-#    jv_E_dir = np.array(jv_E_dir).T
-#    jv_ortho = np.array(jv_ortho).T
-#
-#    # tensordot for contracting the first two indices (2 kpoint directions)
-#    J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
-#    J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
-#
-#    # Return the real part of each component
-#    return np.real(J_E_dir), np.real(J_ortho)
-
 def emission_exact(paths, solution, E_dir, A_field):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
@@ -924,6 +889,78 @@ def emission_exact(paths, solution, E_dir, A_field):
 
                 U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
                 U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
+
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
+                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
+
+    return I_E_dir, I_ortho
+
+
+def emission_semicl_B_field(paths, solution, E_dir):
+
+    E_ort = np.array([E_dir[1], -E_dir[0]])
+
+    n_time_steps = np.size(solution[0,0,:,0])
+
+    # I_E_dir is of size (number of time steps)
+    I_E_dir = np.zeros(n_time_steps)
+    I_ortho = np.zeros(n_time_steps)
+
+    for i_time in range(n_time_steps):
+
+        print(i_time, "/", n_time_steps)
+
+        for i_path, path in enumerate(paths):
+            path = np.array(path)
+            kx_in_path = path[:, 0]
+            ky_in_path = path[:, 1]
+    
+#            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
+#            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+
+            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path, ky=ky_in_path)
+            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path, ky=ky_in_path)
+ 
+            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+
+#            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
+#            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
+    
+            for i_k in range(np.size(kx_in_path)):
+
+                kx_in_path_shifted_v = kx_in_path[i_k] - solution[i_k, i_path, i_time, 4]
+                ky_in_path_shifted_v = ky_in_path[i_k] - solution[i_k, i_path, i_time, 5]
+                kx_in_path_shifted_c = kx_in_path[i_k] - solution[i_k, i_path, i_time, 6]
+                ky_in_path_shifted_c = ky_in_path[i_k] - solution[i_k, i_path, i_time, 7]
+
+                U_shift_v   = sys.wf  (kx=kx_in_path_shifted_v, ky=ky_in_path_shifted_v)
+                U_shift_v_h = sys.wf_h(kx=kx_in_path_shifted_v, ky=ky_in_path_shifted_v)
+                U_shift_c   = sys.wf  (kx=kx_in_path_shifted_c, ky=ky_in_path_shifted_c)
+                U_shift_c_h = sys.wf_h(kx=kx_in_path_shifted_c, ky=ky_in_path_shifted_c)
+
+                U_shift = np.zeros((2,2),dtype='complex')
+                U_shift[0,0] = U_shift_v[0,0]
+                U_shift[1,0] = U_shift_v[1,0]
+                U_shift[0,1] = U_shift_c[0,1]
+                U_shift[1,1] = U_shift_c[1,1]
+
+                U_shift_h = np.zeros((2,2),dtype='complex')
+                U_shift_h[0,0] = U_shift_v_h[0,0]
+                U_shift_h[0,1] = U_shift_v_h[0,1]
+                U_shift_h[1,0] = U_shift_c_h[1,0]
+                U_shift_h[1,1] = U_shift_c_h[1,1]
+
+#                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
+#                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
+
+                U_h_H_U_E_dir = np.matmul(U_shift_h[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_shift[:,:]))
+                U_h_H_U_ortho = np.matmul(U_shift_h[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U_shift[:,:]))
 
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
                 I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
