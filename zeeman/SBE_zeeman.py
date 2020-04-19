@@ -398,7 +398,8 @@ def emission_exact(sys, paths, solution, E_dir, A_field):
     I_ortho = np.zeros(n_time_steps)
 
     for i_time in range(n_time_steps):
-
+        # NEEDS PROPER TIME DEFINITION
+        mb = zeeman_field(t)
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
