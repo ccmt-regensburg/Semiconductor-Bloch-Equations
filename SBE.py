@@ -570,6 +570,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         # Propagate through time
         ti = 0
         while solver.successful() and ti < Nt:
+
             # User output of integration progress
             if (ti % 1000 == 0 and user_out):
                 print('{:5.2f}%'.format(ti/Nt*100))
@@ -913,7 +914,7 @@ def emission_semicl_B_field(paths, solution, E_dir):
 
     for i_time in range(n_time_steps):
 
-        print(i_time, "/", n_time_steps)
+#        print(i_time, "/", n_time_steps)
 
         for i_path, path in enumerate(paths):
             path = np.array(path)
@@ -1267,21 +1268,28 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                wr_d_diag_B      = rabi(E0, w, t, chirp, alpha, phase, A_in_path_B)
                ecv_in_path_B    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
                                 - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-               if Bcurv_in_B_dynamics: 
-                  Bcurv_v = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-                  Bcurv_c = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-               else:
-                  Bcurv_v = 0
-                  Bcurv_c = 0
+#               if Bcurv_in_B_dynamics: 
+#                  Bcurv_v = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+#                  Bcurv_c = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+#               else:
+               Bcurv_v = 0
+               Bcurv_c = 0
+
+               if parallel_transport:
+                   wr_d_diag_B = 0
+
+               if t > -6 and t < -4 and k == Nk_path//2:
+                  print("wr =", wr_B, "ecv =", ecv_in_path_B, "wr_d_diag =", wr_d_diag_B, "wr_c =", wr_B_c, "y[i]", y[i])
+                  print("t =", t, "i_k =", k, "k =", kx_shifted_path_v)
 
                # use the unnecessary entry i+2 to compute the k-point shift 
                B_z = driving_field(B0, w, t, chirp, alpha, phase)
                E_x = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[0]
                E_y = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[1]
                x[i]   = 2*(wr_B*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
-               x[i+1] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+1] - 1j*wr_B_c*(y[i]-0) 
-               x[i+2] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+2] - 1j*wr_B_c*(1-y[i+3]) 
-               x[i+3] = -2*(wr_B*y[i+2]).imag - gamma1*(y[i+3]-y0_np[i+3])
+               x[i+1] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+1] - 1j*wr_B_c*(y[i]-y[i+3]) 
+               x[i+2] = x[i+1].conjugate()
+               x[i+3] = -2*(wr_B*y[i+1]).imag - gamma1*(y[i+3]-y0_np[i+3])
                # k_v_x
                x[i+4] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] - B_z*(ev_dy + Bcurv_v*E_x) / (1 - Bcurv_v*B_z)
                # k_v_y
