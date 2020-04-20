@@ -22,7 +22,7 @@ class params:
 
     # full BZ parametes
     Nk1                 = 100         # Number of kpoints in b1 direction
-    Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
+    Nk2                 = 10          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
     Nk_in_path          = 40        # Number of kpoints in each of the two paths

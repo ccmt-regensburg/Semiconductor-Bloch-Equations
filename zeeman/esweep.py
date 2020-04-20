@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from params import params
+from params_zeeman import params
 
 import hfsbe.dipole
 from hfsbe.example import BiTeResummed
@@ -23,7 +23,7 @@ def run():
     # Initialize sympy bandstructure, energies/derivatives, dipoles
 
     # Sweep electric field
-    for E in np.arange(2.00, 4.10, 0.50):
+    for E in np.arange(2.00, 2.10, 0.50):
 
         params.E0 = E
         print("Current E-field: ", params.E0)

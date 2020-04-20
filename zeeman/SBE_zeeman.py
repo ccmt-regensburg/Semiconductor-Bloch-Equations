@@ -143,7 +143,7 @@ def main(sys, dipole, params):
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path, mb=0)
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path, mb=zeeman_field(t0))
         y0 = initial_condition(e_fermi, temperature, ec)
         y0 = np.append(y0, [0.0])
 
@@ -203,9 +203,10 @@ def main(sys, dipole, params):
 
     # COMPUTE OBSERVABLES
     ###########################################################################
+    dt_out = t[1] - t[0]
     freq = fftshift(fftfreq(np.size(t), d=dt_out))
 
-    I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution,
+    I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, t, solution,
                                                   E_dir, A_field)
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
@@ -387,18 +388,20 @@ def gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*alpha)**2)
 
 
-def emission_exact(sys, paths, solution, E_dir, A_field):
+def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
-    n_time_steps = np.size(solution[0, 0, :, 0])
+    # n_time_steps = np.size(solution[0, 0, :, 0])
+    n_time_steps = np.size(tarr)
 
     # I_E_dir is of size (number of time steps)
     I_E_dir = np.zeros(n_time_steps)
     I_ortho = np.zeros(n_time_steps)
 
-    for i_time in range(n_time_steps):
+    for i_time, t in enumerate(tarr):
 
+        mb = zeeman_field(t)
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
@@ -408,15 +411,15 @@ def emission_exact(sys, paths, solution, E_dir, A_field):
             ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
 
             h_deriv_x = ev_mat(sys.hderivfjit[0], kx=kx_in_path_shifted,
-                               ky=ky_in_path_shifted)
+                               ky=ky_in_path_shifted, mb=mb)
             h_deriv_y = ev_mat(sys.hderivfjit[1], kx=kx_in_path_shifted,
-                               ky=ky_in_path_shifted)
+                               ky=ky_in_path_shifted, mb=mb)
  
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
-            U = sys.Uf(kx=kx_in_path, ky=ky_in_path)
-            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path)
+            U = sys.Uf(kx=kx_in_path, ky=ky_in_path, mb=mb)
+            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path, mb=mb)
     
             for i_k in range(np.size(kx_in_path)):
 

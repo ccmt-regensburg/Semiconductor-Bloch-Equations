@@ -23,7 +23,7 @@ def run():
     # Initialize sympy bandstructure, energies/derivatives, dipoles
 
     # Sweep electric field
-    for E in np.arange(2.00, 4.10, 0.50):
+    for E in np.arange(2.00, 2.10, 0.50):
 
         params.E0 = E
         print("Current E-field: ", params.E0)

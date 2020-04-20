@@ -662,7 +662,6 @@ def emission_exact(sys, paths, solution, E_dir, A_field):
     return I_E_dir, I_ortho
 
 
-
 def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
       dipole_in_path, A_in_path, y0):
     return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
