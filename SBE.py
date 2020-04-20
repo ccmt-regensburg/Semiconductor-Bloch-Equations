@@ -495,10 +495,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
        print("Enter density matrix dynamics.")
     elif dynamics_type == 'wavefunction_dynamics' and user_out:
        print("Enter wavefunction dynamics.")
-
-    if gauge == 'length': 
-        print("Wavefunction dynamics only implemented for velocity gauge. Script abords.")
-        exit("")
+       if gauge == 'length': 
+           print("Wavefunction dynamics only implemented for velocity gauge. Script abords.")
+           exit("")
 
     # Solution containers
     t = []
@@ -957,6 +956,9 @@ def emission_semicl_B_field(paths, solution, E_dir):
                 U_shift_h[1,0] = U_shift_c_h[1,0]
                 U_shift_h[1,1] = U_shift_c_h[1,1]
 
+                if i_time == n_time_steps//2+100 and i_path == 0:
+                    print("i_k,kx for U, kx for dH,shift,U,h_d_E,f_e", i_k, kx_in_path_shifted_v, kx_in_path[i_k], solution[i_k, i_path, i_time, 4], U_shift[0,0], h_deriv_E_dir[0,0,i_k], np.real(solution[i_k, i_path, i_time, 3]))
+
 #                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
 #                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
@@ -1244,10 +1246,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
            if do_B_field:
 
-               kx_shifted_path_v = kx_in_path[k] + y[i+4]
-               ky_shifted_path_v = ky_in_path[k] + y[i+5]
-               kx_shifted_path_c = kx_in_path[k] + y[i+6]
-               ky_shifted_path_c = ky_in_path[k] + y[i+7]
+               kx_shifted_path_v = kx_in_path[k] + np.real(y[i+4])
+               ky_shifted_path_v = ky_in_path[k] + np.real(y[i+5])
+               kx_shifted_path_c = kx_in_path[k] + np.real(y[i+6])
+               ky_shifted_path_c = ky_in_path[k] + np.real(y[i+7])
         
                ev_dx = sys.ev_dx(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
                ev_dy = sys.ev_dy(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
