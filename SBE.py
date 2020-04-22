@@ -248,7 +248,6 @@ def main():
         axE.set_ylabel(r'$E$-field in MV/cm')
         axA.set_xlim(t_lims)
         axA.plot(t/fs_conv,A_field/E_conv/fs_conv)
-#        axA.plot(t/fs_conv,1/E_conv/fs_conv*get_A_field(E0, w, t, alpha) )
         axA.set_xlabel(r'$t$ in fs')
         axA.set_ylabel(r'$A$-field in MV/cm$\cdot$fs')
         axP.set_xlim(t_lims)
@@ -271,39 +270,6 @@ def main():
         freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
         Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
 
-        four_fig, ((axPw,axJw),(axIw,axInt)) = pl.subplots(2,2,figsize=(10,10))
-        axPw.grid(True,axis='x')
-        axPw.set_xlim(freq_lims)
-        axPw.set_ylim(log_limits)
-        axPw.semilogy(freq/w,np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq)
-        axPw.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq)
-        axPw.set_xlabel(r'Frequency $\omega/\omega_0$')
-#        axPw.set_ylabel(r'$[\dot P](\omega)$ (interband) in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        axPw.set_ylabel(r'Emission intensity $I(\omega)$ (interband-p only, relative to $I_{tot}(\omega_0)$) ')
-        axJw.grid(True,axis='x')
-        axJw.set_xlim(freq_lims)
-        axJw.set_ylim(log_limits)
-        axJw.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq)
-        axJw.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq)
-        axJw.set_xlabel(r'Frequency $\omega/\omega_0$')
-        axJw.set_ylabel(r'Emission intensity $I(\omega)$ (intraband-f only, relative to $I_{tot}(\omega_0)$)')
-        axIw.grid(True,axis='x')
-        axIw.set_xlim(freq_lims)
-        axIw.set_ylim(log_limits)
-#        axIw.semilogy(freq/w,np.abs(Int_E_dir) / Int_tot_base_freq)
-#        axIw.semilogy(freq/w,np.abs(Int_ortho) / Int_tot_base_freq)
-        axIw.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq)
-        axIw.set_xlabel(r'Frequency $\omega/\omega_0$')
-        axIw.set_ylabel(r'Total emission intensity $I_{tot}(\omega)$ (relative to $I_{tot}(\omega_0)$)')
-        axInt.grid(True,axis='x')
-        axInt.set_xlim(freq_lims)
-        axInt.set_ylim(log_limits)
-        axInt.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq)
-        axInt.semilogy(freq/w,np.abs(freq**2*(Pw_E_dir**2 + Pw_ortho**2)) / Int_tot_base_freq)
-        axInt.semilogy(freq/w,np.abs(freq**2*(Jw_E_dir**2 + Jw_ortho**2)) / Int_tot_base_freq)
-        axInt.set_xlabel(r'Frequency $\omega/\omega_0$')
-        axInt.set_ylabel(r'Total emission intensity $I_{tot}(\omega)$ (relative to $I_{tot}(\omega_0)$)')
-
 ##########################
 
         five_fig, ((ax_I_E_dir,ax_I_ortho,ax_I_total)) = pl.subplots(3,1,figsize=(10,10))
@@ -325,7 +291,7 @@ def main():
         ax_I_ortho.grid(True,axis='x')
         ax_I_ortho.set_xlim(freq_lims)
         ax_I_ortho.set_ylim(log_limits)
-        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
+        ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, 
           label='$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
         if not do_B_field:
            ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
@@ -340,7 +306,7 @@ def main():
         ax_I_total.grid(True,axis='x')
         ax_I_total.set_xlim(freq_lims)
         ax_I_total.set_ylim(log_limits)
-        ax_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
+        ax_I_total.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
            label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
         if not do_B_field:
            ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
@@ -358,7 +324,6 @@ def main():
            sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
             label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
            sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_check_E_dir**2) / Int_tot_base_freq, linestyle='dotted', 
-#              label='$I_{\parallel E}^\mathrm{wavep}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\tilde{\\rho}_{nn\'}(\mathbf{k},t)$ with $\\tilde{\\rho}_{nn\'}(\mathbf{k}(t),t)=\sum_{underline{n}}u^*_{n\underline{n}}(\mathbf{k}(t),t) u_{n\'\underline{n}}(\mathbf{k}(t),t) f_{\underline{n}}(\mathbf{k}(t),t)$ from wf.~dyn.')
              label='$I_{\parallel E}^\mathrm{wavep}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\tilde{\\rho}_{nn\'}(\mathbf{k},t)$ with $\\tilde{\\rho}_{nn\'}(\mathbf{k}(t),t)$ from wf.~dyn.')
            sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_wavep_E_dir**2) / Int_tot_base_freq, linestyle='dotted',
               label='$I_{\parallel E}^\mathrm{wavep check}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\mathbf{k}(t),t|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|n\mathbf{k}(t),t \\rangle f_{n}(\mathbf{k}(t)) $')
