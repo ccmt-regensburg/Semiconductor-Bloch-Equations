@@ -39,7 +39,7 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 100       # Number of kpoints in each of the two paths
+Nk_in_path          = 10   0      # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -54,7 +54,7 @@ gauge               = 'velocity'    # 'length': use length gauge with gradient_k
 align               = 'K'          # E-field direction (gamma-'K' or gamma-'M'), 
                                    # or angle (30 for 30 degrees, only works with velocity gauge) 
 E0                  = 5.0          # Pulse amplitude (MV/cm)
-B0                  = 0            # B-Field strength (T)
+B0                  = 0           # B-Field strength (T)
 w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
@@ -89,8 +89,6 @@ energy_plots        = False  # Set to True to plot 3d energy bands and contours
 dipole_plots        = False  # Set tp True to plot dipoles (currently not working?)
 test                = False  # Set to True to output travis testing parameters
 matrix_method       = False  # Set to True to use old matrix method for solving
-emission_Bcurv      = False  # additionally compute emission quasiclassically using the Berry curvature (computationally expensive)
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
-parallel_transport  = True   # if true, insert condiction for parallel transport: E(t) * A_n(k(t)) = 0
