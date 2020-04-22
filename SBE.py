@@ -276,11 +276,11 @@ def main():
         ax_I_E_dir.set_xlim(freq_lims)
         ax_I_E_dir.set_ylim(log_limits)
         if do_B_field:
-           label_emission = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
+           label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
-           label_emission = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
+           label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
 
-        ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission)
+        ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
         if not do_B_field:
            ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
               label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
@@ -295,10 +295,10 @@ def main():
         ax_I_ortho.set_xlim(freq_lims)
         ax_I_ortho.set_ylim(log_limits)
         if do_B_field:
-           label_emission = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
+           label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
-           label_emission = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
-        ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission)
+           label_emission_ortho = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
+        ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
         if not do_B_field:
            ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
               label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
@@ -320,6 +320,19 @@ def main():
         ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
         ax_I_total.legend(loc='upper right')
+
+        if do_B_field:
+           B_fig_all_in_one, ((B_1)) = pl.subplots(1,1,figsize=(10,4))
+           B_1.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
+           B_1.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
+           B_1.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
+               label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
+           B_1.set_xlabel(r'Frequency $\omega/\omega_0$')
+           B_1.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
+           B_1.legend(loc='upper right')
+           B_1.grid(True,axis='x')
+           B_1.set_xlim(freq_lims)
+           B_1.set_ylim(log_limits)
 
         if do_emission_wavep:
 
