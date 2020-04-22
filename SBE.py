@@ -221,8 +221,8 @@ def main():
     Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2.0
 
     # Emission intensity (exact formula)
-    Int_exact_E_dir = (freq**2)*Iw_exact_E_dir**2.0
-    Int_exact_ortho = (freq**2)*Iw_exact_ortho**2.0
+    Int_exact_E_dir = np.abs((freq**2)*Iw_exact_E_dir**2.0)
+    Int_exact_ortho = np.abs((freq**2)*Iw_exact_ortho**2.0)
 
     # Save observables to file
     if (BZ_type == '2line'):
