@@ -4,26 +4,19 @@ from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
-import dill
 from scipy.integrate import ode
 
-from hfsbe.utility import evaluate_njit_matrix as ev_mat
+from hfsbe.utility import evaluate_njit_matrix as evmat
 
-dill.settings['recurse'] = True
 
-# Flags for plotting
-
-def main(sys, dipole, params):
+def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
     # RETRIEVE PARAMETERS
     ###########################################################################
     # Flag evaluation
     user_out = params.user_out
-    calc_exact = params.calc_exact
-    normal_plots = params.normal_plots
-    polar_plots = params.polar_plots
     save_file = params.save_file
     save_full = params.save_full
-    
+
     # Unit converstion factors
     fs_conv = params.fs_conv
     E_conv = params.E_conv
@@ -119,7 +112,7 @@ def main(sys, dipole, params):
     solution = []
 
     # Initialize the ode solver and create fnumba
-    fnumba = make_fnumba(sys, dipole)
+    fnumba = make_fnumba(sys, dipole, dipole_mb)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
@@ -239,6 +232,7 @@ def main(sys, dipole, params):
 
         D_name = 'E_' + driving_tail
         np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
+
 
 ###############################################################################
 # FUNCTIONS
@@ -399,45 +393,53 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
     I_E_dir = np.zeros(n_time_steps)
     I_ortho = np.zeros(n_time_steps)
 
-
     for i_time, t in enumerate(tarr):
         mb = zeeman_field(t)
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
-    
+
             kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
             ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
 
-            h_deriv_x = ev_mat(sys.hderivfjit[0], kx=kx_in_path_shifted,
-                               ky=ky_in_path_shifted, mb=mb)
-            h_deriv_y = ev_mat(sys.hderivfjit[1], kx=kx_in_path_shifted,
-                               ky=ky_in_path_shifted, mb=mb)
- 
+            h_deriv_x = evmat(sys.hderivfjit[0], kx=kx_in_path_shifted,
+                              ky=ky_in_path_shifted, mb=mb)
+            h_deriv_y = evmat(sys.hderivfjit[1], kx=kx_in_path_shifted,
+                              ky=ky_in_path_shifted, mb=mb)
+
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
             U = sys.Uf(kx=kx_in_path, ky=ky_in_path, mb=mb)
             U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path, mb=mb)
-    
+
             for i_k in range(np.size(kx_in_path)):
 
-                U_h_H_U_E_dir = np.matmul(U_h[:, :, i_k], np.matmul(h_deriv_E_dir[:, :, i_k], U[:, :, i_k]))
-                U_h_H_U_ortho = np.matmul(U_h[:, :, i_k], np.matmul(h_deriv_ortho[:, :, i_k], U[:, :, i_k]))
+                dH_U_E_dir = np.matmul(h_deriv_E_dir[:, :, i_k], U[:, :, i_k])
+                U_h_H_U_E_dir = np.matmul(U_h[:, :, i_k], dH_U_E_dir)
 
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])*np.real(solution[i_k, i_path, i_time, 0])
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])*np.real(solution[i_k, i_path, i_time, 3])
-                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]*solution[i_k, i_path, i_time, 2])
+                dH_U_ortho = np.matmul(h_deriv_ortho[:, :, i_k], U[:, :, i_k])
+                U_h_H_U_ortho = np.matmul(U_h[:, :, i_k], dH_U_ortho)
 
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])*np.real(solution[i_k, i_path, i_time, 0])
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])*np.real(solution[i_k, i_path, i_time, 3])
-                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]*solution[i_k, i_path, i_time, 2])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])\
+                    * np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])\
+                    * np.real(solution[i_k, i_path, i_time, 3])
+                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]
+                                             * solution[i_k, i_path, i_time, 2])
+
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])\
+                    * np.real(solution[i_k, i_path, i_time, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])\
+                    * np.real(solution[i_k, i_path, i_time, 3])
+                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]
+                                             * solution[i_k, i_path, i_time, 2])
 
     return I_E_dir, I_ortho
 
 
-def make_fnumba(sys, dipole):
+def make_fnumba(sys, dipole, dipole_mb):
     # Wire the energies
     evf = sys.efjit[0]
     ecf = sys.efjit[1]
@@ -449,6 +451,10 @@ def make_fnumba(sys, dipole):
     di_00yf = dipole.Ayfjit[0][0]
     di_01yf = dipole.Ayfjit[0][1]
     di_11yf = dipole.Ayfjit[1][1]
+
+    di_00mbf = dipole_mb.Apfjit[0][0]
+    di_01mbf = dipole_mb.Apfjit[0][1]
+    di_11mbf = dipole_mb.Apfjit[1][1]
 
     @njit
     def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
@@ -573,7 +579,3 @@ def BZ_plot(kpnts, a, b1, b2, paths):
         pl.plot(path[:, 0], path[:, 1])
 
     pl.show()
-
-
-if __name__ == "__main__":
-    main()

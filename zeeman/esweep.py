@@ -1,13 +1,12 @@
 import numpy as np
+import sympy as sp
 import os
 from params_zeeman import params
 
-import hfsbe.dipole
+from hfsbe.dipole import SymbolicDipole, SymbolicParameterDipole
 from hfsbe.example import BiTeResummed
-import hfsbe.utility
 
-
-from SBE_zeeman import main as solver
+from SBE_zeeman import sbe_zeeman_solver
 
 
 def run():
@@ -27,15 +26,18 @@ def run():
 
         params.E0 = E
         print("Current E-field: ", params.E0)
-        dirname = 'E_{:1.2f}'.format(params.E0)
+        dirname = "E_{:1.2f}".format(params.E0)
         if (not os.path.exists(dirname)):
             os.mkdir(dirname)
         os.chdir(dirname)
 
         system = BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym)
-        h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
-        dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
-        solver(system, dipole, params)
+        h_sym, e_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
+        dipole = SymbolicDipole(h_sym, e_sym, wf_sym)
+
+        mb = sp.Symbol("mb", real=True)
+        dipole_mb = SymbolicParameterDipole(h_sym, e_sym, mb)
+        sbe_zeeman_solver(system, dipole, dipole_mb, params)
         os.chdir('..')
 
 
