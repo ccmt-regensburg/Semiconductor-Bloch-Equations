@@ -524,7 +524,7 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
             x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) \
                 - gamma1*(y[i]-y0[i])
 
-            x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+            x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
                 - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
 
             x[i+2] = x[i+1].conjugate()
@@ -587,7 +587,7 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
             # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
             x[i] = 2*(wr*y[i+1]).imag - gamma1*(y[i]-y0[i])
 
-            x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+            x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
                 - 1j*wr_c*(y[i]-y[i+3])
 
             x[i+2] = x[i+1].conjugate()
