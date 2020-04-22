@@ -934,10 +934,10 @@ def emission_semicl_B_field(paths, solution, E_dir):
     
             for i_k in range(np.size(kx_in_path)):
 
-                kx_in_path_shifted_v = kx_in_path[i_k] - solution[i_k, i_path, i_time, 4]
-                ky_in_path_shifted_v = ky_in_path[i_k] - solution[i_k, i_path, i_time, 5]
-                kx_in_path_shifted_c = kx_in_path[i_k] - solution[i_k, i_path, i_time, 6]
-                ky_in_path_shifted_c = ky_in_path[i_k] - solution[i_k, i_path, i_time, 7]
+                kx_in_path_shifted_v = kx_in_path[i_k] + solution[i_k, i_path, i_time, 4]
+                ky_in_path_shifted_v = ky_in_path[i_k] + solution[i_k, i_path, i_time, 5]
+                kx_in_path_shifted_c = kx_in_path[i_k] + solution[i_k, i_path, i_time, 6]
+                ky_in_path_shifted_c = ky_in_path[i_k] + solution[i_k, i_path, i_time, 7]
 
                 U_shift_v   = sys.wf  (kx=kx_in_path_shifted_v, ky=ky_in_path_shifted_v)
                 U_shift_v_h = sys.wf_h(kx=kx_in_path_shifted_v, ky=ky_in_path_shifted_v)
