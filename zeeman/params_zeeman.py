@@ -15,14 +15,15 @@ class params:
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
     BZ_type = 'full'
+    gauge = 'length'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
     b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
     # full BZ parametes
-    Nk1                 = 100         # Number of kpoints in b1 direction
-    Nk2                 = 10          # Number of kpoints in b2 direction (number of paths)
+    Nk1                 = 800         # Number of kpoints in b1 direction
+    Nk2                 = 80          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
     Nk_in_path          = 40        # Number of kpoints in each of the two paths

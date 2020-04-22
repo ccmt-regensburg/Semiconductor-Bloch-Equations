@@ -16,6 +16,7 @@ def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
     user_out = params.user_out
     save_file = params.save_file
     save_full = params.save_full
+    gauge = params.gauge
 
     # Unit converstion factors
     fs_conv = params.fs_conv
@@ -112,7 +113,7 @@ def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
     solution = []
 
     # Initialize the ode solver and create fnumba
-    fnumba = make_fnumba(sys, dipole, dipole_mb)
+    fnumba = make_fnumba(sys, dipole, dipole_mb, gauge=gauge)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
@@ -439,27 +440,33 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
     return I_E_dir, I_ortho
 
 
-def make_fnumba(sys, dipole, dipole_mb):
+def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
     # Wire the energies
     evf = sys.efjit[0]
     ecf = sys.efjit[1]
 
     # Wire the dipoles
+    # kx-parameter
     di_00xf = dipole.Axfjit[0][0]
     di_01xf = dipole.Axfjit[0][1]
     di_11xf = dipole.Axfjit[1][1]
+
+    # ky-parameter
     di_00yf = dipole.Ayfjit[0][0]
     di_01yf = dipole.Ayfjit[0][1]
     di_11yf = dipole.Ayfjit[1][1]
 
+    # mb - Zeeman z parameter
     di_00mbf = dipole_mb.Apfjit[0][0]
     di_01mbf = dipole_mb.Apfjit[0][1]
     di_11mbf = dipole_mb.Apfjit[1][1]
 
     @njit
-    def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-               E_dir, y0):
+    def flength(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+                E_dir, y0):
 
+        # WARNING! THE LENGTH GAUGE ONLY WORKS WITH
+        # TIME CONSTANT MAGNETIC FIELDS FOR NOW
         # Preparing system parameters, energies, dipoles
         mb = zeeman_field(t)
         kx = kpath[:, 0]
@@ -528,10 +535,78 @@ def make_fnumba(sys, dipole, dipole_mb):
         x[-1] = -driving_f
         return x
 
+    @njit
+    def fvelocity(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
+                  E_dir, y0):
+
+        # Preparing system parameters, energies, dipoles
+        mb = zeeman_field(t)
+        k_shift = y[-1].real
+
+        kx = kpath[:, 0] + E_dir[0]*k_shift
+        ky = kpath[:, 1] + E_dir[1]*k_shift
+
+        ev = evf(kx=kx, ky=ky, mb=mb)
+        ec = ecf(kx=kx, ky=ky, mb=mb)
+        ecv_in_path = ec - ev
+
+        di_00x = di_00xf(kx=kx, ky=ky, mb=mb)
+        di_01x = di_01xf(kx=kx, ky=ky, mb=mb)
+        di_11x = di_11xf(kx=kx, ky=ky, mb=mb)
+        di_00y = di_00yf(kx=kx, ky=ky, mb=mb)
+        di_01y = di_01yf(kx=kx, ky=ky, mb=mb)
+        di_11y = di_11yf(kx=kx, ky=ky, mb=mb)
+
+        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
+        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
+            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
+
+        # x != y(t+dt)
+        x = np.empty(np.shape(y), dtype=np.dtype('complex'))
+
+        # Gradient term coefficient
+        driving_f = driving_field(E0, w, t, chirp, alpha, phase)
+
+        # Update the solution vector
+        Nk_path = kpath.shape[0]
+        for k in range(Nk_path):
+            i = 4*k
+            # Energy term eband(i,k) the energy of band i at point k
+            ecv = ecv_in_path[k]
+
+            # Rabi frequency: w_R = d_12(k).E(t)
+            # Rabi frequency conjugate
+            wr = dipole_in_path[k]*driving_f
+            wr_c = wr.conjugate()
+
+            # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
+            # wr_d_diag   = A_in_path[k]*D
+            wr_d_diag = A_in_path[k]*driving_f
+
+            # Update each component of the solution vector
+            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+            x[i] = 2*(wr*y[i+1]).imag - gamma1*(y[i]-y0[i])
+
+            x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+                - 1j*wr_c*(y[i]-y[i+3])
+
+            x[i+2] = x[i+1].conjugate()
+
+            x[i+3] = -2*(wr*y[i+1]).imag - gamma1*(y[i+3]-y0[i+3])
+
+        x[-1] = -driving_f
+        return x
+
+    freturn = None
+    if (gauge == 'velocity'):
+        freturn = fvelocity
+    if (gauge == 'length'):
+        freturn = flength
+
     def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
           E_dir, y0):
-        return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha,
-                      phase, E_dir, y0)
+        return freturn(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha,
+                       phase, E_dir, y0)
 
     return f
 
