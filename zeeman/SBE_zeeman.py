@@ -599,8 +599,10 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
 
     freturn = None
     if (gauge == 'velocity'):
+        print("Using velocity gauge")
         freturn = fvelocity
     if (gauge == 'length'):
+        print("Using length gauge")
         freturn = flength
 
     def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
