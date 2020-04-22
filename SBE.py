@@ -1135,10 +1135,6 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                Bcurv_v = 0
                Bcurv_c = 0
 
-               if t > -6 and t < -4 and k == Nk_path//2:
-                  print("wr =", wr_B, "ecv =", ecv_in_path_B, "wr_d_diag =", wr_d_diag_B, "wr_c =", wr_B_c, "y[i]", y[i])
-                  print("t =", t, "i_k =", k, "k =", kx_shifted_path_v)
-
                # use the unnecessary entry i+2 to compute the k-point shift 
                B_z = driving_field(B0, w, t, chirp, alpha, phase)
                E_x = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[0]
