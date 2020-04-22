@@ -97,7 +97,6 @@ def main():
     energy_plots        = params.energy_plots
     dipole_plots        = params.dipole_plots
     test                = params.test                       # Testing flag for Travis
-    do_emission_Bcurv   = params.emission_Bcurv
     do_emission_wavep   = params.emission_wavep
     store_all_timesteps = params.store_all_timesteps
     Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics
@@ -182,9 +181,6 @@ def main():
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
-    if do_emission_Bcurv:
-       # Berry curvature current
-       I_Bcurv_E_dir, I_Bcurv_ortho = current_Bcurv(paths, solution[:,:,:,0], solution[:,:,:,3], t, chirp, alpha, E_dir, E0, w, phase, A_field)
     # emission with exact formula
     if do_B_field:
        I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
@@ -218,14 +214,15 @@ def main():
        Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    if do_emission_Bcurv:
-       Iw_Bcurv_E_dir = np.fft.fftshift(np.fft.fft(I_Bcurv_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-       Iw_Bcurv_ortho = np.fft.fftshift(np.fft.fft(I_Bcurv_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
-    # Emission intensity
+    # Emission intensity (approximate formula)
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2.0
     Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2.0
+
+    # Emission intensity (exact formula)
+    Int_exact_E_dir = (freq**2)*Iw_exact_E_dir**2.0
+    Int_exact_ortho = (freq**2)*Iw_exact_ortho**2.0
 
     # Save observables to file
     if (BZ_type == '2line'):
@@ -272,7 +269,7 @@ def main():
 
         freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
         freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
-        Int_tot_base_freq = Int_E_dir[freq_index_base_freq] + Int_ortho[freq_index_base_freq]
+        Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
 
         four_fig, ((axPw,axJw),(axIw,axInt)) = pl.subplots(2,2,figsize=(10,10))
         axPw.grid(True,axis='x')
@@ -313,14 +310,15 @@ def main():
         ax_I_E_dir.grid(True,axis='x')
         ax_I_E_dir.set_xlim(freq_lims)
         ax_I_E_dir.set_ylim(log_limits)
-        ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
+        ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, 
            label='$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-        ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
-           label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
-        ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
-           label='$I_{\mathrm{intra} \parallel E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
-        ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
-           label='$I_{\mathrm{inter} \parallel E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_E\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
+        if not do_B_field:
+           ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
+              label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
+           ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
+              label='$I_{\mathrm{intra} \parallel E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
+           ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
+              label='$I_{\mathrm{inter} \parallel E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_E\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
         ax_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
         ax_I_E_dir.legend(loc='upper right')
@@ -329,12 +327,13 @@ def main():
         ax_I_ortho.set_ylim(log_limits)
         ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
           label='$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-        ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
-           label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
-        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
-           label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
-        ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, linestyle='dashed',
-           label='$I_{\mathrm{inter} \\bot E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_{\\bot E}\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
+        if not do_B_field:
+           ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
+              label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
+           ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
+              label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
+           ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+              label='$I_{\mathrm{inter} \\bot E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_{\\bot E}\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
         ax_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_ortho.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
         ax_I_ortho.legend(loc='upper right')
@@ -343,49 +342,12 @@ def main():
         ax_I_total.set_ylim(log_limits)
         ax_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
            label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
-        ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
-           label='$I_{\mathrm{i+i}}(t) = I_{\mathrm{i+i} \parallel E}(t) + I_{\mathrm{i+i} \\bot E}(t)$')
+        if not do_B_field:
+           ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
+              label='$I_{\mathrm{i+i}}(t) = I_{\mathrm{i+i} \parallel E}(t) + I_{\mathrm{i+i} \\bot E}(t)$')
         ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
         ax_I_total.legend(loc='upper right')
-
-##########################
-
-        if do_emission_Bcurv:
-
-           six_fig, ((sc_I_E_dir,sc_I_ortho,sc_I_total)) = pl.subplots(3,1,figsize=(10,10))
-           sc_I_E_dir.grid(True,axis='x')
-           sc_I_E_dir.set_xlim(freq_lims)
-           sc_I_E_dir.set_ylim(log_limits)
-           sc_I_E_dir.semilogy(freq/w,np.abs(freq**2*Iw_exact_E_dir**2) / Int_tot_base_freq, 
-            label='$I_{\parallel E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-           sc_I_E_dir.semilogy(freq/w, np.abs(freq**2*Iw_Bcurv_E_dir**2) / Int_tot_base_freq, linestyle='dashed',
-              label='$I_{\parallel E}^\mathrm{quasic}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E \left[\partial \\varepsilon_n/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}- \mathbf{E}(t)\\times\Omega_n(\mathbf{k}-\mathbf{A}(t)) \\right] f^0_{n}(\mathbf{k})$')
-           sc_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
-           sc_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
-           sc_I_E_dir.legend(loc='upper right')
-   
-           sc_I_ortho.grid(True,axis='x')
-           sc_I_ortho.set_xlim(freq_lims)
-           sc_I_ortho.set_ylim(log_limits)
-           sc_I_ortho.semilogy(freq/w,np.abs(freq**2*Iw_exact_ortho**2) / Int_tot_base_freq, 
-            label='$I_{\\bot E}^\mathrm{full}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'(\mathbf{k},t)}$')
-           sc_I_ortho.semilogy(freq/w, np.abs(freq**2*Iw_Bcurv_ortho**2) / Int_tot_base_freq, linestyle='dashed',
-              label='$I_{\\bot E}^\mathrm{quasic}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E} \left[\partial \\varepsilon_n/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}- \mathbf{E}(t)\\times\Omega_n(\mathbf{k}-\mathbf{A}(t)) \\right] f^0_{n}(\mathbf{k})$')
-           sc_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
-           sc_I_ortho.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
-           sc_I_ortho.legend(loc='upper right')
-   
-           sc_I_total.grid(True,axis='x')
-           sc_I_total.set_xlim(freq_lims)
-           sc_I_total.set_ylim(log_limits)
-           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_exact_E_dir**2 + Iw_exact_ortho**2)) / Int_tot_base_freq, 
-            label='$I^\mathrm{full}(\omega) = I_{\parallel E}^\mathrm{full}(\omega) + I_{\\bot E}^\mathrm{full}(\omega)$')
-           sc_I_total.semilogy(freq/w,np.abs(freq**2*(Iw_Bcurv_E_dir**2 + Iw_Bcurv_ortho**2)) / Int_tot_base_freq, linestyle='dashed',
-            label='$I^\mathrm{quasic}(\omega) = I^\mathrm{quasic}_{\parallel E}(\omega) + I^\mathrm{quasic}_{\\bot E}(\omega)$')
-           sc_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
-           sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
-           sc_I_total.legend(loc='upper right')
 
         if do_emission_wavep:
 
@@ -913,24 +875,16 @@ def emission_semicl_B_field(paths, solution, E_dir):
 
     for i_time in range(n_time_steps):
 
-#        print(i_time, "/", n_time_steps)
-
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
-    
-#            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
-#            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
 
             h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path, ky=ky_in_path)
             h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path, ky=ky_in_path)
  
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
-
-#            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
-#            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
     
             for i_k in range(np.size(kx_in_path)):
 
@@ -955,12 +909,6 @@ def emission_semicl_B_field(paths, solution, E_dir):
                 U_shift_h[0,1] = U_shift_v_h[0,1]
                 U_shift_h[1,0] = U_shift_c_h[1,0]
                 U_shift_h[1,1] = U_shift_c_h[1,1]
-
-                if i_time == n_time_steps//2+100 and i_path == 0:
-                    print("i_k,kx for U, kx for dH,shift,U,h_d_E,f_e", i_k, kx_in_path_shifted_v, kx_in_path[i_k], solution[i_k, i_path, i_time, 4], U_shift[0,0], h_deriv_E_dir[0,0,i_k], np.real(solution[i_k, i_path, i_time, 3]))
-
-#                U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
-#                U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
                 U_h_H_U_E_dir = np.matmul(U_shift_h[:,:], np.matmul(h_deriv_E_dir[:,:,i_k], U_shift[:,:]))
                 U_h_H_U_ortho = np.matmul(U_shift_h[:,:], np.matmul(h_deriv_ortho[:,:,i_k], U_shift[:,:]))
@@ -1084,56 +1032,6 @@ def emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function)
                 I_ortho[i_time] += np.real(U_h_wf_H_U_wf_ortho[1,1])*np.real(fermi_function[i_k, i_path, i_time, 0])
 
     return I_E_dir, I_ortho
-
-def current_Bcurv(paths,fv,fc,t,chirp,alpha,E_dir,E0,w,phase,A_field):
-
-    # t contains all time points
-    A_field_x = A_field*E_dir[0]
-    A_field_y = A_field*E_dir[1]
-    E_field   = driving_field(E0, w, t, chirp, alpha, phase)
-
-    E_ort = np.array([E_dir[1], -E_dir[0]])
-
-    # Calculate the gradient analytically at each k-point
-    I_E_dir, I_ortho = [], []
-
-    curv = hfsbe.dipole.SymbolicCurvature(sys.dipole.Ax, sys.dipole.Ay)
-
-    for j_time, time in enumerate(t):
-       je_E_dir,je_ortho,jh_E_dir,jh_ortho = [],[],[],[]
-
-       for path in paths:
-           path = np.array(path)
-           kx_in_path = path[:,0]
-           ky_in_path = path[:,1]
-
-           kx_in_path = np.real(np.array([x - A_field_x[j_time] for x in kx_in_path]))
-           ky_in_path = np.real(np.array([y - A_field_y[j_time] for y in ky_in_path]))
-
-           bandstruc_deriv = sys.system.evaluate_ederivative(kx_in_path, ky_in_path)
-
-           curv_eval = curv.evaluate(kx_in_path, ky_in_path)
-
-           # the cross product of Berry curvature and E-field points only in direction orthogonal to E
-           cross_prod_ortho = E_field[j_time]*curv_eval
-
-           #0: v, x   1: v,y   2: c, x  3: c, y
-           je_E_dir.append(bandstruc_deriv[2]*E_dir[0] + bandstruc_deriv[3]*E_dir[1])
-           je_ortho.append(bandstruc_deriv[2]*E_ort[0] + bandstruc_deriv[3]*E_ort[1] + cross_prod_ortho[1,1,:])
-           jh_E_dir.append(bandstruc_deriv[0]*E_dir[0] + bandstruc_deriv[1]*E_dir[1])
-           jh_ortho.append(bandstruc_deriv[0]*E_ort[0] + bandstruc_deriv[1]*E_ort[1] + cross_prod_ortho[0,0,:])
-
-       je_E_dir_swapped = np.swapaxes(je_E_dir,0,1)
-       je_ortho_swapped = np.swapaxes(je_ortho,0,1)
-       jh_E_dir_swapped = np.swapaxes(jh_E_dir,0,1)
-       jh_ortho_swapped = np.swapaxes(jh_ortho,0,1)
-
-       # we need tensordot for contracting the first two indices (2 kpoint directions)
-       I_E_dir.append(np.tensordot(je_E_dir_swapped,fc[:,:,0],2) + np.tensordot(jh_E_dir_swapped,fv[:,:,0],2))
-       I_ortho.append(np.tensordot(je_ortho_swapped,fc[:,:,0],2) + np.tensordot(jh_ortho_swapped,fv[:,:,0],2))
-
-    # Return the real part of each component
-    return np.real(I_E_dir), np.real(I_ortho)
 
 
 def get_A_field(E0, w, t, alpha):
