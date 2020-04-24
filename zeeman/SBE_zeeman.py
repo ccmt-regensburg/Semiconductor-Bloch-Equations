@@ -618,11 +618,11 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
 def shift_solution(solution, A_field, dk):
 
     for i_time in range(np.size(A_field)):
-        # shift of k index in the direction of the E-field 
+        # shift of k index in the direction of the E-field
         # (direction is already included in the paths)
         k_shift = (A_field[i_time]/dk).real
         k_index_shift_1 = int(int(np.abs(k_shift))*np.sign(k_shift))
-        if (k_shift < 0): 
+        if (k_shift < 0):
             k_index_shift_1 = k_index_shift_1 - 1
         k_index_shift_2 = k_index_shift_1 + 1
         weight_1 = k_index_shift_2 - k_shift
