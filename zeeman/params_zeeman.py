@@ -14,7 +14,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = 'full'
+    BZ_type = '2line'
     gauge = 'length'
 
     # Reciprocal lattice vectors
@@ -22,15 +22,15 @@ class params:
     b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
     # full BZ parametes
-    Nk1                 = 800         # Number of kpoints in b1 direction
-    Nk2                 = 80          # Number of kpoints in b2 direction (number of paths)
+    Nk1                 = 1600        # Number of kpoints in b1 direction
+    Nk2                 = 2           # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 40        # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.01       # relative distance (in units of 2pi/a) of both paths to Gamma
-    length_path_in_BZ   = 4*np.pi/a  # Length of path in BZ K-direction
+    Nk_in_path          = 1600        # Number of kpoints in each of the two paths
+    rel_dist_to_Gamma   = 0.01        # relative distance (in units of 2pi/a) of both paths to Gamma
+    length_path_in_BZ   = 4*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
-    angle_inc_E_field   = 0        # incoming angle of the E-field in degree
+    angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
     # Driving field parameters
     ##########################################################################

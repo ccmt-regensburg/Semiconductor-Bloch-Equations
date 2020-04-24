@@ -17,13 +17,12 @@ def run():
     R                   = 5.52658     # k^3 coefficient
     mb                  = 0.000373195 # Splitting of cones.(10 meV)
     k_cut               = 0.05        # Model hamiltonian cutoff
-    order               = 4           # hz order in periodic hamiltonian
      
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
     # Sweep Wilson mass
-    for T2 in [3]:
+    for T2 in [1, 500, 1000]:
         params.T2 = T2
         print("Current C2: ", C2)
         dirname = 'T2_{:1.0f}'.format(params.T2)
@@ -31,7 +30,7 @@ def run():
             os.mkdir(dirname)
         os.chdir(dirname)
 
-        system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=0, mb=0, kcut=k_cut)
+        system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mb=0, kcut=k_cut)
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)
