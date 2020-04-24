@@ -13,13 +13,14 @@ from SBE_zeeman import sbe_zeeman_solver
 def run():
 
     # C2                  = 5.39018     # k^2 coefficient
-    A                   = 0.19732     # Fermi velocity
+    # A                   = 0.19732     # Fermi velocity
+    A = 0.1974
     # R                   = 5.52658     # k^3 coefficient
     # mb                  = 0.000373195 # Splitting of cones.(10 meV)
     # k_cut               = 0.05        # Model hamiltonian cutoff
 
     # Sweep electric field
-    for E in np.arange(2.00, 2.10, 0.50):
+    for E in np.arange(5.00, 5.10, 0.50):
 
         params.E0 = E
         print("Current E-field: ", params.E0)

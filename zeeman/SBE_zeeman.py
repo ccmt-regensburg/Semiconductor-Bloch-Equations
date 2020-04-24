@@ -194,6 +194,8 @@ def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
     solution = np.array(solution)
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
+    if gauge == 'velocity':
+        solution = shift_solution(solution, A_field, dk)
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -371,7 +373,7 @@ def driving_field(E0, w, t, chirp, alpha, phase):
 
 @njit
 def zeeman_field(t):
-    mb = 0.000373195 
+    mb = 0.000373195
     return mb
 
 
@@ -611,6 +613,35 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
                        phase, E_dir, y0)
 
     return f
+
+
+def shift_solution(solution, A_field, dk):
+
+    for i_time in range(np.size(A_field)):
+        # shift of k index in the direction of the E-field 
+        # (direction is already included in the paths)
+        k_shift = (A_field[i_time]/dk).real
+        k_index_shift_1 = int(int(np.abs(k_shift))*np.sign(k_shift))
+        if (k_shift < 0): 
+            k_index_shift_1 = k_index_shift_1 - 1
+        k_index_shift_2 = k_index_shift_1 + 1
+        weight_1 = k_index_shift_2 - k_shift
+        weight_2 = 1 - weight_1
+        # n_kpoints = np.size(solution[:, 0, 0, 0])
+
+        # transfer to polar coordinates
+        r = np.abs(solution[:, :, i_time, :])
+        phi = np.arctan2(np.imag(solution[:, :, i_time, :]),
+                         np.real(solution[:, :, i_time, :]))
+
+        r = weight_1*np.roll(r,   k_index_shift_1, axis=0) \
+            + weight_2*np.roll(r,   k_index_shift_2, axis=0)
+        phi = weight_1*np.roll(phi, k_index_shift_1, axis=0) \
+            + weight_2*np.roll(phi, k_index_shift_2, axis=0)
+
+        solution[:, :, i_time, :] = r*np.cos(phi) + 1j*r*np.sin(phi)
+
+    return solution
 
 
 def initial_condition(e_fermi, temperature, e_c):
