@@ -3,7 +3,7 @@ import sympy as sp
 import os
 from params_zeeman import params
 
-from hfsbe.dipole import SymbolicDipole, SymbolicParameterDipole
+from hfsbe.dipole import SymbolicDipole, SymbolicZeemanDipole
 from hfsbe.example import BiTeResummed
 
 from SBE_zeeman import sbe_zeeman_solver
@@ -31,13 +31,13 @@ def run():
             os.mkdir(dirname)
         os.chdir(dirname)
 
-        system = BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym)
+        system = BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym,
+                              zeeman=True)
         h_sym, e_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
-        dipole = SymbolicDipole(h_sym, e_sym, wf_sym)
+        dipole_k = SymbolicDipole(h_sym, e_sym, wf_sym)
 
-        mb = sp.Symbol("mb", real=True)
-        dipole_mb = SymbolicParameterDipole(h_sym, wf_sym, mb)
-        sbe_zeeman_solver(system, dipole, dipole_mb, params)
+        dipole_B = SymbolicZeemanDipole(h_sym, wf_sym)
+        sbe_zeeman_solver(system, dipole_k, dipole_B, params)
         os.chdir('..')
 
 

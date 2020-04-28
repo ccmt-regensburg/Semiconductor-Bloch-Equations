@@ -9,7 +9,7 @@ from scipy.integrate import ode
 from hfsbe.utility import evaluate_njit_matrix as evmat
 
 
-def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
+def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     # RETRIEVE PARAMETERS
     ###########################################################################
     # Flag evaluation
@@ -113,7 +113,7 @@ def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
     solution = []
 
     # Initialize the ode solver and create fnumba
-    fnumba = make_fnumba(sys, dipole, dipole_mb, gauge=gauge)
+    fnumba = make_fnumba(sys, dipole_k, dipole_B, gauge=gauge)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
@@ -137,7 +137,9 @@ def sbe_zeeman_solver(sys, dipole, dipole_mb, params):
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path, mb=zeeman_field(t0))
+        mx, my, mz = zeeman_field(t0)
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path,
+                          m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
         y0 = initial_condition(e_fermi, temperature, ec)
         y0 = np.append(y0, [0.0])
 
@@ -372,9 +374,11 @@ def driving_field(E0, w, t, chirp, alpha, phase):
 
 
 @njit
-def zeeman_field(t):
-    mb = 0.000373195
-    return mb
+def zeeman_field(B0, w, t, chirp, alpha, phase):
+    mx = 0
+    my = 0
+    mz = 0.000373195
+    return mx, my, mz
 
 
 def gaussian_envelope(t, alpha):
@@ -397,7 +401,7 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
     I_ortho = np.zeros(n_time_steps)
 
     for i_time, t in enumerate(tarr):
-        mb = zeeman_field(t)
+        mx, my, mz = zeeman_field(t)
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
@@ -406,16 +410,20 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
             kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
             ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
 
-            h_deriv_x = evmat(sys.hderivfjit[0], kx=kx_in_path_shifted,
-                              ky=ky_in_path_shifted, mb=mb)
-            h_deriv_y = evmat(sys.hderivfjit[1], kx=kx_in_path_shifted,
-                              ky=ky_in_path_shifted, mb=mb)
+            h_deriv_x = evmat(sys.hderivfjit[0],
+                              kx=kx_in_path_shifted, ky=ky_in_path_shifted,
+                              m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+            h_deriv_y = evmat(sys.hderivfjit[1],
+                              kx=kx_in_path_shifted, ky=ky_in_path_shifted,
+                              m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
 
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
-            U = sys.Uf(kx=kx_in_path, ky=ky_in_path, mb=mb)
-            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path, mb=mb)
+            U = sys.Uf(kx=kx_in_path, ky=ky_in_path,
+                       m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path,
+                           m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
 
             for i_k in range(np.size(kx_in_path)):
 
@@ -442,26 +450,35 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
     return I_E_dir, I_ortho
 
 
-def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
+def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
     # Wire the energies
     evf = sys.efjit[0]
     ecf = sys.efjit[1]
 
     # Wire the dipoles
     # kx-parameter
-    di_00xf = dipole.Axfjit[0][0]
-    di_01xf = dipole.Axfjit[0][1]
-    di_11xf = dipole.Axfjit[1][1]
+    di_00xf = dipole_k.Axfjit[0][0]
+    di_01xf = dipole_k.Axfjit[0][1]
+    di_11xf = dipole_k.Axfjit[1][1]
 
     # ky-parameter
-    di_00yf = dipole.Ayfjit[0][0]
-    di_01yf = dipole.Ayfjit[0][1]
-    di_11yf = dipole.Ayfjit[1][1]
+    di_00yf = dipole_k.Ayfjit[0][0]
+    di_01yf = dipole_k.Ayfjit[0][1]
+    di_11yf = dipole_k.Ayfjit[1][1]
 
-    # mb - Zeeman z parameter
-    di_00mbf = dipole_mb.Apfjit[0][0]
-    di_01mbf = dipole_mb.Apfjit[0][1]
-    di_11mbf = dipole_mb.Apfjit[1][1]
+    # Mx - Zeeman z parameter
+    di_00mxf = dipole_B.Mxfjit[0][0]
+    di_01mxf = dipole_B.Mxfjit[0][1]
+    di_11mxf = dipole_B.Mxfjit[1][1]
+
+    di_00myf = dipole_B.Myfjit[0][0]
+    di_01myf = dipole_B.Myfjit[0][1]
+    di_11myf = dipole_B.Myfjit[1][1]
+
+    di_00mzf = dipole_B.Mzfjit[0][0]
+    di_01mzf = dipole_B.Mzfjit[0][1]
+    di_11mzf = dipole_B.Mzfjit[1][1]
+
 
     @njit
     def flength(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
@@ -470,19 +487,19 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
         # WARNING! THE LENGTH GAUGE ONLY WORKS WITH
         # TIME CONSTANT MAGNETIC FIELDS FOR NOW
         # Preparing system parameters, energies, dipoles
-        mb = zeeman_field(t)
+        mx, my, mz = zeeman_field(t)
         kx = kpath[:, 0]
         ky = kpath[:, 1]
-        ev = evf(kx=kx, ky=ky, mb=mb)
-        ec = ecf(kx=kx, ky=ky, mb=mb)
+        ev = evf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        ec = ecf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
         ecv_in_path = ec - ev
 
-        di_00x = di_00xf(kx=kx, ky=ky, mb=mb)
-        di_01x = di_01xf(kx=kx, ky=ky, mb=mb)
-        di_11x = di_11xf(kx=kx, ky=ky, mb=mb)
-        di_00y = di_00yf(kx=kx, ky=ky, mb=mb)
-        di_01y = di_01yf(kx=kx, ky=ky, mb=mb)
-        di_11y = di_11yf(kx=kx, ky=ky, mb=mb)
+        di_00x = di_00xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_01x = di_01xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11x = di_11xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_00y = di_00yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_01y = di_01yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11y = di_11yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
 
         dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
         A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
@@ -542,22 +559,22 @@ def make_fnumba(sys, dipole, dipole_mb, gauge='velocity'):
                   E_dir, y0):
 
         # Preparing system parameters, energies, dipoles
-        mb = zeeman_field(t)
+        mx, my, mz = zeeman_field(t)
         k_shift = y[-1].real
 
         kx = kpath[:, 0] + E_dir[0]*k_shift
         ky = kpath[:, 1] + E_dir[1]*k_shift
 
-        ev = evf(kx=kx, ky=ky, mb=mb)
-        ec = ecf(kx=kx, ky=ky, mb=mb)
+        ev = evf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        ec = ecf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
         ecv_in_path = ec - ev
 
-        di_00x = di_00xf(kx=kx, ky=ky, mb=mb)
-        di_01x = di_01xf(kx=kx, ky=ky, mb=mb)
-        di_11x = di_11xf(kx=kx, ky=ky, mb=mb)
-        di_00y = di_00yf(kx=kx, ky=ky, mb=mb)
-        di_01y = di_01yf(kx=kx, ky=ky, mb=mb)
-        di_11y = di_11yf(kx=kx, ky=ky, mb=mb)
+        di_00x = di_00xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_01x = di_01xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11x = di_11xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_00y = di_00yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_01y = di_01yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11y = di_11yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
 
         dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
         A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
