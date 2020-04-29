@@ -37,6 +37,11 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     alpha = params.alpha*fs_conv                # Gaussian pulse width
     phase = params.phase                        # Carrier-envelope phase
 
+    incident_angle = np.radians(params.incident_angle)
+    mdx = params.mdx
+    mdy = params.mdy
+    mdz = params.mdz
+
     # Time scales
     T1 = params.T1*fs_conv                      # Occupation damping time
     T2 = params.T2*fs_conv                      # Polarization damping time
@@ -119,6 +124,7 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
 
     # Vector field
     A_field = []
+    Zeeman_field = []
     # SOLVING
     ###########################################################################
     # Iterate through each path in the Brillouin zone
@@ -137,16 +143,19 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
-        mx, my, mz = zeeman_field(t0)
+
+        mx = 0
+        my = 0
+        mz = 0
         ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path,
                           m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
         y0 = initial_condition(e_fermi, temperature, ec)
-        y0 = np.append(y0, [0.0])
+        y0 = np.append(y0, [mx, my, mz, 0.0])
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
             .set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                          E_dir, y0) 
+                          E_dir, mdx, mdy, mdz, incident_angle, y0)
 
         # Propagate through time
         ti = 0
@@ -161,12 +170,13 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
             # Save solution each output step
             if (ti % dt_out == 0):
                 # Do not append the last element (A_field)
-                path_solution.append(solver.y[:-1])
+                path_solution.append(solver.y[:-4])
                 # Construct time array only once
                 if not t_constructed:
                     # Construct time and A_field only in first round
                     t.append(solver.t)
                     A_field.append(solver.y[-1])
+                    Zeeman_field.append(solver.y[-4:-1])
 
             # Increment time counter
             ti += 1
@@ -183,6 +193,7 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     t = np.array(t)
     solution = np.array(solution)
     A_field = np.array(A_field)
+    Zeeman_field = np.array(Zeeman_field)
 
     # Slice solution along each path for easier observable calculation
     # Split the last index into 100 subarrays, corresponding to kx
@@ -230,13 +241,13 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
         if (save_full):
             S_name = 'Sol_' + tail
             np.savez(S_name, t=t, solution=solution, paths=paths,
-                     driving_field=driving_field(E0, w, t, chirp, alpha, phase))
+                     electric_field=electric_field(E0, w, t, chirp, alpha, phase))
 
         driving_tail = 'w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_wc-{:4.3f}'\
             .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
 
         D_name = 'E_' + driving_tail
-        np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
+        np.save(D_name, [t, electric_field(E0, w, t, chirp, alpha, phase)])
 
 
 ###############################################################################
@@ -362,7 +373,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
 
 
 @njit
-def driving_field(E0, w, t, chirp, alpha, phase):
+def electric_field(E0, w, t, chirp, alpha, phase):
     '''
     Returns the instantaneous driving pulse field
     '''
@@ -374,10 +385,13 @@ def driving_field(E0, w, t, chirp, alpha, phase):
 
 
 @njit
-def zeeman_field(B0, w, t, chirp, alpha, phase):
-    mx = 0
-    my = 0
-    mz = 0.000373195
+def curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha, phase, E_dir,
+                        incident_angle):
+    time_dep = np.exp(-t**2.0/(2.0*alpha)**2) \
+        * np.cos(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+    mx = mdx * E_dir[1] * np.cos(incident_angle) * time_dep
+    my = -mdy * E_dir[0] * np.cos(incident_angle) * time_dep
+    mz = mdz * np.sin(incident_angle) * time_dep
     return mx, my, mz
 
 
@@ -389,7 +403,7 @@ def gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*alpha)**2)
 
 
-def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
+def emission_exact(sys, paths, tarr, solution, E_dir, A_field, Zeeman_field):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -401,7 +415,10 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field):
     I_ortho = np.zeros(n_time_steps)
 
     for i_time, t in enumerate(tarr):
-        mx, my, mz = zeeman_field(t)
+        Ze = Zeeman_field[i_time]
+        mx = Ze[0]
+        my = Ze[1]
+        mz = Ze[2]
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
@@ -482,12 +499,14 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
 
     @njit
     def flength(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                E_dir, y0):
+                E_dir, mdx, mdy, mdz, incident_angle, y0):
 
         # WARNING! THE LENGTH GAUGE ONLY WORKS WITH
         # TIME CONSTANT MAGNETIC FIELDS FOR NOW
         # Preparing system parameters, energies, dipoles
-        mx, my, mz = zeeman_field(t)
+        mx = y[-4]
+        my = y[-3]
+        mz = y[-2]
         kx = kpath[:, 0]
         ky = kpath[:, 1]
         ev = evf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
@@ -509,8 +528,8 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
         x = np.empty(np.shape(y), dtype=np.dtype('complex'))
 
         # Gradient term coefficient
-        driving_f = driving_field(E0, w, t, chirp, alpha, phase)
-        D = driving_f/(2*dk)
+        electric_f = electric_field(E0, w, t, chirp, alpha, phase)
+        D = electric_f/(2*dk)
 
         # Update the solution vector
         Nk_path = kpath.shape[0]
@@ -531,12 +550,12 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
 
             # Rabi frequency: w_R = d_12(k).E(t)
             # Rabi frequency conjugate
-            wr = dipole_in_path[k]*driving_f
+            wr = dipole_in_path[k]*electric_f
             wr_c = wr.conjugate()
 
             # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
             # wr_d_diag   = A_in_path[k]*D
-            wr_d_diag = A_in_path[k]*driving_f
+            wr_d_diag = A_in_path[k]*electric_f
 
             # Update each component of the solution vector
             # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
@@ -551,15 +570,23 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
             x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) \
                 - gamma1*(y[i+3]-y0[i+3])
 
-        x[-1] = -driving_f
+        mxb, myb, mzb = curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha,
+                                            phase, E_dir, incident_angle)
+        x[-4] = -mxb
+        x[-3] = -myb
+        x[-2] = -mzb
+        x[-1] = -electric_f
         return x
 
     @njit
     def fvelocity(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                  E_dir, y0):
+                  E_dir, mdx, mdy, mdz, incident_angle, y0):
 
         # Preparing system parameters, energies, dipoles
-        mx, my, mz = zeeman_field(t)
+
+        mx = y[-4]
+        my = y[-3]
+        mz = y[-2]
         k_shift = y[-1].real
 
         kx = kpath[:, 0] + E_dir[0]*k_shift
@@ -584,7 +611,7 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
         x = np.empty(np.shape(y), dtype=np.dtype('complex'))
 
         # Gradient term coefficient
-        driving_f = driving_field(E0, w, t, chirp, alpha, phase)
+        electric_f = electric_field(E0, w, t, chirp, alpha, phase)
 
         # Update the solution vector
         Nk_path = kpath.shape[0]
@@ -595,12 +622,12 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
 
             # Rabi frequency: w_R = d_12(k).E(t)
             # Rabi frequency conjugate
-            wr = dipole_in_path[k]*driving_f
+            wr = dipole_in_path[k]*electric_f
             wr_c = wr.conjugate()
 
             # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
             # wr_d_diag   = A_in_path[k]*D
-            wr_d_diag = A_in_path[k]*driving_f
+            wr_d_diag = A_in_path[k]*electric_f
 
             # Update each component of the solution vector
             # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
@@ -613,7 +640,12 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
 
             x[i+3] = -2*(wr*y[i+1]).imag - gamma1*(y[i+3]-y0[i+3])
 
-        x[-1] = -driving_f
+        mxb, myb, mzb = curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha,
+                                            phase, E_dir, incident_angle)
+        x[-4] = -mxb
+        x[-3] = -myb
+        x[-2] = -mzb
+        x[-1] = -electric_f
         return x
 
     freturn = None
@@ -625,9 +657,9 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
         freturn = flength
 
     def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-          E_dir, y0):
+          E_dir, mdx, mdy, mdz, incident_angle, y0):
         return freturn(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha,
-                       phase, E_dir, y0)
+                       phase, E_dir, mdx, mdy, mdz, incident_angle, y0)
 
     return f
 
