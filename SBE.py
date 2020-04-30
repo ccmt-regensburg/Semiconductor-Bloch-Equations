@@ -1,18 +1,16 @@
-import params
 import numpy as np
 from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib import patches
 from scipy.integrate import ode
 from scipy.special import erf
-import systems as sys
 from sys import exit
 
-import hfsbe.dipole
-import hfsbe.example
-import hfsbe.utility
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
+import params
+import systems as sys
+from efield import driving_field
 '''
 TO DO:
 UPDATE MATRIX METHOD. NOT COMPATIBLE WITH CODE AS OF NOW. MAGNETIC FIELD.
@@ -44,9 +42,9 @@ def main():
     # Driving field parameters
     E0    = params.E0*E_conv                          # Driving pulse field amplitude
     B0    = params.B0*B_conv                          # Driving pulse magnetic field amplitude
-    w     = params.w*THz_conv                         # Driving pulse frequency
-    chirp = params.chirp*THz_conv                     # Pulse chirp frequency
-    alpha = params.alpha*fs_conv                      # Gaussian pulse width
+    w     = params.w*params.THz_conv                         # Driving pulse frequency
+    chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
+    alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
 
     # Dipole scaling to obtain semiclassical motion
@@ -242,7 +240,7 @@ def main():
         freq_lims = (0,25)
         log_limits = (1e-7,1e1)
         axE.set_xlim(t_lims)
-        axE.plot(t/fs_conv,driving_field(E0,w,t,chirp,alpha,phase)/E_conv)
+        axE.plot(t/fs_conv, driving_field(E0, t)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
         axA.set_xlim(t_lims)
@@ -677,23 +675,23 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
 
     return np.array(mesh), np.array(paths)
 
-@njit
-def driving_field(E0, w, t, chirp, alpha, phase):
-    '''
-    Returns the instantaneous driving pulse field
-    '''
-    # Non-pulse
-    # return E0*np.sin(2.0*np.pi*w*t)
-    # Chirped Gaussian pulse
-    return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+# @njit
+# def driving_field(E0, w, t, chirp, alpha, phase):
+#     '''
+#     Returns the instantaneous driving pulse field
+#     '''
+#     # Non-pulse
+#     # return E0*np.sin(2.0*np.pi*w*t)
+#     # Chirped Gaussian pulse
+#     return E0*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
 @njit
-def rabi(E0, w, t, chirp, alpha, phase, dipole):
+def rabi(E0, t, dipole):
     '''
     Rabi frequency of the transition.
     Calculated from dipole element and driving field
     '''
-    return dipole*driving_field(E0, w, t, chirp, alpha, phase)
+    return dipole*driving_field(E0, t)
 
 
 def diff(x, y):
@@ -1036,7 +1034,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
     # Gradient term coefficient
     if gauge == 'length':
-        D = driving_field(E0, w, t, chirp, alpha, phase)/(2*dk)
+        D = driving_field(E0, t)/(2*dk)
     elif gauge == 'velocity':
         k_shift = (y[-1]).real
         kx_shift_path = kx_in_path+E_dir[0]*k_shift
@@ -1084,16 +1082,16 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
         # Rabi frequency: w_R = d_12(k).E(t)
         dipole = dipole_in_path[k]
-        wr = rabi(E0, w, t, chirp, alpha, phase, dipole)
+        wr = rabi(E0, t, dipole)
         wr_c = wr.conjugate()
 
         # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
         Berry_con_diff = A_in_path[k]
-        wr_d_diag      = rabi(E0, w, t, chirp, alpha, phase, Berry_con_diff)
+        wr_d_diag      = rabi(E0, t, Berry_con_diff)
         Berry_con_v    = Avv_in_path[k]
-        wr_d_vv        = rabi(E0, w, t, chirp, alpha, phase, Berry_con_v)
+        wr_d_vv        = rabi(E0, t, Berry_con_v)
         Berry_con_c    = Acc_in_path[k]
-        wr_d_cc        = rabi(E0, w, t, chirp, alpha, phase, Berry_con_c)
+        wr_d_cc        = rabi(E0, t, Berry_con_c)
 
         if dynamics_type == 'density_matrix_dynamics':
 
@@ -1130,9 +1128,9 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
 
                dipole_in_path_B = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
                A_in_path_B      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
-               wr_B             = rabi(E0, w, t, chirp, alpha, phase, dipole_in_path_B)
+               wr_B             = rabi(E0, t, dipole_in_path_B)
                wr_B_c           = wr_B.conjugate()
-               wr_d_diag_B      = rabi(E0, w, t, chirp, alpha, phase, A_in_path_B)
+               wr_d_diag_B      = rabi(E0, t, A_in_path_B)
                ecv_in_path_B    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
                                 - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
 #               if Bcurv_in_B_dynamics: 
@@ -1143,21 +1141,21 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
                Bcurv_c = 0
 
                # use the unnecessary entry i+2 to compute the k-point shift 
-               B_z = driving_field(B0, w, t, chirp, alpha, phase)
-               E_x = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[0]
-               E_y = driving_field(E0, w, t, chirp, alpha, phase) * E_dir[1]
+               B_z = driving_field(B0, t)
+               E_x = driving_field(E0, t) * E_dir[0]
+               E_y = driving_field(E0, t) * E_dir[1]
                x[i]   = 2*(wr_B*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
                x[i+1] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+1] - 1j*wr_B_c*(y[i]-y[i+3]) 
                x[i+2] = x[i+1].conjugate()
                x[i+3] = -2*(wr_B*y[i+1]).imag - gamma1*(y[i+3]-y0_np[i+3])
                # k_v_x
-               x[i+4] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] - B_z*(ev_dy + Bcurv_v*E_x) / (1 - Bcurv_v*B_z)
+               x[i+4] = - driving_field(E0, t)*E_dir[0] - B_z*(ev_dy + Bcurv_v*E_x) / (1 - Bcurv_v*B_z)
                # k_v_y
-               x[i+5] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[1] + B_z*(ev_dx - Bcurv_v*E_y) / (1 - Bcurv_v*B_z)
+               x[i+5] = - driving_field(E0, t)*E_dir[1] + B_z*(ev_dx - Bcurv_v*E_y) / (1 - Bcurv_v*B_z)
                # k_c_x
-               x[i+6] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[0] - B_z*(ec_dy + Bcurv_c*E_x) / (1 - Bcurv_c*B_z)
+               x[i+6] = - driving_field(E0, t)*E_dir[0] - B_z*(ec_dy + Bcurv_c*E_x) / (1 - Bcurv_c*B_z)
                # k_v_y
-               x[i+7] = - driving_field(E0, w, t, chirp, alpha, phase)*E_dir[1] + B_z*(ec_dx - Bcurv_c*E_y) / (1 - Bcurv_c*B_z)
+               x[i+7] = - driving_field(E0, t)*E_dir[1] + B_z*(ec_dx - Bcurv_c*E_y) / (1 - Bcurv_c*B_z)
 
         elif dynamics_type == 'wavefunction_dynamics':
 
@@ -1173,7 +1171,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+7] = 0
 
     # last component of x is the E-field to obtain the vector potential A(t)
-    x[-1] = -driving_field(E0, w, t, chirp, alpha, phase)
+    x[-1] = -driving_field(E0, t)
 
     return x
 
@@ -1208,7 +1206,7 @@ def f_matrix(t, y, kgrid, Nk, dk, gamma2, E0, w, alpha):
         Brillouin zone drift term coefficient: E(t)*grad_k
         Coefficient for finite difference derivative.
         '''
-        drift_coef = driving_field(E0, w, t, alpha)/(2.0*dk)
+        drift_coef = driving_field(E0, t)/(2.0*dk)
 
         '''
         Diagonal block of the propagation matrix M. Contains all terms not related to drift term. Case for electron-hole picture.
