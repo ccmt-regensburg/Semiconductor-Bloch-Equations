@@ -21,6 +21,8 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     # Unit converstion factors
     fs_conv = params.fs_conv
     E_conv = params.E_conv
+    B_conv = params.B_conv
+    muB_conv = params.muB_conv
     THz_conv = params.THz_conv
     # amp_conv = params.amp_conv
     eV_conv = params.eV_conv
@@ -37,10 +39,9 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     alpha = params.alpha*fs_conv                # Gaussian pulse width
     phase = params.phase                        # Carrier-envelope phase
 
+    B0 = params.B0*B_conv
     incident_angle = np.radians(params.incident_angle)
-    mdx = params.mdx
-    mdy = params.mdy
-    mdz = params.mdz
+    mu = muB_conv*np.array([params.mu_x, params.mu_y, params.mu_z])
 
     # Time scales
     T1 = params.T1*fs_conv                      # Occupation damping time
@@ -118,13 +119,14 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     solution = []
 
     # Initialize the ode solver and create fnumba
-    fnumba = make_fnumba(sys, dipole_k, dipole_B, gauge=gauge)
+    fnumba = make_fnumba(sys, dipole_k, dipole_B,
+                         gamma1, gamma2, E0, w, chirp, alpha, phase, E_dir,
+                         B0, mu, incident_angle, gauge=gauge)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
     # Vector field
     A_field = []
-    Zeeman_field = []
     # SOLVING
     ###########################################################################
     # Iterate through each path in the Brillouin zone
@@ -143,19 +145,17 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
+        B = magnetic_field(B0, w, t0, chirp, alpha, phase, E_dir,
+                           incident_angle)
+        m_zee = mu*B
 
-        mx = 0
-        my = 0
-        mz = 0
-        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path,
-                          m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path, m_zee_x=m_zee[0],
+                          m_zee_y=m_zee[1], m_zee_z=m_zee[2])
         y0 = initial_condition(e_fermi, temperature, ec)
-        y0 = np.append(y0, [mx, my, mz, 0.0])
+        y0 = np.append(y0, [0.0])
 
         # Set the initual values and function parameters for the current kpath
-        solver.set_initial_value(y0, t0)\
-            .set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                          E_dir, mdx, mdy, mdz, incident_angle, y0)
+        solver.set_initial_value(y0, t0).set_f_params(path, dk, y0)
 
         # Propagate through time
         ti = 0
@@ -170,13 +170,12 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
             # Save solution each output step
             if (ti % dt_out == 0):
                 # Do not append the last element (A_field)
-                path_solution.append(solver.y[:-4])
+                path_solution.append(solver.y[:-1])
                 # Construct time array only once
                 if not t_constructed:
                     # Construct time and A_field only in first round
                     t.append(solver.t)
                     A_field.append(solver.y[-1])
-                    Zeeman_field.append(solver.y[-4:-1])
 
             # Increment time counter
             ti += 1
@@ -193,7 +192,6 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     t = np.array(t)
     solution = np.array(solution)
     A_field = np.array(A_field)
-    Zeeman_field = np.array(Zeeman_field)
 
     # Slice solution along each path for easier observable calculation
     # Split the last index into 100 subarrays, corresponding to kx
@@ -215,8 +213,10 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     dt_out = t[1] - t[0]
     freq = fftshift(fftfreq(np.size(t), d=dt_out))
 
-    I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, t, solution,
-                                                  E_dir, A_field)
+    I_exact_E_dir, I_exact_ortho =\
+        emission_exact(sys, paths, t, solution, E_dir, A_field, w, chirp,
+                       alpha, phase, B0, mu, incident_angle)
+
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
     Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t, alpha),
@@ -383,16 +383,28 @@ def electric_field(E0, w, t, chirp, alpha, phase):
     return E0*np.exp(-t**2.0/(2.0*alpha)**2) \
         * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
-
 @njit
-def curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha, phase, E_dir,
-                        incident_angle):
+def magnetic_field(B0, w, t, chirp, alpha, phase, E_dir, incident_angle):
     time_dep = np.exp(-t**2.0/(2.0*alpha)**2) \
-        * np.cos(2.0*np.pi*w*t*(1 + chirp*t) + phase)
-    mx = mdx * E_dir[1] * np.cos(incident_angle) * time_dep
-    my = -mdy * E_dir[0] * np.cos(incident_angle) * time_dep
-    mz = mdz * np.sin(incident_angle) * time_dep
-    return mx, my, mz
+        * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+
+    # x, y, z components
+    B = np.empty(3)
+    B[0] = B0*E_dir[1] * np.cos(incident_angle) * time_dep
+    B[1] = B0*E_dir[0] * np.cos(incident_angle) * time_dep
+    B[2] = B0*np.sin(incident_angle) * time_dep
+
+    return B
+
+# @njit
+# def curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha, phase, E_dir,
+#                         incident_angle):
+#     time_dep = np.exp(-t**2.0/(2.0*alpha)**2) \
+#         * np.cos(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+#     mx = mdx * E_dir[1] * np.cos(incident_angle) * time_dep
+#     my = -mdy * E_dir[0] * np.cos(incident_angle) * time_dep
+#     mz = mdz * np.sin(incident_angle) * time_dep
+#     return mx, my, mz
 
 
 def gaussian_envelope(t, alpha):
@@ -403,7 +415,9 @@ def gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*alpha)**2)
 
 
-def emission_exact(sys, paths, tarr, solution, E_dir, A_field, Zeeman_field):
+def emission_exact(sys, paths, tarr, solution, E_dir, A_field,
+                   w, chirp, alpha, phase,
+                   B0, mu, incident_angle):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -415,10 +429,11 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field, Zeeman_field):
     I_ortho = np.zeros(n_time_steps)
 
     for i_time, t in enumerate(tarr):
-        Ze = Zeeman_field[i_time]
-        mx = Ze[0]
-        my = Ze[1]
-        mz = Ze[2]
+        B = magnetic_field(B0, w, t, chirp, alpha, phase, E_dir, incident_angle)
+        m_zee = mu*B
+        mx = m_zee[0]
+        my = m_zee[1]
+        mz = m_zee[2]
         for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
@@ -467,7 +482,10 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field, Zeeman_field):
     return I_E_dir, I_ortho
 
 
-def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
+def make_fnumba(sys, dipole_k, dipole_B,
+                gamma1, gamma2, E0, w, chirp, alpha, phase, E_dir,
+                B0, mu, incident_angle,
+                gauge='velocity'):
     # Wire the energies
     evf = sys.efjit[0]
     ecf = sys.efjit[1]
@@ -498,15 +516,16 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
 
 
     @njit
-    def flength(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                E_dir, mdx, mdy, mdz, incident_angle, y0):
+    def flength(t, y, kpath, dk, y0):
 
         # WARNING! THE LENGTH GAUGE ONLY WORKS WITH
         # TIME CONSTANT MAGNETIC FIELDS FOR NOW
         # Preparing system parameters, energies, dipoles
-        mx = y[-4]
-        my = y[-3]
-        mz = y[-2]
+        m_zee = mu*magnetic_field(B0, w, t, chirp, alpha, phase, E_dir,
+                                  incident_angle)
+        mx = m_zee[0]
+        my = m_zee[1]
+        mz = m_zee[2]
         kx = kpath[:, 0]
         ky = kpath[:, 1]
         ev = evf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
@@ -570,23 +589,19 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
             x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) \
                 - gamma1*(y[i+3]-y0[i+3])
 
-        mxb, myb, mzb = curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha,
-                                            phase, E_dir, incident_angle)
-        x[-4] = -mxb
-        x[-3] = -myb
-        x[-2] = -mzb
         x[-1] = -electric_f
         return x
 
     @njit
-    def fvelocity(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                  E_dir, mdx, mdy, mdz, incident_angle, y0):
+    def fvelocity(t, y, kpath, dk, y0):
 
         # Preparing system parameters, energies, dipoles
 
-        mx = y[-4]
-        my = y[-3]
-        mz = y[-2]
+        m_zee = mu*magnetic_field(B0, w, t, chirp, alpha, phase, E_dir,
+                                  incident_angle)
+        mx = m_zee[0]
+        my = m_zee[1]
+        mz = m_zee[2]
         k_shift = y[-1].real
 
         kx = kpath[:, 0] + E_dir[0]*k_shift
@@ -640,11 +655,6 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
 
             x[i+3] = -2*(wr*y[i+1]).imag - gamma1*(y[i+3]-y0[i+3])
 
-        mxb, myb, mzb = curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha,
-                                            phase, E_dir, incident_angle)
-        x[-4] = -mxb
-        x[-3] = -myb
-        x[-2] = -mzb
         x[-1] = -electric_f
         return x
 
@@ -656,10 +666,8 @@ def make_fnumba(sys, dipole_k, dipole_B, gauge='velocity'):
         print("Using length gauge")
         freturn = flength
 
-    def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-          E_dir, mdx, mdy, mdz, incident_angle, y0):
-        return freturn(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha,
-                       phase, E_dir, mdx, mdy, mdz, incident_angle, y0)
+    def f(t, y, kpath, dk, y0):
+        return freturn(t, y, kpath, dk, y0)
 
     return f
 

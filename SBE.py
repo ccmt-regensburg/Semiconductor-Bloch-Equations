@@ -12,7 +12,6 @@ from hfsbe.utility import evaluate_njit_matrix as ev_mat
 dill.settings['recurse'] = True
 
 # Flags for plotting
-
 def main(sys, dipole, params):
     # RETRIEVE PARAMETERS
     ###########################################################################
@@ -118,8 +117,10 @@ def main(sys, dipole, params):
     t = []
     solution = []
 
-    # Initialize the ode solver
-    solver = ode(f, jac=None)\
+    # Initalise electric_field, create fnumba and initalise ode solver
+    electric_field = make_electric_field(E0, w, alpha, chirp, phase)
+    fnumba = make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field)
+    solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
     # Vector field
@@ -168,8 +169,7 @@ def main(sys, dipole, params):
 
         # Set the initual values and function parameters for the current kpath
         solver.set_initial_value(y0, t0)\
-            .set_f_params(path, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                          ecv_in_path, dipole_in_path, A_in_path, y0)
+            .set_f_params(path, dk, ecv_in_path, dipole_in_path, A_in_path, y0)
 
         # Propagate through time
         ti = 0
@@ -283,14 +283,8 @@ def main(sys, dipole, params):
         if (save_full):
             S_name = 'Sol_' + tail
             np.savez(S_name, t=t, solution=solution, paths=paths,
-                     driving_field=driving_field(E0, w, t, chirp, alpha, phase))
-            # Full_name = 'Full_' + tail
-            # np.savez(Full_name,
-            #          system=dill.dumps(sys),
-            #          dipole=dill.dumps(dipole),
-            #          params=dill.dumps(params),
-            #          paths=paths, time=t, solution=solution,
-            #          driving_field=driving_field(E0, w, t, chirp, alpha, phase))
+                     electric_field=electric_field(t))
+
         J_name = 'J_' + tail
         np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
         P_name = 'P_' + tail
@@ -303,7 +297,7 @@ def main(sys, dipole, params):
             .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
 
         D_name = 'E_' + driving_tail
-        np.save(D_name, [t, driving_field(E0, w, t, chirp, alpha, phase)])
+        np.save(D_name, [t, electric_field(t)])
 
     if (normal_plots):
         pl.rcParams['figure.figsize'] = (10, 10)
@@ -312,7 +306,7 @@ def main(sys, dipole, params):
         freq_lims = (0, 30)
         log_limits = (10e-20, 100)
         axE.set_xlim(t_lims)
-        axE.plot(t/fs_conv, driving_field(E0, w, t, chirp, alpha, phase)/E_conv)
+        axE.plot(t/fs_conv, electric_field(t)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
         axE.set_ylabel(r'$E$-field in MV/cm')
         axP.set_xlim(t_lims)
@@ -512,16 +506,19 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
     return np.array(mesh), np.array(paths)
 
 
-@njit
-def driving_field(E0, w, t, chirp, alpha, phase):
-    '''
-    Returns the instantaneous driving pulse field
-    '''
-    # Non-pulse
-    # return E0*np.sin(2.0*np.pi*w*t)
-    # Chirped Gaussian pulse
-    return E0*np.exp(-t**2.0/(2.0*alpha)**2) \
-        * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+def make_electric_field(E0, w, alpha, chirp, phase):
+    @njit
+    def electric_field(t):
+        '''
+        Returns the instantaneous driving pulse field
+        '''
+        # Non-pulse
+        # return E0*np.sin(2.0*np.pi*w*t)
+        # Chirped Gaussian pulse
+        return E0*np.exp(-t**2.0/(2.0*alpha)**2) \
+            * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+
+    return electric_field
 
 
 def diff(x, y):
@@ -662,64 +659,63 @@ def emission_exact(sys, paths, solution, E_dir, A_field):
     return I_E_dir, I_ortho
 
 
-def f(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase, ecv_in_path,
-      dipole_in_path, A_in_path, y0):
-    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-                  ecv_in_path, dipole_in_path, A_in_path, y0)
+def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field):
 
+    @njit
+    def fnumba(t, y, kpath, dk, ecv_in_path, dipole_in_path, A_in_path, y0):
+        # x != y(t+dt)
+        x = np.empty(np.shape(y), dtype=np.dtype('complex'))
 
-@njit
-def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, w, chirp, alpha, phase,
-           ecv_in_path, dipole_in_path, A_in_path, y0):
+        # Gradient term coefficient
+        electric_f = electric_field(t)
+        D = electric_f/(2*dk)
 
-    # x != y(t+dt)
-    x = np.empty(np.shape(y), dtype=np.dtype('complex'))
+        # Update the solution vector
+        Nk_path = kpath.shape[0]
+        for k in range(Nk_path):
+            i = 4*k
+            if k == 0:
+                m = 4*(k+1)
+                n = 4*(Nk_path-1)
+            elif k == Nk_path-1:
+                m = 0
+                n = 4*(k-1)
+            else:
+                m = 4*(k+1)
+                n = 4*(k-1)
 
-    # Gradient term coefficient
-    driving_f = driving_field(E0, w, t, chirp, alpha, phase)
-    D = driving_f/(2*dk)
+            # Energy term eband(i,k) the energy of band i at point k
+            ecv = ecv_in_path[k]
 
-    # Update the solution vector
-    Nk_path = kpath.shape[0]
-    for k in range(Nk_path):
-        i = 4*k
-        if k == 0:
-            m = 4*(k+1)
-            n = 4*(Nk_path-1)
-        elif k == Nk_path-1:
-            m = 0
-            n = 4*(k-1)
-        else:
-            m = 4*(k+1)
-            n = 4*(k-1)
+            # Rabi frequency: w_R = d_12(k).E(t)
+            # Rabi frequency conjugate
+            wr = dipole_in_path[k]*electric_f
+            wr_c = wr.conjugate()
 
-        # Energy term eband(i,k) the energy of band i at point k
-        ecv = ecv_in_path[k]
+            # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
+            # wr_d_diag   = A_in_path[k]*D
+            wr_d_diag = A_in_path[k]*electric_f
 
-        # Rabi frequency: w_R = d_12(k).E(t)
-        # Rabi frequency conjugate
-        wr = dipole_in_path[k]*driving_f
-        wr_c = wr.conjugate()
+            # Update each component of the solution vector
+            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+            x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) \
+                - gamma1*(y[i]-y0[i])
 
-        # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
-        # wr_d_diag   = A_in_path[k]*D
-        wr_d_diag = A_in_path[k]*driving_f
+            x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+                - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
 
-        # Update each component of the solution vector
-        # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
-        x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) \
-            - gamma1*(y[i]-y0[i])
+            x[i+2] = x[i+1].conjugate()
 
-        x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
-            - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+            x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) \
+                - gamma1*(y[i+3]-y0[i+3])
 
-        x[i+2] = x[i+1].conjugate()
+        x[-1] = -electric_f
+        return x
 
-        x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) \
-            - gamma1*(y[i+3]-y0[i+3])
+    def f(t, y, kpath, dk, ecv_in_path, dipole_in_path, A_in_path, y0):
+        return fnumba(t, y, kpath, dk, ecv_in_path, dipole_in_path, A_in_path, y0)
 
-    x[-1] = -driving_f
-    return x
+    return f
 
 
 def initial_condition(e_fermi, temperature, e_c):
@@ -765,7 +761,3 @@ def BZ_plot(kpnts, a, b1, b2, paths):
         pl.plot(path[:, 0], path[:, 1])
 
     pl.show()
-
-
-if __name__ == "__main__":
-    main()

@@ -14,7 +14,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = 'full'
+    BZ_type = '2line'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
@@ -60,7 +60,7 @@ class params:
     ##########################################################################
     user_out      = True   # Set to True to get user plotting and progress output
     calc_exact    = True   # Calculate exact emission (Careful takes long!)
-    normal_plots  = False  # Standard plots of P, J, I and w-dependency
+    normal_plots  = True   # Standard plots of P, J, I and w-dependency
     polar_plots   = False  # Higher harmonic polarization rotation
     save_file     = True   # Save all data files
     save_full     = False  # Save full information

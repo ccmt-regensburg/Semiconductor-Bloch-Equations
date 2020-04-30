@@ -18,7 +18,6 @@ def run():
     # R                   = 5.52658     # k^3 coefficient
     # mb                  = 0.000373195 # Splitting of cones.(10 meV)
     # k_cut               = 0.05        # Model hamiltonian cutoff
-
     # Sweep electric field
     for E in np.arange(5.00, 5.10, 0.50):
 
@@ -33,8 +32,8 @@ def run():
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = SymbolicDipole(h_sym, ef_sym, wf_sym)
 
-        dipole_mb = SymbolicZeemanDipole(h_sym, wf_sym)
-        sbe_zeeman_solver(system, dipole, dipole_mb, params)
+        dipole_B = SymbolicZeemanDipole(h_sym, wf_sym)
+        sbe_zeeman_solver(system, dipole, dipole_B, params)
         os.chdir('..')
 
 

@@ -42,10 +42,11 @@ class params:
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
     phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.py)
 
+    B0                  = 1           # Magnetic field Amplitude (T)
     incident_angle      = 45          # Theta angle to the z-axis
-    mdx = 0.5
-    mdy = 0.5
-    mdz = 0.5
+    mu_x                = 1           # Magnetic dipole moment in x direction (mu_b)
+    mu_y                = 1           # Magnetic dipole moment in y direction (mu_b)
+    mu_z                = 1           # Magnetic dipole moment in z direction (mu_b)
 
     # Time scales (all units in femtoseconds)
     ##########################################################################
@@ -59,9 +60,11 @@ class params:
     ##########################################################################
     fs_conv = 41.34137335                  #(1fs    = 41.341473335 a.u.)
     E_conv = 0.0001944690381               #(1MV/cm = 1.944690381*10^-4 a.u.)
+    B_conv = 4e-7                          #(1T     = 4e-7 a.u.)
     THz_conv = 0.000024188843266           #(1THz   = 2.4188843266*10^-5 a.u.)
     amp_conv = 150.97488474                #(1A     = 150.97488474)
     eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
+    muB_conv = 0.5                         #(1mb    = 0.5 a.u.)
 
     # Flags for testing and features
     ##########################################################################

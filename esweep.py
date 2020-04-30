@@ -32,8 +32,8 @@ def run():
             os.mkdir(dirname)
         os.chdir(dirname)
 
-        system = BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym,
-                              mb=mb)
+        system = BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym)
+
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)
