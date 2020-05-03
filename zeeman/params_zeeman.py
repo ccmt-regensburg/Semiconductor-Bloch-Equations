@@ -27,10 +27,10 @@ class params:
     Nk2                 = 2           # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 400         # Number of kpoints in each of the two paths
+    Nk_in_path          = 800         # Number of kpoints in each of the two paths
     rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-    length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ K-direction
-    # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
+    # length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ K-direction
+    length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
     # Driving field parameters
@@ -60,11 +60,11 @@ class params:
     ##########################################################################
     fs_conv = 41.34137335                  #(1fs    = 41.341473335 a.u.)
     E_conv = 0.0001944690381               #(1MV/cm = 1.944690381*10^-4 a.u.)
-    B_conv = 4e-7                          #(1T     = 4e-7 a.u.)
+    B_conv = 4.255e-6                      #(1T     = 4.255e-6 a.u.)
     THz_conv = 0.000024188843266           #(1THz   = 2.4188843266*10^-5 a.u.)
     amp_conv = 150.97488474                #(1A     = 150.97488474)
     eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
-    muB_conv = 0.5                         #(1mb    = 0.5 a.u.)
+    muB_conv = 0.5                         #(1mu_b    = 0.5 a.u.)
 
     # Flags for testing and features
     ##########################################################################
