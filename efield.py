@@ -14,11 +14,12 @@ fitted_pulse   = params.fitted_pulse
 parameters = nir.opt_pulses()
 
 if fitted_pulse:
-    print("Broadening Gauss [fs] =", parameters[0]/params.fs_conv  )
-    print("Time shift [fs]       =", parameters[1]/params.fs_conv  )
-    print("Frequency [THz]       =", parameters[2]/params.THz_conv )
-    print("Chirp [THz]           =", parameters[3]/params.THz_conv )
-    print("Phase                 =", parameters[4])
+    print("Amplitude (without unit) =", parameters[0] )
+    print("Broadening Gauss [fs]    =", parameters[1]/params.fs_conv  )
+    print("Time shift [fs]          =", parameters[2]/params.fs_conv  )
+    print("Frequency [THz]          =", parameters[3]/params.THz_conv )
+    print("Chirp [THz]              =", parameters[4]/params.THz_conv )
+    print("Phase                    =", parameters[5] )
 
 @njit
 def driving_field(Amplitude, t):
