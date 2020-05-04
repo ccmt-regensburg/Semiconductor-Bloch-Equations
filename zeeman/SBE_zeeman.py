@@ -83,6 +83,7 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
         elif BZ_type == '2line':
             print("Driving field direction         = " + str(angle_inc_E_field))
         print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
+        print("Magnetic amplitude (T)[a.u.]    = " + "(" + '%.6f'%(B0/B_conv) + ")" + "[" + '%.6f'%(B0) + "]")
         print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
         print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
         print("Chirp rate (THz)[a.u.]          = " + "(" + '%.6f'%(chirp/THz_conv) + ")" + "[" + '%.6f'%(chirp) + "]")
@@ -103,12 +104,12 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
         elif align == 'M':
             E_dir = np.array([np.cos(np.radians(-30)),
                              np.sin(np.radians(-30))])
-        BZ_plot(kpnts, a, b1, b2, paths)
+        # BZ_plot(kpnts, a, b1, b2, paths)
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
-        BZ_plot(kpnts, a, b1, b2, paths)
+        # BZ_plot(kpnts, a, b1, b2, paths)
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
@@ -119,8 +120,9 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     solution = []
 
     # Initialize the ode solver and create fnumba
-    electric_field, zeeman_field =\
-        make_fields(E0, w, alpha, chirp, phase, B0, mu, E_dir, incident_angle)
+    electric_field = make_electric_field(E0, w, alpha, chirp, phase)
+    zeeman_field = make_zeeman_field(B0, mu, w, alpha, chirp, phase, E_dir,
+                                     incident_angle)
 
     fnumba = make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
                          electric_field, zeeman_field, gauge=gauge)
@@ -371,7 +373,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
     return np.array(mesh), np.array(paths)
 
 
-def make_fields(E0, w, alpha, chirp, phase, B0, mu, E_dir, incident_angle):
+def make_electric_field(E0, w, alpha, chirp, phase):
     @njit
     def electric_field(t):
         '''
@@ -383,6 +385,10 @@ def make_fields(E0, w, alpha, chirp, phase, B0, mu, E_dir, incident_angle):
         return E0*np.exp(-t**2.0/(2.0*alpha)**2) \
             * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
+    return electric_field
+
+
+def make_zeeman_field(B0, mu, w, alpha, chirp, phase, E_dir, incident_angle):
     @njit
     def zeeman_field(t):
         time_dep = np.exp(-t**2.0/(2.0*alpha)**2) \
@@ -396,7 +402,7 @@ def make_fields(E0, w, alpha, chirp, phase, B0, mu, E_dir, incident_angle):
 
         return m_zee
 
-    return electric_field, zeeman_field
+    return zeeman_field
 
 # @njit
 # def curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha, phase, E_dir,
