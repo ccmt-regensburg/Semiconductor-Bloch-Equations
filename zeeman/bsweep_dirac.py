@@ -1,5 +1,4 @@
 import numpy as np
-import sympy as sp
 import os
 from params_zeeman import params
 

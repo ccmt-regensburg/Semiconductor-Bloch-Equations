@@ -6,7 +6,7 @@ class params:
 # System parameters
 #########################################################################
     a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
-    e_fermi             = 0.0         # Fermi energy in eV
+    e_fermi             = 0.2         # Fermi energy in eV
     temperature         = 0.03        # Temperature in eV
 
     # Model Hamiltonian parameters
@@ -25,16 +25,16 @@ class params:
     Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 40        # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.01       # relative distance (in units of 2pi/a) of both paths to Gamma
-    length_path_in_BZ   = 4*np.pi/a  # Length of path in BZ K-direction
+    Nk_in_path          = 400        # Number of kpoints in each of the two paths
+    rel_dist_to_Gamma   = 0.05       # relative distance (in units of 2pi/a) of both paths to Gamma
+    length_path_in_BZ   = 3*np.pi/a  # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   = 0        # incoming angle of the E-field in degree
 
     # Driving field parameters
     ##########################################################################
     align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
-    E0                  = 2.50        # Pulse amplitude (MV/cm)
+    E0                  = 5.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)

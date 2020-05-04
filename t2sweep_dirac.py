@@ -30,7 +30,7 @@ def run():
             os.mkdir(dirname)
         os.chdir(dirname)
 
-        system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mb=0, kcut=k_cut)
+        system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, kcut=k_cut)
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)

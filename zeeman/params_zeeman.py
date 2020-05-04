@@ -5,8 +5,8 @@ import numpy as np
 class params:
 # System parameters
 #########################################################################
-    # a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
-    a = 8.308
+    a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
+    # a = 8.308
     e_fermi             = 0.2         # Fermi energy in eV
     temperature         = 0.03        # Temperature in eV
 
@@ -15,8 +15,8 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = '2line'
-    gauge = 'velocity'
+    BZ_type = 'full'
+    gauge = 'length'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
@@ -29,8 +29,8 @@ class params:
     # 2line BZ parameters
     Nk_in_path          = 800         # Number of kpoints in each of the two paths
     rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-    # length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ K-direction
-    length_path_in_BZ   = 5*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
+    length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
+    # length_path_in_BZ   = 5*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   =  0          # incoming angle of the E-field in degree
 
     # Driving field parameters
@@ -60,7 +60,7 @@ class params:
     ##########################################################################
     fs_conv = 41.34137335                  #(1fs    = 41.341473335 a.u.)
     E_conv = 0.0001944690381               #(1MV/cm = 1.944690381*10^-4 a.u.)
-    B_conv = 4.255e-6                      #(1T     = 4.255e-6 a.u.)
+    B_conv = 4.25531e-6                    #(1T     = 4.255e-6 a.u.)
     THz_conv = 0.000024188843266           #(1THz   = 2.4188843266*10^-5 a.u.)
     amp_conv = 150.97488474                #(1A     = 150.97488474)
     eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
