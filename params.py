@@ -60,8 +60,6 @@ chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
 phase               = (0/5)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
 
-flag_fitted_pulse   = False
-
 # scaling of the dipole
 scale_dipole_eq_mot = 1
 scale_dipole_emiss  = 1
@@ -94,3 +92,4 @@ matrix_method       = False  # Set to True to use old matrix method for solving
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
+fitted_pulse        = False
