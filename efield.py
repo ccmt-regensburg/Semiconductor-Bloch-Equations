@@ -10,6 +10,7 @@ chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
 alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
 phase = params.phase                              # Carrier-envelope phase
 
+flag_fitted_pulse   = params.flag_fitted_pulse
 parameters = nir.opt_pulses()
 
 @njit
@@ -20,7 +21,10 @@ def driving_field(Amplitude, t):
     # Non-pulse
     # return E0*np.sin(2.0*np.pi*w*t)
     # Chirped Gaussian pulse
-    return Amplitude*nir.transient(t, parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
-    #return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)\
-    #    * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+    if flag_fitted_pulse:
+        return Amplitude*nir.transient(t, parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
+
+    else:
+        return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)\
+                * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
