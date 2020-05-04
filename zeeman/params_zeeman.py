@@ -30,8 +30,8 @@ class params:
     Nk_in_path          = 800         # Number of kpoints in each of the two paths
     rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
     # length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ K-direction
-    length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
-    angle_inc_E_field   = 0           # incoming angle of the E-field in degree
+    length_path_in_BZ   = 5*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
+    angle_inc_E_field   =  0          # incoming angle of the E-field in degree
 
     # Driving field parameters
     ##########################################################################

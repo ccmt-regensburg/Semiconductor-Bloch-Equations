@@ -19,7 +19,7 @@ def run():
     # mb                  = 0.000373195 # Splitting of cones.(10 meV)
     # k_cut               = 0.05        # Model hamiltonian cutoff
     # Sweep electric field
-    for B in np.arange(0.00, 100.10, 10.00):
+    for B in np.arange(0.00, 10.10, 2.00):
 
         params.B0 = B
         print("Current B-field: ", params.B0)
