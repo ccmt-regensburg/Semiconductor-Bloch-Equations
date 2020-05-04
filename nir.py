@@ -29,7 +29,7 @@ def opt_pulses():
     ax.set_xlabel("time in atomic units")
     ax.legend()
     
-    pl.show()
+#    pl.show()
     pl.clf()
     pl.close()
     return tOpt
