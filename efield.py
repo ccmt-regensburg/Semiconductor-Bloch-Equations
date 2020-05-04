@@ -13,6 +13,13 @@ phase = params.phase                              # Carrier-envelope phase
 fitted_pulse   = params.fitted_pulse
 parameters = nir.opt_pulses()
 
+if fitted_pulse:
+    print("Broadening Gauss [fs] =", parameters[0]/params.fs_conv  )
+    print("Time shift [fs]       =", parameters[1]/params.fs_conv  )
+    print("Frequency [THz]       =", parameters[2]/params.THz_conv )
+    print("Chirp [THz]           =", parameters[3]/params.THz_conv )
+    print("Phase                 =", parameters[4])
+
 @njit
 def driving_field(Amplitude, t):
     '''
@@ -25,6 +32,5 @@ def driving_field(Amplitude, t):
         return Amplitude*nir.transient(t, parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
 
     else:
-        return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)\
-                * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+        return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
