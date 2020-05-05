@@ -319,18 +319,17 @@ def main():
         ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
         ax_I_total.legend(loc='upper right')
 
-        if do_B_field:
-           B_fig_all_in_one, ((B_1)) = pl.subplots(1,1,figsize=(10,4))
-           B_1.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
-           B_1.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
-           B_1.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
-               label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
-           B_1.set_xlabel(r'Frequency $\omega/\omega_0$')
-           B_1.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
-           B_1.legend(loc='upper right')
-           B_1.grid(True,axis='x')
-           B_1.set_xlim(freq_lims)
-           B_1.set_ylim(log_limits)
+        B_fig_all_in_one, ((B_1)) = pl.subplots(1,1,figsize=(10,4))
+        B_1.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
+        B_1.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
+        B_1.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
+            label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
+        B_1.set_xlabel(r'Frequency $\omega/\omega_0$')
+        B_1.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
+        B_1.legend(loc='upper right')
+        B_1.grid(True,axis='x')
+        B_1.set_xlim(freq_lims)
+        B_1.set_ylim(log_limits)
 
         if do_emission_wavep:
 

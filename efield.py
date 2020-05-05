@@ -11,9 +11,10 @@ alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
 phase = params.phase                              # Carrier-envelope phase
 
 fitted_pulse   = params.fitted_pulse
-parameters = nir.opt_pulses()
 
 if fitted_pulse:
+    parameters = nir.opt_pulses()
+
     print("Amplitude (without unit) =", parameters[0] )
     print("Broadening Gauss [fs]    =", parameters[1]/params.fs_conv  )
     print("Time shift [fs]          =", parameters[2]/params.fs_conv  )
