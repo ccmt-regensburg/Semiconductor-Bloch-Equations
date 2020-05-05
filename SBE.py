@@ -182,7 +182,7 @@ def main():
     if do_B_field:
        I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
     else:
-       I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
+       I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, gauge) 
     # emission with exact formula with semiclassical formula
     if do_emission_wavep:
        I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
@@ -295,7 +295,7 @@ def main():
         if do_B_field:
            label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
-           label_emission_ortho = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
+           label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
         ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
         if not do_B_field:
            ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
@@ -325,7 +325,7 @@ def main():
         B_1.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
             label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
         B_1.set_xlabel(r'Frequency $\omega/\omega_0$')
-        B_1.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
+        B_1.set_ylabel(r'Relative emission intensity $I(\omega)$')
         B_1.legend(loc='upper right')
         B_1.grid(True,axis='x')
         B_1.set_xlim(freq_lims)
@@ -569,10 +569,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
     # In case of the velocity gauge, we need to shift the time-dependent
     # k(t)=k_0+e/hbar A(t) to k_0 = k(t) - e/hbar A(t)
-    if gauge == 'velocity' and do_B_field == False:
+    if gauge == 'velocity' and do_B_field == False and dynamics_type == 'wavefunction_dynamics':
         solution = shift_solution(solution, A_field, dk, dynamics_type)
-        if dynamics_type == 'wavefunction_dynamics':
-            fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
+        fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
     return solution, t, A_field, fermi_function
 
@@ -799,7 +798,7 @@ def current(paths, fv, fc, t, alpha, E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
-def emission_exact(paths, solution, E_dir, A_field):
+def emission_exact(paths, solution, E_dir, A_field, gauge):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -815,18 +814,31 @@ def emission_exact(paths, solution, E_dir, A_field):
             path = np.array(path)
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
-    
-            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
-            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
 
-            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
-            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_shifted, ky=ky_in_path_shifted)
+            if gauge == 'length':
+
+               kx_in_path_for_h_deriv = kx_in_path - A_field[i_time]*E_dir[0]
+               ky_in_path_for_h_deriv = ky_in_path - A_field[i_time]*E_dir[1]
+   
+               kx_in_path_for_U       = kx_in_path 
+               ky_in_path_for_U       = ky_in_path 
+
+            elif gauge == 'velocity':
+       
+               kx_in_path_for_h_deriv = kx_in_path - 2*A_field[i_time]*E_dir[0]
+               ky_in_path_for_h_deriv = ky_in_path - 2*A_field[i_time]*E_dir[1]
+   
+               kx_in_path_for_U       = kx_in_path - A_field[i_time]*E_dir[0]
+               ky_in_path_for_U       = ky_in_path - A_field[i_time]*E_dir[0]
+
+            h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_for_h_deriv, ky=ky_in_path_for_h_deriv)
+            h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_for_h_deriv, ky=ky_in_path_for_h_deriv)
  
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
-            U = sys.wf(kx=kx_in_path, ky=ky_in_path)
-            U_h = sys.wf_h(kx=kx_in_path, ky=ky_in_path)
+            U   = sys.wf  (kx=kx_in_path_for_U, ky=ky_in_path_for_U)
+            U_h = sys.wf_h(kx=kx_in_path_for_U, ky=ky_in_path_for_U)
     
             for i_k in range(np.size(kx_in_path)):
 
