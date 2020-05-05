@@ -269,55 +269,54 @@ def main():
 
 ##########################
 
-        five_fig, ((ax_I_E_dir,ax_I_ortho,ax_I_total)) = pl.subplots(3,1,figsize=(10,10))
-        ax_I_E_dir.grid(True,axis='x')
-        ax_I_E_dir.set_xlim(freq_lims)
-        ax_I_E_dir.set_ylim(log_limits)
         if do_B_field:
            label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
-        else:
-           label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
-
-        ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
-        if not do_B_field:
-           ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
-              label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
-           ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
-              label='$I_{\mathrm{intra} \parallel E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
-           ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
-              label='$I_{\mathrm{inter} \parallel E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_E\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
-        ax_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
-        ax_I_E_dir.legend(loc='upper right')
-        ax_I_ortho.grid(True,axis='x')
-        ax_I_ortho.set_xlim(freq_lims)
-        ax_I_ortho.set_ylim(log_limits)
-        if do_B_field:
            label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
+           label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
            label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
-        ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
-        if not do_B_field:
-           ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
-              label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
-           ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
-              label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
-           ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, linestyle='dashed',
-              label='$I_{\mathrm{inter} \\bot E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_{\\bot E}\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
-        ax_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax_I_ortho.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
-        ax_I_ortho.legend(loc='upper right')
-        ax_I_total.grid(True,axis='x')
-        ax_I_total.set_xlim(freq_lims)
-        ax_I_total.set_ylim(log_limits)
-        ax_I_total.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
-           label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
-        if not do_B_field:
-           ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
-              label='$I_{\mathrm{i+i}}(t) = I_{\mathrm{i+i} \parallel E}(t) + I_{\mathrm{i+i} \\bot E}(t)$')
-        ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
-        ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
-        ax_I_total.legend(loc='upper right')
+
+        if gauge == 'length':
+           five_fig, ((ax_I_E_dir,ax_I_ortho,ax_I_total)) = pl.subplots(3,1,figsize=(10,10))
+           ax_I_E_dir.grid(True,axis='x')
+           ax_I_E_dir.set_xlim(freq_lims)
+           ax_I_E_dir.set_ylim(log_limits)
+           ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
+           if not do_B_field:
+              ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
+                 label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
+              ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
+                 label='$I_{\mathrm{intra} \parallel E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
+              ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
+                 label='$I_{\mathrm{inter} \parallel E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_E\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
+           ax_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
+           ax_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
+           ax_I_E_dir.legend(loc='upper right')
+           ax_I_ortho.grid(True,axis='x')
+           ax_I_ortho.set_xlim(freq_lims)
+           ax_I_ortho.set_ylim(log_limits)
+           ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
+           if not do_B_field:
+              ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
+                 label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
+              ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
+                 label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
+              ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+                 label='$I_{\mathrm{inter} \\bot E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_{\\bot E}\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
+           ax_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
+           ax_I_ortho.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
+           ax_I_ortho.legend(loc='upper right')
+           ax_I_total.grid(True,axis='x')
+           ax_I_total.set_xlim(freq_lims)
+           ax_I_total.set_ylim(log_limits)
+           ax_I_total.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
+              label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
+           if not do_B_field:
+              ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
+                 label='$I_{\mathrm{i+i}}(t) = I_{\mathrm{i+i} \parallel E}(t) + I_{\mathrm{i+i} \\bot E}(t)$')
+           ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
+           ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
+           ax_I_total.legend(loc='upper right')
 
         B_fig_all_in_one, ((B_1)) = pl.subplots(1,1,figsize=(10,4))
         B_1.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
@@ -829,7 +828,7 @@ def emission_exact(paths, solution, E_dir, A_field, gauge):
                ky_in_path_for_h_deriv = ky_in_path - 2*A_field[i_time]*E_dir[1]
    
                kx_in_path_for_U       = kx_in_path - A_field[i_time]*E_dir[0]
-               ky_in_path_for_U       = ky_in_path - A_field[i_time]*E_dir[0]
+               ky_in_path_for_U       = ky_in_path - A_field[i_time]*E_dir[1]
 
             h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_for_h_deriv, ky=ky_in_path_for_h_deriv)
             h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_for_h_deriv, ky=ky_in_path_for_h_deriv)
