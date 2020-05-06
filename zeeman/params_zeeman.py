@@ -42,7 +42,7 @@ class params:
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
     phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.py)
 
-    B0                  = 1           # Magnetic field Amplitude (T)
+    B0                  = 10          # Magnetic field Amplitude (T)
     incident_angle      = 45          # Theta angle to the z-axis
     mu_x                = 1           # Magnetic dipole moment in x direction (mu_b)
     mu_y                = 1           # Magnetic dipole moment in y direction (mu_b)
