@@ -216,7 +216,8 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     freq = fftshift(fftfreq(np.size(t), d=dt_out))
 
     I_exact_E_dir, I_exact_ortho =\
-        emission_exact(sys, paths, t, solution, E_dir, A_field, zeeman_field)
+        emission_exact(sys, paths, t, solution, E_dir, A_field, zeeman_field,
+                       gauge)
 
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
@@ -423,7 +424,8 @@ def gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*alpha)**2)
 
 
-def emission_exact(sys, paths, tarr, solution, E_dir, A_field, zeeman_field):
+def emission_exact(sys, paths, tarr, solution, E_dir, A_field, zeeman_field,
+                   gauge):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
@@ -444,22 +446,33 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field, zeeman_field):
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
 
-            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
-            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+            if gauge == 'length':
+                kx_in_path_h_deriv = kx_in_path - A_field[i_time]*E_dir[0]
+                ky_in_path_h_deriv = ky_in_path - A_field[i_time]*E_dir[1]
+
+                kx_in_path_U = kx_in_path
+                ky_in_path_U = ky_in_path
+
+            elif gauge == 'velocity':
+                kx_in_path_h_deriv = kx_in_path - 2*A_field[i_time]*E_dir[0]
+                ky_in_path_h_deriv = ky_in_path - 2*A_field[i_time]*E_dir[1]
+
+                kx_in_path_U = kx_in_path - A_field[i_time]*E_dir[0]
+                ky_in_path_U = ky_in_path - A_field[i_time]*E_dir[1]
 
             h_deriv_x = evmat(sys.hderivfjit[0],
-                              kx=kx_in_path_shifted, ky=ky_in_path_shifted,
+                              kx=kx_in_path_h_deriv, ky=ky_in_path_h_deriv,
                               m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
             h_deriv_y = evmat(sys.hderivfjit[1],
-                              kx=kx_in_path_shifted, ky=ky_in_path_shifted,
+                              kx=kx_in_path_h_deriv, ky=ky_in_path_h_deriv,
                               m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
 
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
-            U = sys.Uf(kx=kx_in_path, ky=ky_in_path,
+            U = sys.Uf(kx=kx_in_path_U, ky=ky_in_path_U,
                        m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
-            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path,
+            U_h = sys.Uf_h(kx=kx_in_path_U, ky=ky_in_path_U,
                            m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
 
             for i_k in range(np.size(kx_in_path)):

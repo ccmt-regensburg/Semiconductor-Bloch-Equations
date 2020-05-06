@@ -15,7 +15,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = 'full'
+    BZ_type = '2line'
     gauge = 'length'
 
     # Reciprocal lattice vectors
