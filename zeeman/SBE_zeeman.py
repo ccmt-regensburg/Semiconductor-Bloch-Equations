@@ -616,7 +616,7 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
         mx = m_zee[0]
         my = m_zee[1]
         mz = m_zee[2]
-        k_shift = y[-1].real
+        k_shift = -y[-1].real
 
         kx = kpath[:, 0] + E_dir[0]*k_shift
         ky = kpath[:, 1] + E_dir[1]*k_shift
@@ -705,8 +705,8 @@ def shift_solution(solution, A_field, dk):
         phi = np.arctan2(np.imag(solution[:, :, i_time, :]),
                          np.real(solution[:, :, i_time, :]))
 
-        r = weight_1*np.roll(r,   k_index_shift_1, axis=0) \
-            + weight_2*np.roll(r,   k_index_shift_2, axis=0)
+        r = weight_1*np.roll(r, k_index_shift_1, axis=0) \
+            + weight_2*np.roll(r, k_index_shift_2, axis=0)
         phi = weight_1*np.roll(phi, k_index_shift_1, axis=0) \
             + weight_2*np.roll(phi, k_index_shift_2, axis=0)
 
