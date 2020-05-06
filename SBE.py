@@ -10,6 +10,7 @@ from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
 import params
 import systems as sys
+import efield
 from efield import driving_field
 '''
 TO DO:
@@ -39,13 +40,18 @@ def main():
     e_fermi = params.e_fermi*eV_conv                  # Fermi energy for initial conditions
     temperature = params.temperature*eV_conv          # Temperature for initial conditions
 
+    print("alpha is calculated now")
     # Driving field parameters
     E0    = params.E0*E_conv                          # Driving pulse field amplitude
     B0    = params.B0*B_conv                          # Driving pulse magnetic field amplitude
     w     = params.w*params.THz_conv                         # Driving pulse frequency
     chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
-    alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
+    
+    alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
+    if params.fitted_pulse:
+        w       = efield.w
+        alpha   = efield.sigma
 
     # Dipole scaling to obtain semiclassical motion
     scale_dipole_eq_mot = params.scale_dipole_eq_mot

@@ -1,43 +1,49 @@
 import numpy as np
 from numba import njit
-import matplotlib.pyplot as pl
-from scipy import optimize, special, interpolate, signal
-from scipy.signal import hilbert, butter, lfilter, sosfilt
+from scipy import optimize
 
 import params
 
-def main():
-    opt_pulses()
-
 def opt_pulses():
     #Prepare pyplot axes
-    fig, ax         = pl.subplots(1, 1)
     fs_conv         = params.fs_conv
     E_conv          = params.E_conv
     THz_conv        = params.THz_conv
+    vel_light       = params.c
 
     #Load THz Pulse data
-    thzPulse        = np.loadtxt("Transient_25THz.txt", delimiter=",")
-    thzPulse[:,0]   *= fs_conv                                              #Recalculation of s into a.u.
-
-    initThz         = [1, 100*fs_conv, 0, 25*THz_conv, 0, 0]
+    thzPulse        = np.loadtxt("Transient.dat")
+    thzPulse[:,0]   *= 1e15*fs_conv                             #Recalculation of s into a.u.
+    thzPulse[:,1]   *= 1e-8*E_conv                                     #Recalculation of V/m into MV/cm
+    initThz         = [1, 1000*fs_conv, 0, 1*THz_conv, 0]
     tOpt, tCov      = optimize.curve_fit(transient, thzPulse[:,0], thzPulse[:,1], p0=initThz)
-    ax.plot(thzPulse[:,0], thzPulse[:,1], label="THz-Pulse")
-    ax.plot(thzPulse[:,0], transient(thzPulse[:,0], *tOpt), label="THz-Pulse fitted")
 
-    ax.set_ylabel("electrical field normed to maximum")
-    ax.set_xlabel("time in atomic units")
-    ax.legend()
-    
-#    pl.show()
-    pl.clf()
-    pl.close()
-    return tOpt
+    #Load experimental frequency spectrum
+    pulseFreq       = np.loadtxt("NIR_spectrum.dat")
+    pulseFreq[:,0]  = vel_light/(pulseFreq[:,0]*1e-9)*1e-12*THz_conv
+    pulseFreq[:,1]  *= E_conv
+    peak            = pulseFreq[np.argmax(pulseFreq[:,1] ) ]
+    initNir         = [peak[1], 100*THz_conv, peak[0]]
+    fOpt, fCov      = optimize.curve_fit(gaussSpec, pulseFreq[:,0], np.abs(pulseFreq[:,1]), p0=initNir )
+
+    nOpt            = list(fOpt[:] )
+    nOpt[0]         = fOpt[0]*fOpt[1]
+    nOpt[1]         = 1/nOpt[1]
+    nOpt.append(nOpt[2])
+    nOpt[2]         = 0
+    nOpt.append(0)
+
+    return [tOpt, nOpt]
 
 @njit
-def transient(t, A, alpha, mu, w, chirp, phase):
-    return A*np.exp(-(t-mu)**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+def transient(x, aT, sigmaT, muT, freqT, chirpT):
+    return aT*np.exp(-((x-muT)/sigmaT)**2/2)*np.cos(2*np.pi*(1+chirpT*x)*freqT*x)
 
-#Appendix to use main function
-if __name__ == "__main__":
-    main()
+@njit
+def nir(x, aN, sigmaN, muN, freqN, phiN):
+    return aN*np.exp(-(x-muN)**2/sigmaN**2/2)*np.cos(2*np.pi*freqN*(x-muN)+phiN )
+
+def gaussSpec(x, A, sigma, mu):
+    return A*np.exp(-(2*np.pi*(x-mu)/sigma)**2/2)
+
+
