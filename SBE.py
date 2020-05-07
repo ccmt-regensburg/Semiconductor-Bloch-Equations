@@ -824,11 +824,11 @@ def emission_exact(paths, solution, E_dir, A_field, gauge):
 
             elif gauge == 'velocity':
        
-               kx_in_path_for_h_deriv = kx_in_path - 2*A_field[i_time]*E_dir[0]
-               ky_in_path_for_h_deriv = ky_in_path - 2*A_field[i_time]*E_dir[1]
+               kx_in_path_for_h_deriv = kx_in_path 
+               ky_in_path_for_h_deriv = ky_in_path 
    
-               kx_in_path_for_U       = kx_in_path - A_field[i_time]*E_dir[0]
-               ky_in_path_for_U       = ky_in_path - A_field[i_time]*E_dir[1]
+               kx_in_path_for_U       = kx_in_path + A_field[i_time]*E_dir[0]
+               ky_in_path_for_U       = ky_in_path + A_field[i_time]*E_dir[1]
 
             h_deriv_x = ev_mat(sys.h_deriv[0], kx=kx_in_path_for_h_deriv, ky=ky_in_path_for_h_deriv)
             h_deriv_y = ev_mat(sys.h_deriv[1], kx=kx_in_path_for_h_deriv, ky=ky_in_path_for_h_deriv)
@@ -1059,7 +1059,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
     if gauge == 'length':
         D = driving_field(E0, t)/(2*dk)
     elif gauge == 'velocity':
-        k_shift = -(y[-1]).real
+        k_shift = (y[-1]).real
         kx_shift_path = kx_in_path+E_dir[0]*k_shift
         ky_shift_path = ky_in_path+E_dir[1]*k_shift
         ecv_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path) \
