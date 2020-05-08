@@ -31,7 +31,7 @@ class params:
     rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 5*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
-    angle_inc_E_field   =  0          # incoming angle of the E-field in degree
+    angle_inc_E_field   = 30          # incoming angle of the E-field in degree
 
     # Driving field parameters
     ##########################################################################
