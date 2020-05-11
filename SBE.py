@@ -40,14 +40,13 @@ def main():
     e_fermi = params.e_fermi*eV_conv                  # Fermi energy for initial conditions
     temperature = params.temperature*eV_conv          # Temperature for initial conditions
 
-    print("alpha is calculated now")
     # Driving field parameters
     E0    = params.E0*E_conv                          # Driving pulse field amplitude
     B0    = params.B0*B_conv                          # Driving pulse magnetic field amplitude
-    w     = params.w*params.THz_conv                         # Driving pulse frequency
     chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
     phase = params.phase                              # Carrier-envelope phase
     
+    w     = params.w*params.THz_conv                         # Driving pulse frequency
     alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
     if params.fitted_pulse:
         w       = efield.w
@@ -163,24 +162,54 @@ def main():
     else: 
         do_B_field = False
 
-    # here,the time evolution of the density matrix is done
-    solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                          Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+    ############### This is the part where the biggest changes are done #################
+    # In this part the solver runs twice and the results are substracted from one another
+    for wahrheitswert in [True, False]:
+        # Decide in this step if the nir-pulse is included or not
+        efield.with_nir = wahrheitswert
+        driving_field.recompile()
 
-    if do_emission_wavep:
-       wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
-    n_time_steps = np.size(solution[0,0,:,0])
+        # here,the time evolution of the density matrix is done
+        solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+                                                              gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                                              Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+    
+        #reduce the time window of the data to the time-domain of the nir-pulse
+        time_window     = 500*fs_conv
+        time_indices    = np.where(np.abs(t) < time_window)[0]
 
-    # COMPUTE OBSERVABLES
-    ###########################################################################
-    # Calculate parallel and orthogonal components of observables
-    # Polarization (interband)
-    P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
-    # Current (intraband)
-    J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+        solution        = solution[ :, :, time_indices]
+        t               = t[time_indices]
+        A_field         = A_field[time_indices]
+
+        if do_emission_wavep:
+           wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+                                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                                                          Bcurv_in_B_dynamics, 'wavefunction_dynamics')
+        n_time_steps = np.size(solution[0,0,:,0])
+    
+        # COMPUTE OBSERVABLES
+        ###########################################################################
+        # Calculate parallel and orthogonal components of observables
+        if wahrheitswert:
+            # Polarization (interband)
+            P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
+            # Current (intraband)
+            J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+
+        else:
+            Dummy_P_E_dir, Dummy_P_ortho    = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
+            Dummy_J_E_dir, Dummy_J_ortho   = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+
+            P_E_dir         -= Dummy_P_E_dir
+            P_ortho         -= Dummy_P_ortho
+            J_E_dir         -= Dummy_J_E_dir
+            J_ortho         -= Dummy_J_ortho
+
+            del Dummy_P_E_dir, Dummy_P_ortho, Dummy_J_E_dir, Dummy_J_ortho
+
+    ############### These changes end here ###################
+
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
@@ -719,7 +748,8 @@ def Gaussian_envelope(t, alpha):
     Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
+    return 1
+    #return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
 def polarization(paths, pcv, E_dir, scale_dipole_emiss):
@@ -1113,55 +1143,55 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            x[i+6] = 0
            x[i+7] = 0
 
-           if do_B_field:
-
-               kx_shifted_path_v = kx_in_path[k] + np.real(y[i+4])
-               ky_shifted_path_v = ky_in_path[k] + np.real(y[i+5])
-               kx_shifted_path_c = kx_in_path[k] + np.real(y[i+6])
-               ky_shifted_path_c = ky_in_path[k] + np.real(y[i+7])
-        
-               ev_dx = sys.ev_dx(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-               ev_dy = sys.ev_dy(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-               ec_dx = sys.ec_dx(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-               ec_dy = sys.ec_dy(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-
-               di_00x_B_field = sys.di_00xjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-               di_01x_B_field = sys.di_01xjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
-               di_11x_B_field = sys.di_11xjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-               di_00y_B_field = sys.di_00yjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-               di_01y_B_field = sys.di_01yjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
-               di_11y_B_field = sys.di_11yjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-
-               dipole_in_path_B = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
-               A_in_path_B      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
-               wr_B             = rabi(E0, t, dipole_in_path_B)
-               wr_B_c           = wr_B.conjugate()
-               wr_d_diag_B      = rabi(E0, t, A_in_path_B)
-               ecv_in_path_B    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
-                                - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-#               if Bcurv_in_B_dynamics: 
-#                  Bcurv_v = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
-#                  Bcurv_c = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
-#               else:
-               Bcurv_v = 0
-               Bcurv_c = 0
-
-               # use the unnecessary entry i+2 to compute the k-point shift 
-               B_z = driving_field(B0, t)
-               E_x = driving_field(E0, t) * E_dir[0]
-               E_y = driving_field(E0, t) * E_dir[1]
-               x[i]   = 2*(wr_B*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
-               x[i+1] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+1] - 1j*wr_B_c*(y[i]-y[i+3]) 
-               x[i+2] = x[i+1].conjugate()
-               x[i+3] = -2*(wr_B*y[i+1]).imag - gamma1*(y[i+3]-y0_np[i+3])
-               # k_v_x
-               x[i+4] = - driving_field(E0, t)*E_dir[0] - B_z*(ev_dy + Bcurv_v*E_x) / (1 - Bcurv_v*B_z)
-               # k_v_y
-               x[i+5] = - driving_field(E0, t)*E_dir[1] + B_z*(ev_dx - Bcurv_v*E_y) / (1 - Bcurv_v*B_z)
-               # k_c_x
-               x[i+6] = - driving_field(E0, t)*E_dir[0] - B_z*(ec_dy + Bcurv_c*E_x) / (1 - Bcurv_c*B_z)
-               # k_v_y
-               x[i+7] = - driving_field(E0, t)*E_dir[1] + B_z*(ec_dx - Bcurv_c*E_y) / (1 - Bcurv_c*B_z)
+#           if do_B_field:
+#
+#               kx_shifted_path_v = kx_in_path[k] + np.real(y[i+4])
+#               ky_shifted_path_v = ky_in_path[k] + np.real(y[i+5])
+#               kx_shifted_path_c = kx_in_path[k] + np.real(y[i+6])
+#               ky_shifted_path_c = ky_in_path[k] + np.real(y[i+7])
+#        
+#               ev_dx = sys.ev_dx(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+#               ev_dy = sys.ev_dy(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+#               ec_dx = sys.ec_dx(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+#               ec_dy = sys.ec_dy(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+#
+#               di_00x_B_field = sys.di_00xjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+#               di_01x_B_field = sys.di_01xjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
+#               di_11x_B_field = sys.di_11xjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+#               di_00y_B_field = sys.di_00yjit     (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+#               di_01y_B_field = sys.di_01yjit_offk(kx=kx_shifted_path_v, ky=ky_shifted_path_v, kxp=kx_shifted_path_c, kyp=ky_shifted_path_c)
+#               di_11y_B_field = sys.di_11yjit     (kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+#
+#               dipole_in_path_B = E_dir[0]*di_01x_B_field + E_dir[1]*di_01y_B_field
+#               A_in_path_B      = E_dir[0]*di_00x_B_field + E_dir[1]*di_00y_B_field - (E_dir[0]*di_11x_B_field + E_dir[1]*di_11y_B_field)
+#               wr_B             = rabi(E0, t, dipole_in_path_B)
+#               wr_B_c           = wr_B.conjugate()
+#               wr_d_diag_B      = rabi(E0, t, A_in_path_B)
+#               ecv_in_path_B    = sys.ecjit   (kx=kx_shifted_path_c, ky=ky_shifted_path_c) \
+#                                - sys.evjit   (kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+##               if Bcurv_in_B_dynamics: 
+##                  Bcurv_v = sys.cu_00jit(kx=kx_shifted_path_v, ky=ky_shifted_path_v)
+##                  Bcurv_c = sys.cu_11jit(kx=kx_shifted_path_c, ky=ky_shifted_path_c)
+##               else:
+#               Bcurv_v = 0
+#               Bcurv_c = 0
+#
+#               # use the unnecessary entry i+2 to compute the k-point shift 
+#               B_z = driving_field(B0, t)
+#               E_x = driving_field(E0, t) * E_dir[0]
+#               E_y = driving_field(E0, t) * E_dir[1]
+#               x[i]   = 2*(wr_B*y[i+1]).imag - gamma1*(y[i]-y0_np[i])
+#               x[i+1] = (1j*ecv_in_path_B - gamma2 + 1j*wr_d_diag_B)*y[i+1] - 1j*wr_B_c*(y[i]-y[i+3]) 
+#               x[i+2] = x[i+1].conjugate()
+#               x[i+3] = -2*(wr_B*y[i+1]).imag - gamma1*(y[i+3]-y0_np[i+3])
+#               # k_v_x
+#               x[i+4] = - driving_field(E0, t)*E_dir[0] - B_z*(ev_dy + Bcurv_v*E_x) / (1 - Bcurv_v*B_z)
+#               # k_v_y
+#               x[i+5] = - driving_field(E0, t)*E_dir[1] + B_z*(ev_dx - Bcurv_v*E_y) / (1 - Bcurv_v*B_z)
+#               # k_c_x
+#               x[i+6] = - driving_field(E0, t)*E_dir[0] - B_z*(ec_dy + Bcurv_c*E_x) / (1 - Bcurv_c*B_z)
+#               # k_v_y
+#               x[i+7] = - driving_field(E0, t)*E_dir[1] + B_z*(ec_dx - Bcurv_c*E_y) / (1 - Bcurv_c*B_z)
 
         elif dynamics_type == 'wavefunction_dynamics':
 

@@ -18,9 +18,10 @@ c   = nOpt[2]
 d   = nOpt[3]
 e   = nOpt[4]
 
-
 sigma   = tOpt[1]
-w       = tOpt[3]
+w       = nOpt[3]
+
+with_nir    = True
 
 @njit
 def driving_field(Amplitude, t):
@@ -31,7 +32,11 @@ def driving_field(Amplitude, t):
     # return E0*np.sin(2.0*np.pi*w*t)
     # Chirped Gaussian pulse
     if fitted_pulse:
-        return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir.nir(t, a, b, c, d, e)
+        if with_nir:
+            return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir.nir(t, a, b, c, d, e)
+
+        else:
+            return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4])
 
     else:
         return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)\
