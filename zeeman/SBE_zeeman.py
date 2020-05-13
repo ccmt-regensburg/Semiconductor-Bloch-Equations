@@ -123,9 +123,13 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     electric_field = make_electric_field(E0, w, alpha, chirp, phase)
     zeeman_field = make_zeeman_field(B0, mu, w, alpha, chirp, phase, E_dir,
                                      incident_angle)
+    zeeman_field_derivative = \
+        make_zeeman_field_derivative(B0, mu, w, alpha, chirp, phase, E_dir,
+                                     incident_angle)
 
     fnumba = make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
-                         electric_field, zeeman_field, gauge=gauge)
+                         electric_field, zeeman_field, zeeman_field_derivative,
+                         gauge=gauge)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
 
@@ -405,12 +409,14 @@ def make_zeeman_field(B0, mu, w, alpha, chirp, phase, E_dir, incident_angle):
 
     return zeeman_field
 
-def make_zeeman_field_derivative(B0, mu, w, alpha, chirp, phase, E_dir, incident_angle):
+
+def make_zeeman_field_derivative(B0, mu, w, alpha, chirp, phase, E_dir,
+                                 incident_angle):
     # WARNING NO CHIRP HERE!
     @njit
     def zeeman_field_derivative(t):
         time_dep = np.exp(-t**2.0/(2.0*alpha)**2) \
-            * (2*np.pi*w*np.cos(2.0*np.pi*w*t + phase) \
+            * (2*np.pi*w*np.cos(2.0*np.pi*w*t + phase)
                - (2*t)/(2*alpha)**2 * np.sin(2*np.pi*w*t + phase))
 
         # x, y, z components
@@ -419,7 +425,7 @@ def make_zeeman_field_derivative(B0, mu, w, alpha, chirp, phase, E_dir, incident
         m_zee_deriv[1] = mu[1]*B0*E_dir[0] * np.cos(incident_angle) * time_dep
         m_zee_deriv[2] = mu[2]*B0*np.sin(incident_angle) * time_dep
 
-        return m_zee
+        return m_zee_deriv
 
     return zeeman_field_derivative
 
@@ -519,7 +525,8 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field, zeeman_field,
 
 
 def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
-                electric_field, zeeman_field, gauge='velocity'):
+                electric_field, zeeman_field, zeeman_field_derivative,
+                gauge='velocity'):
     # Wire the energies
     evf = sys.efjit[0]
     ecf = sys.efjit[1]
@@ -547,7 +554,6 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
     di_00mzf = dipole_B.Mzfjit[0][0]
     di_10mzf = dipole_B.Mzfjit[1][0]
     di_11mzf = dipole_B.Mzfjit[1][1]
-
 
     @njit
     def flength(t, y, kpath, dk, y0):
@@ -793,7 +799,7 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
     if (gauge == 'length'):
         print("Using length gauge")
         freturn = flength
-    if (gauge == "velocity extra"):
+    if (gauge == "velocity_extra"):
         print("Using velocity extra gauge")
         freturn = fvelocity_extra
 
