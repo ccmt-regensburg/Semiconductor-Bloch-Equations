@@ -405,6 +405,24 @@ def make_zeeman_field(B0, mu, w, alpha, chirp, phase, E_dir, incident_angle):
 
     return zeeman_field
 
+def make_zeeman_field_derivative(B0, mu, w, alpha, chirp, phase, E_dir, incident_angle):
+    # WARNING NO CHIRP HERE!
+    @njit
+    def zeeman_field_derivative(t):
+        time_dep = np.exp(-t**2.0/(2.0*alpha)**2) \
+            * (2*np.pi*w*np.cos(2.0*np.pi*w*t + phase) \
+               - (2*t)/(2*alpha)**2 * np.sin(2*np.pi*w*t + phase))
+
+        # x, y, z components
+        m_zee_deriv = np.empty(3)
+        m_zee_deriv[0] = mu[0]*B0*E_dir[1] * np.cos(incident_angle) * time_dep
+        m_zee_deriv[1] = mu[1]*B0*E_dir[0] * np.cos(incident_angle) * time_dep
+        m_zee_deriv[2] = mu[2]*B0*np.sin(incident_angle) * time_dep
+
+        return m_zee
+
+    return zeeman_field_derivative
+
 # @njit
 # def curl_electric_field(mdx, mdy, mdz, w, t, chirp, alpha, phase, E_dir,
 #                         incident_angle):
@@ -519,15 +537,15 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
 
     # Mx - Zeeman z parameter
     di_00mxf = dipole_B.Mxfjit[0][0]
-    di_01mxf = dipole_B.Mxfjit[0][1]
+    di_10mxf = dipole_B.Mxfjit[1][0]
     di_11mxf = dipole_B.Mxfjit[1][1]
 
     di_00myf = dipole_B.Myfjit[0][0]
-    di_01myf = dipole_B.Myfjit[0][1]
+    di_10myf = dipole_B.Myfjit[1][0]
     di_11myf = dipole_B.Myfjit[1][1]
 
     di_00mzf = dipole_B.Mzfjit[0][0]
-    di_01mzf = dipole_B.Mzfjit[0][1]
+    di_10mzf = dipole_B.Mzfjit[1][0]
     di_11mzf = dipole_B.Mzfjit[1][1]
 
 
@@ -672,6 +690,102 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
         x[-1] = -electric_f
         return x
 
+    @njit
+    def fvelocity_extra(t, y, kpath, dk, y0):
+
+        # Preparing system parameters, energies, dipoles
+
+        m_zee = zeeman_field(t)
+        mx = m_zee[0]
+        my = m_zee[1]
+        mz = m_zee[2]
+        k_shift = -y[-1].real
+
+        kx = kpath[:, 0] + E_dir[0]*k_shift
+        ky = kpath[:, 1] + E_dir[1]*k_shift
+
+        ev = evf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        ec = ecf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        ecv_in_path = ec - ev
+
+        # Electric dipoles
+        di_00x = di_00xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_01x = di_01xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11x = di_11xf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_00y = di_00yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_01y = di_01yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11y = di_11yf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+
+        # Magnetic dipole integral
+        di_00mx = di_00mxf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_10mx = di_10mxf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11mx = di_11mxf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+
+        di_00my = di_00myf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_10my = di_10myf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11my = di_11myf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+
+        di_00mz = di_00mzf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_10mz = di_10mzf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+        di_11mz = di_11mzf(kx=kx, ky=ky, m_zee_x=mx, m_zee_y=my, m_zee_z=mz)
+
+        # Electric
+        dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
+        A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
+            - (E_dir[0]*di_11x + E_dir[1]*di_11y)
+
+        # x != y(t+dt)
+        x = np.empty(np.shape(y), dtype=np.dtype('complex'))
+
+        # Electric field strength
+        electric_f = electric_field(t)
+
+        # Time derivative zeeman field
+        m_zee_deriv = zeeman_field_derivative(t)
+        mxd = m_zee_deriv[0]
+        myd = m_zee_deriv[1]
+        mzd = m_zee_deriv[2]
+
+        # Magnetic
+        M_in_path = mxd*di_10mx + myd*di_10my + mzd*di_10mz
+        M_diag_in_path = mxd*(di_00mx - di_11mx) + myd*(di_00my - di_11my) \
+            + mzd*(di_00mz - di_11mz)
+
+        # Update the solution vector
+        Nk_path = kpath.shape[0]
+        for k in range(Nk_path):
+            i = 4*k
+            # Energy term eband(i,k) the energy of band i at point k
+            ecv = ecv_in_path[k]
+
+            # Rabi frequency: w_R = d_12(k).E(t)
+            # Rabi frequency conjugate
+            wr = dipole_in_path[k]*electric_f
+            wr_c = wr.conjugate()
+
+            # Rabi frequency: w_R = (d_11(k) - d_22(k))*E(t)
+            # wr_d_diag   = A_in_path[k]*D
+            wr_d_diag = A_in_path[k]*electric_f
+
+            # Magnetic frequency: M_21(k).Bdot(t)
+            mr_d_diag = M_diag_in_path[k]
+            mr = M_in_path[k]
+            mr_c = mr.conjugate()
+
+            # Update each component of the solution vector
+            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
+            x[i] = 2*((wr+mr)*y[i+1]).imag - gamma1*(y[i]-y0[i])
+
+            x[i+1] = (1j*ecv - gamma2 + 1j*(wr_d_diag + mr_d_diag))*y[i+1] \
+                - 1j*(wr_c + mr_c)*(y[i]-y[i+3])
+
+            x[i+2] = x[i+1].conjugate()
+
+            x[i+3] = -2*((wr+mr)*y[i+1]).imag - gamma1*(y[i+3]-y0[i+3])
+
+        x[-1] = -electric_f
+        return x
+
     freturn = None
     if (gauge == 'velocity'):
         print("Using velocity gauge")
@@ -679,6 +793,9 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
     if (gauge == 'length'):
         print("Using length gauge")
         freturn = flength
+    if (gauge == "velocity extra"):
+        print("Using velocity extra gauge")
+        freturn = fvelocity_extra
 
     def f(t, y, kpath, dk, y0):
         return freturn(t, y, kpath, dk, y0)
