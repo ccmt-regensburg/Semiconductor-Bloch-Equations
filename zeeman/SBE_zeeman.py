@@ -211,8 +211,8 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
     solution = np.array(solution)
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
-    if gauge == 'velocity':
-        solution = shift_solution(solution, A_field, dk)
+    # if gauge == 'velocity':
+    #     solution = shift_solution(solution, A_field, dk)
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -477,7 +477,7 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field, zeeman_field,
                 kx_in_path_U = kx_in_path
                 ky_in_path_U = ky_in_path
 
-            elif gauge == 'velocity':
+            elif gauge == 'velocity' or gauge == 'velocity_extra':
                 kx_in_path_h_deriv = kx_in_path - 2*A_field[i_time]*E_dir[0]
                 ky_in_path_h_deriv = ky_in_path - 2*A_field[i_time]*E_dir[1]
 
