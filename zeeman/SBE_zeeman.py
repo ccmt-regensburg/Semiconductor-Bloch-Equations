@@ -104,7 +104,7 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
         elif align == 'M':
             E_dir = np.array([np.cos(np.radians(-30)),
                              np.sin(np.radians(-30))])
-        # BZ_plot(kpnts, a, b1, b2, paths)
+        BZ_plot(kpnts, a, b1, b2, paths)
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
@@ -360,7 +360,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         b_a2 = 4*np.pi/(a*3)*np.array([1, np.sqrt(3)])
         # Extend over half of the b2 direction and 1.5x the b1 direction
         # (extending into the 2nd BZ to get correct boundary conditions)
-        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 1.0 - (1/(2*Nk1)), num=Nk1)
+        alpha1 = np.linspace(-0.5 + (3/(4*Nk1)), 1.0 - (3/(4*Nk1)), num=Nk1)
         alpha2 = np.linspace(0, 0.5 - (1/(2*Nk2)), num=Nk2)
         for a2 in alpha2:
             path_K = []
