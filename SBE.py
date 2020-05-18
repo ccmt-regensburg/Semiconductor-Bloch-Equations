@@ -160,12 +160,12 @@ def main():
     # here,the time evolution of the density matrix is done
     solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                           gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                          Bcurv_in_B_dynamics, length_path_in_BZ, 'density_matrix_dynamics')
+                                                          Bcurv_in_B_dynamics, 'density_matrix_dynamics')
 
     if do_emission_wavep:
        wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                                       gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                      Bcurv_in_B_dynamics, length_path_in_BZ, 'wavefunction_dynamics')
+                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
     # COMPUTE OBSERVABLES
@@ -431,7 +431,7 @@ def main():
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
                    E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, 
-                   length_path_in_BZ, dynamics_type):
+                   dynamics_type):
 
     if dynamics_type == 'density_matrix_dynamics' and user_out:
        print("Enter density matrix dynamics.")
@@ -506,7 +506,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
                                                       ecv_in_path, ev_in_path, ec_in_path, 
                                                       dipole_in_path, A_in_path, Avv_in_path, Acc_in_path, 
                                                       gauge, kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, 
-                                                      length_path_in_BZ, dynamics_type)
+                                                      dynamics_type)
 
         # Propagate through time
         ti = 0
@@ -1037,12 +1037,12 @@ def get_A_field(E0, w, t, alpha):
 def f(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
       ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
       A_in_path, Avv_in_path, Acc_in_path, gauge,
-      kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, length_path_in_BZ, 
+      kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics,  
       dynamics_type):
     return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
                   ecv_in_path,  ev_in_path, ec_in_path, dipole_in_path, 
                   A_in_path, Avv_in_path, Acc_in_path, gauge,
-                  kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, length_path_in_BZ, 
+                  kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics,  
                   dynamics_type)
 
 @njit
