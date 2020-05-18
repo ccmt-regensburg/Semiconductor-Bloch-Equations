@@ -1049,7 +1049,7 @@ def f(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_fiel
 def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
            ecv_in_path, ev_in_path, ec_in_path, dipole_in_path, 
            A_in_path, Avv_in_path, Acc_in_path, gauge,
-           kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, length_path_in_BZ, 
+           kx_in_path, ky_in_path, E_dir, y0_np, Bcurv_in_B_dynamics, 
            dynamics_type):
 
     # x != y(t+dt)
