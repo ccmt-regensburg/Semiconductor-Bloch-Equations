@@ -47,10 +47,6 @@ def main():
     alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
     phase = params.phase                              # Carrier-envelope phase
 
-    # Dipole scaling to obtain semiclassical motion
-    scale_dipole_eq_mot = params.scale_dipole_eq_mot
-    scale_dipole_emiss  = params.scale_dipole_emiss
-
     # Time scales
     T1 = params.T1*fs_conv                            # Occupation damping time
     T2 = params.T2*fs_conv                            # Polarization damping time
@@ -157,36 +153,27 @@ def main():
     else: 
         do_B_field = False
 
+    # Current definitions
+    P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho = \
+    [], [], [], [], [], [], [], [], [], []
+
     # here,the time evolution of the density matrix is done
-    solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+    solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                                           gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                          Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+                                                          Bcurv_in_B_dynamics, 'density_matrix_dynamics', 
+                                                          P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, 
+                                                          I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho)
 
     if do_emission_wavep:
-       wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+       wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                                                       gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
-    n_time_steps = np.size(solution[0,0,:,0])
+                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics', 
+                                                                      P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, 
+                                                                      I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho)
 
-    # COMPUTE OBSERVABLES
-    ###########################################################################
-    # Calculate parallel and orthogonal components of observables
-    # Polarization (interband)
-    P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
-    # Current (intraband)
-    J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
-    # emission with exact formula
-    if do_B_field:
-       I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
-    else:
-       I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, gauge) 
-    # emission with exact formula with semiclassical formula
-    if do_emission_wavep:
-       I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
-       I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
 
     # Polar emission in time
     Ir = []
@@ -211,7 +198,6 @@ def main():
        Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     # Emission intensity (approximate formula)
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2.0
@@ -429,9 +415,11 @@ def main():
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
 
 
-def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
+def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, gamma1, gamma2, 
                    E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, 
-                   dynamics_type):
+                   dynamics_type, 
+                   P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, 
+                   I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho):
 
     if dynamics_type == 'density_matrix_dynamics' and user_out:
        print("Enter density matrix dynamics.")
@@ -475,7 +463,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
-        dipole_in_path = scale_dipole_eq_mot*(E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :])
+        dipole_in_path = (E_dir[0]*di_x[0, 1, :] + E_dir[1]*di_y[0, 1, :])
         A_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :] \
             - (E_dir[0]*di_x[1, 1, :] + E_dir[1]*di_y[1, 1, :])
         Avv_in_path = E_dir[0]*di_x[0, 0, :] + E_dir[1]*di_y[0, 0, :]
@@ -540,10 +528,34 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         solution.append(np.array(path_solution)[:, 0:-1])
         if dynamics_type == 'wavefunction_dynamics':
            fermi_function.append(np.array(path_fermi_function)[:, :])
-   
+
+        if ti % dt_out == 0:
+
+            solution = np.array(solution)
+    
+            # COMPUTE OBSERVABLES
+            ###########################################################################
+            # Calculate parallel and orthogonal components of observables
+            # Polarization (interband)
+            P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir)
+            # Current (intraband)
+            J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+        
+            # emission with exact formula
+            if do_B_field:
+               I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
+            else:
+               I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, gauge) 
+            # emission with exact formula with semiclassical formula
+            if do_emission_wavep:
+               I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+               I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+    
+            solution = []
+
     # Convert solution and time array to numpy arrays
     t = np.array(t)
-    solution       = np.array(solution)
+#    solution       = np.array(solution)
     fermi_function = np.array(fermi_function)
     A_field        = np.array(path_solution)[:, -1]
 
@@ -726,7 +738,7 @@ def Gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
-def polarization(paths, pcv, E_dir, scale_dipole_emiss):
+def polarization(paths, pcv, E_dir):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -748,13 +760,12 @@ def polarization(paths, pcv, E_dir, scale_dipole_emiss):
 
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
-    # d_E_dir = d_E_dir.T
-    # d_ortho = d_ortho.T
 
-    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))*scale_dipole_emiss
-    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))*scale_dipole_emiss
-    # P_E_dir = 2*np.real(np.tensordot(d_E_dir,pcv,2))
-    # P_ortho = 2*np.real(np.tensordot(d_ortho,pcv,2))
+#    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
+#    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
+
+    P_E_dir.append(2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2)))
+    P_ortho.append(2*np.real(np.tensordot(d_ortho_swapped, pcv, 2)))
 
     return P_E_dir, P_ortho
 
