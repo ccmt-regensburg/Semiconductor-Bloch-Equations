@@ -532,7 +532,21 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         if ti % dt_out == 0:
 
             solution = np.array(solution)
-    
+
+            # Slice solution along each path for easier observable calculation
+            if BZ_type == 'full' or BZ_type == 'full_for_velocity':
+                solution = np.array_split(solution, Nk1, axis=2)
+                if dynamics_type == 'wavefunction_dynamics':
+                   fermi_function = np.array_split(fermi_function, Nk1, axis=2)
+            elif BZ_type == '2line':
+                solution = np.array_split(solution, Nk_in_path, axis=2)
+                if dynamics_type == 'wavefunction_dynamics':
+                   fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
+
+            solution = np.array(solution)
+
+            print("np.shape(solution)", np.shape(solution))
+
             # COMPUTE OBSERVABLES
             ###########################################################################
             # Calculate parallel and orthogonal components of observables
@@ -559,15 +573,15 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
     fermi_function = np.array(fermi_function)
     A_field        = np.array(path_solution)[:, -1]
 
-    # Slice solution along each path for easier observable calculation
-    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
-        solution = np.array_split(solution, Nk1, axis=2)
-        if dynamics_type == 'wavefunction_dynamics':
-           fermi_function = np.array_split(fermi_function, Nk1, axis=2)
-    elif BZ_type == '2line':
-        solution = np.array_split(solution, Nk_in_path, axis=2)
-        if dynamics_type == 'wavefunction_dynamics':
-           fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
+#    # Slice solution along each path for easier observable calculation
+#    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
+#        solution = np.array_split(solution, Nk1, axis=2)
+#        if dynamics_type == 'wavefunction_dynamics':
+#           fermi_function = np.array_split(fermi_function, Nk1, axis=2)
+#    elif BZ_type == '2line':
+#        solution = np.array_split(solution, Nk_in_path, axis=2)
+#        if dynamics_type == 'wavefunction_dynamics':
+#           fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
 
     # Convert lists into numpy arrays
     solution = np.array(solution)
