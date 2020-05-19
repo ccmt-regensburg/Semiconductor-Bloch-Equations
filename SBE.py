@@ -304,6 +304,9 @@ def main():
            ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
            ax_I_total.legend(loc='upper right')
 
+           pl.savefig("emission_KKR.pdf", dpi=300)
+
+
         B_fig_all_in_one, ((B_1)) = pl.subplots(1,1,figsize=(10,4))
         B_1.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
         B_1.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
@@ -315,6 +318,8 @@ def main():
         B_1.grid(True,axis='x')
         B_1.set_xlim(freq_lims)
         B_1.set_ylim(log_limits)
+
+        pl.savefig("emission_exact.pdf", dpi=300)
 
         if do_emission_wavep:
 
@@ -1405,7 +1410,7 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     pl.scatter(R,0,s=15,c='black')
     pl.text(R,0.02,r'$K$')
     pl.scatter(kpnts[:,0],kpnts[:,1], s=15)
-    pl.xlim(-5.0/a,5.0/a)
+    pl.xlim(-25.0/a,25.0/a)
     pl.ylim(-5.0/a,5.0/a)
     pl.xlabel(r'$k_x$ ($1/a_0$)')
     pl.ylabel(r'$k_y$ ($1/a_0$)')
