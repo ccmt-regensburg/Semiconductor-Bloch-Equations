@@ -78,7 +78,7 @@ def main():
         length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
         Nk1   = params.Nk_in_path                         # for printing file names, we use Nk1 and ...
-        Nk2   = 2                                         # ... and Nk2 = 2
+        Nk2   = params.num_paths                          # ... and Nk2 = 2
 
     # Gauge: length versus velocity gauge
     gauge = params.gauge
@@ -592,10 +592,11 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 # FUNCTIONS
 ################################################################################################
 def mesh(params, E_dir):
-    Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
+    Nk_in_path        = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
-    a = params.a                                      # Lattice spacing
+    a                 = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      #
+    num_paths         = params.num_paths
 
     alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
@@ -607,7 +608,11 @@ def mesh(params, E_dir):
     paths = []
 
     # Create the kpoint mesh and the paths
-    for path_index in [-1, 1]:
+#    for path_index in [-1, 1]:
+    for path_index in np.linspace(-num_paths+1,num_paths-1, num = num_paths):
+
+        print("path_index",path_index)
+
         # Container for a single path
         path = []
         for alpha in alpha_array:
