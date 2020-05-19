@@ -557,7 +557,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
             if do_B_field:
                I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir) 
             else:
-               I_exact_E_dir, I_exact_ortho = emission_exact(path, solution, E_dir, A_field, gauge, path_num) 
+               I_exact_E_dir, I_exact_ortho = emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_exact_E_dir, I_exact_ortho) 
             # emission with exact formula with semiclassical formula
 #            if do_emission_wavep:
 #               I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
@@ -793,12 +793,11 @@ def polarization(path, pcv, E_dir, P_E_dir, P_ortho, path_num):
 def current(path, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho, path_num):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
-    where j_n(k) != (d/dk) E_n(k)
+    where j_n(k) = (d/dk) E_n(k)
     '''
     E_ort = np.array([E_dir[1], -E_dir[0]])
     
     # Calculate the gradient analytically at each k-point
-    J_E_dir, J_ortho = [], []
     jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
 #    for path in paths:
     path = np.array(path)
@@ -823,16 +822,16 @@ def current(path, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho, path_num):
     
     # tensordot for contracting the first two indices (2 kpoint directions)
     if path_num == 1:
-       J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
-       J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
+       J_E_dir = np.real(np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2))
+       J_ortho = np.real(np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2))
     else:
-       J_E_dir += np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
-       J_ortho += np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
+       J_E_dir += np.real(np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2))
+       J_ortho += np.real(np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2))
 
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
-def emission_exact(path, solution, E_dir, A_field, gauge, path_num):
+def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_ortho):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
