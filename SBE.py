@@ -555,13 +555,13 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
             # emission with exact formula
             if do_B_field:
-               I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
+               I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir) 
             else:
-               I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, gauge, path_num) 
+               I_exact_E_dir, I_exact_ortho = emission_exact(path, solution, E_dir, A_field, gauge, path_num) 
             # emission with exact formula with semiclassical formula
-            if do_emission_wavep:
-               I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
-               I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+#            if do_emission_wavep:
+#               I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+#               I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
     
             solution = []
 
