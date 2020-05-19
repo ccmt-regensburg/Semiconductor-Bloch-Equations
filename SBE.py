@@ -551,9 +551,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
             ###########################################################################
             # Calculate parallel and orthogonal components of observables
             # Polarization (interband)
-            P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir)
+            P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path)
             # Current (intraband)
-            J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+            J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho)
         
             # emission with exact formula
             if do_B_field:
@@ -752,7 +752,7 @@ def Gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
-def polarization(paths, pcv, E_dir):
+def polarization(paths, pcv, E_dir, P_E_dir, P_ortho, path):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -760,17 +760,17 @@ def polarization(paths, pcv, E_dir):
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
     d_E_dir, d_ortho = [],[]
-    for path in paths:
+#    for path in paths:
 
-        kx_in_path = path[:, 0]
-        ky_in_path = path[:, 1]
+    kx_in_path = path[:, 0]
+    ky_in_path = path[:, 1]
 
-        # Evaluate the dipole moments in path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+    # Evaluate the dipole moments in path
+    di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
 
-        # Append the dot product d.E
-        d_E_dir.append(di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1])
-        d_ortho.append(di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1])
+    # Append the dot product d.E
+    d_E_dir.append(di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1])
+    d_ortho.append(di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1])
 
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
@@ -778,13 +778,16 @@ def polarization(paths, pcv, E_dir):
 #    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
 #    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
 
+    print("np.shape(pcv)", np.shape(pcv))
+    print("np.shape(d_E_dir_swapped)", np.shape(d_E_dir_swapped))
+
     P_E_dir.append(2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2)))
     P_ortho.append(2*np.real(np.tensordot(d_ortho_swapped, pcv, 2)))
 
     return P_E_dir, P_ortho
 
 
-def current(paths, fv, fc, t, alpha, E_dir):
+def current(paths, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
