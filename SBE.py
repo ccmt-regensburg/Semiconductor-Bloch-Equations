@@ -520,10 +520,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
             # Increment time counter
             ti += 1
 
-        # Flag that time array has been built up
-        t_constructed = True
-        path_num += 1
-
         # Append path solutions to the total solution arrays
         solution.append(np.array(path_solution)[:, 0:-1])
         if dynamics_type == 'wavefunction_dynamics':
@@ -545,33 +541,38 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
             solution = np.array(solution)
 
+            A_field  = np.array(path_solution)[:, -1]
+
             print("np.shape(solution)", np.shape(solution))
 
             # COMPUTE OBSERVABLES
             ###########################################################################
             # Calculate parallel and orthogonal components of observables
             # Polarization (interband)
-            P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path)
+            P_E_dir, P_ortho = polarization(path, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path_num)
             # Current (intraband)
-            J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho)
-        
+            J_E_dir, J_ortho = current(path, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho, path_num)
+
             # emission with exact formula
             if do_B_field:
                I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
             else:
-               I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, gauge) 
+               I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field, gauge, path_num) 
             # emission with exact formula with semiclassical formula
             if do_emission_wavep:
-               I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+               I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
                I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
     
             solution = []
+
+        # Flag that time array has been built up
+        t_constructed = True
+        path_num += 1
 
     # Convert solution and time array to numpy arrays
     t = np.array(t)
 #    solution       = np.array(solution)
     fermi_function = np.array(fermi_function)
-    A_field        = np.array(path_solution)[:, -1]
 
 #    # Slice solution along each path for easier observable calculation
 #    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
@@ -752,7 +753,7 @@ def Gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
-def polarization(paths, pcv, E_dir, P_E_dir, P_ortho, path):
+def polarization(path, pcv, E_dir, P_E_dir, P_ortho, path_num):
     '''
     Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
     Dipole term currently a crude model to get a vector polarization
@@ -775,19 +776,21 @@ def polarization(paths, pcv, E_dir, P_E_dir, P_ortho, path):
     d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
     d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
 
-#    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
-#    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
+    if path_num == 1:
+       P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
+       P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
+
+    else:
+       P_E_dir += 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
+       P_ortho += 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
 
     print("np.shape(pcv)", np.shape(pcv))
     print("np.shape(d_E_dir_swapped)", np.shape(d_E_dir_swapped))
 
-    P_E_dir.append(2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2)))
-    P_ortho.append(2*np.real(np.tensordot(d_ortho_swapped, pcv, 2)))
-
     return P_E_dir, P_ortho
 
 
-def current(paths, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho):
+def current(path, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho, path_num):
     '''
     Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
     where j_n(k) != (d/dk) E_n(k)
@@ -797,21 +800,21 @@ def current(paths, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho):
     # Calculate the gradient analytically at each k-point
     J_E_dir, J_ortho = [], []
     jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
-    for path in paths:
-        path = np.array(path)
-        kx_in_path = path[:, 0]
-        ky_in_path = path[:, 1]
-        
-        evdx = sys.system.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
-        evdy = sys.system.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
-        ecdx = sys.system.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
-        ecdy = sys.system.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
+#    for path in paths:
+    path = np.array(path)
+    kx_in_path = path[:, 0]
+    ky_in_path = path[:, 1]
     
-        # 0: v, x 1: v,y 2: c, x 3: c, y
-        jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
-        jc_ortho.append(ecdx*E_ort[0] + ecdy*E_ort[1])
-        jv_E_dir.append(evdx*E_dir[0] + evdy*E_dir[1])
-        jv_ortho.append(evdx*E_ort[0] + evdy*E_ort[1])
+    evdx = sys.system.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
+    evdy = sys.system.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
+    ecdx = sys.system.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
+    ecdy = sys.system.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
+    
+    # 0: v, x 1: v,y 2: c, x 3: c, y
+    jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
+    jc_ortho.append(ecdx*E_ort[0] + ecdy*E_ort[1])
+    jv_E_dir.append(evdx*E_dir[0] + evdy*E_dir[1])
+    jv_ortho.append(evdx*E_ort[0] + evdy*E_ort[1])
     
     jc_E_dir = np.swapaxes(jc_E_dir, 0, 1)
     jc_ortho = np.swapaxes(jc_ortho, 0, 1)
@@ -819,25 +822,30 @@ def current(paths, fv, fc, t, alpha, E_dir, J_E_dir, J_ortho):
     jv_ortho = np.swapaxes(jv_ortho, 0, 1)
     
     # tensordot for contracting the first two indices (2 kpoint directions)
-    J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
-    J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
-    
+    if path_num == 1:
+       J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
+       J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
+    else:
+       J_E_dir += np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
+       J_ortho += np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
+
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
-def emission_exact(paths, solution, E_dir, A_field, gauge):
+def emission_exact(path, solution, E_dir, A_field, gauge, path_num):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
 
     n_time_steps = np.size(solution[0,0,:,0])
 
     # I_E_dir is of size (number of time steps)
-    I_E_dir = np.zeros(n_time_steps)
-    I_ortho = np.zeros(n_time_steps)
+    if path_num == 1:
+        I_E_dir = np.zeros(n_time_steps)
+        I_ortho = np.zeros(n_time_steps)
 
     for i_time in range(n_time_steps):
 
-        for i_path, path in enumerate(paths):
+#        for i_path, path in enumerate(paths):
             path = np.array(path)
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
@@ -872,13 +880,13 @@ def emission_exact(paths, solution, E_dir, A_field, gauge):
                 U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
                 U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, i_path, i_time, 0])
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, i_path, i_time, 3])
-                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, i_path, i_time, 2])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, 0, i_time, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, 0, i_time, 3])
+                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, 0, i_time, 2])
 
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, i_path, i_time, 0])
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, i_path, i_time, 3])
-                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, i_path, i_time, 2])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, 0, i_time, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, 0, i_time, 3])
+                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
 
     return I_E_dir, I_ortho
 
