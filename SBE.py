@@ -158,18 +158,26 @@ def main():
     [], [], [], [], [], [], [], [], [], []
 
     # here,the time evolution of the density matrix is done
-    solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+    solution, t, A_field, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
+                                           time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                                           gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                           Bcurv_in_B_dynamics, 'density_matrix_dynamics', 
-                                                          P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, 
-                                                          I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho)
+                                                          P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
 
     if do_emission_wavep:
-       wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+       wf_solution, t_wf, A_field_wf, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
+                                                       time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                                                       gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                                                       Bcurv_in_B_dynamics, 'wavefunction_dynamics', 
-                                                                      P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, 
-                                                                      I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho)
+                                                                      P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
+
+
+    print("np.shape(P_E_dir)", np.shape(P_E_dir))
+    print("np.shape(P_ortho)", np.shape(P_ortho))
+    print("np.shape(J_E_dir)", np.shape(J_E_dir))
+    print("np.shape(J_ortho)", np.shape(J_ortho))
+
+    print("np.shape(t)", np.shape(t))
 
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
@@ -360,16 +368,16 @@ def main():
 
 ######################äää
 
-        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-        # Countour plots of occupations and gradients of occupations
-        fig5 = pl.figure()
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
+#        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+#        # Countour plots of occupations and gradients of occupations
+#        fig5 = pl.figure()
+#        X, Y = np.meshgrid(t/fs_conv,kp_array)
+#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+#        pl.xlabel(r'$t\;(fs)$')
+#        pl.ylabel(r'$k$')
+#        pl.tight_layout()
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
@@ -418,8 +426,7 @@ def main():
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, gamma1, gamma2, 
                    E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, 
                    dynamics_type, 
-                   P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, 
-                   I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho):
+                   P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho):
 
     if dynamics_type == 'density_matrix_dynamics' and user_out:
        print("Enter density matrix dynamics.")
@@ -549,7 +556,10 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
             ###########################################################################
             # Calculate parallel and orthogonal components of observables
             # Polarization (interband)
+            print("np.shape(P_E_dir) before polarization call", np.shape(P_E_dir))
             P_E_dir, P_ortho = polarization(path, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path_num)
+            print("np.shape(P_E_dir) after  polarization call", np.shape(P_E_dir))
+
             # Current (intraband)
             J_E_dir, J_ortho = current(path, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho, path_num)
 
@@ -599,7 +609,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         solution = shift_solution(solution, A_field, dk, dynamics_type)
         fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
-    return solution, t, A_field, fermi_function
+    return solution, t, A_field, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho
 
 #################################################################################################
 # FUNCTIONS
