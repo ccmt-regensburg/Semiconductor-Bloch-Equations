@@ -158,26 +158,18 @@ def main():
     [], [], [], [], [], [], [], [], [], []
 
     # here,the time evolution of the density matrix is done
-    solution, t, A_field, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
-                                           time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
-                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                          Bcurv_in_B_dynamics, 'density_matrix_dynamics', 
-                                                          P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
+    t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
+                time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+                               gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                               Bcurv_in_B_dynamics, 'density_matrix_dynamics', 
+                               P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
 
-    if do_emission_wavep:
-       wf_solution, t_wf, A_field_wf, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
-                                                       time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
-                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics', 
-                                                                      P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
-
-
-    print("np.shape(P_E_dir)", np.shape(P_E_dir))
-    print("np.shape(P_ortho)", np.shape(P_ortho))
-    print("np.shape(J_E_dir)", np.shape(J_E_dir))
-    print("np.shape(J_ortho)", np.shape(J_ortho))
-
-    print("np.shape(t)", np.shape(t))
+#    if do_emission_wavep:
+#       wf_solution, t_wf, A_field_wf, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
+#                                                       time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+#                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+#                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics', 
+#                                                                      P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
 
     # Emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
@@ -550,15 +542,11 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
             A_field  = np.array(path_solution)[:, -1]
 
-            print("np.shape(solution)", np.shape(solution))
-
             # COMPUTE OBSERVABLES
             ###########################################################################
             # Calculate parallel and orthogonal components of observables
             # Polarization (interband)
-            print("np.shape(P_E_dir) before polarization call", np.shape(P_E_dir))
             P_E_dir, P_ortho = polarization(path, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path_num)
-            print("np.shape(P_E_dir) after  polarization call", np.shape(P_E_dir))
 
             # Current (intraband)
             J_E_dir, J_ortho = current(path, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho, path_num)
@@ -581,18 +569,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
     # Convert solution and time array to numpy arrays
     t = np.array(t)
-#    solution       = np.array(solution)
     fermi_function = np.array(fermi_function)
-
-#    # Slice solution along each path for easier observable calculation
-#    if BZ_type == 'full' or BZ_type == 'full_for_velocity':
-#        solution = np.array_split(solution, Nk1, axis=2)
-#        if dynamics_type == 'wavefunction_dynamics':
-#           fermi_function = np.array_split(fermi_function, Nk1, axis=2)
-#    elif BZ_type == '2line':
-#        solution = np.array_split(solution, Nk_in_path, axis=2)
-#        if dynamics_type == 'wavefunction_dynamics':
-#           fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
 
     # Convert lists into numpy arrays
     solution = np.array(solution)
@@ -609,7 +586,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         solution = shift_solution(solution, A_field, dk, dynamics_type)
         fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
-    return solution, t, A_field, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho
+    return t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho
 
 #################################################################################################
 # FUNCTIONS
@@ -793,9 +770,6 @@ def polarization(path, pcv, E_dir, P_E_dir, P_ortho, path_num):
     else:
        P_E_dir += 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
        P_ortho += 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
-
-    print("np.shape(pcv)", np.shape(pcv))
-    print("np.shape(d_E_dir_swapped)", np.shape(d_E_dir_swapped))
 
     return P_E_dir, P_ortho
 
