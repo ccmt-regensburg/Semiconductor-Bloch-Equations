@@ -15,14 +15,13 @@ def run():
     C2                  = 5.39018     # k^2 coefficient
     A                   = 0.19732     # Fermi velocity
     R                   = 5.52658     # k^3 coefficient
-    mb                  = 0.000373195 # Splitting of cones.(10 meV)
     k_cut               = 0.05        # Model hamiltonian cutoff
      
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
     # Sweep Wilson mass
-    for T2 in [1, 500, 1000]:
+    for T2 in [1]:
         params.T2 = T2
         print("Current C2: ", C2)
         dirname = 'T2_{:1.0f}'.format(params.T2)

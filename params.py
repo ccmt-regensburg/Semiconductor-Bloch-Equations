@@ -25,7 +25,7 @@ class params:
     Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 800        # Number of kpoints in each of the two paths
+    Nk_in_path          = 400        # Number of kpoints in each of the two paths
     rel_dist_to_Gamma   = 0.05       # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a  # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
@@ -59,9 +59,7 @@ class params:
     # Flags for testing and features
     ##########################################################################
     user_out      = True   # Set to True to get user plotting and progress output
-    calc_exact    = True   # Calculate exact emission (Careful takes long!)
-    normal_plots  = True   # Standard plots of P, J, I and w-dependency
-    polar_plots   = False  # Higher harmonic polarization rotation
-    save_file     = True   # Save all data files
+    save_file     = False  # To save exact data
     save_full     = False  # Save full information
+    test          = True   # Test plots of exact data
 

@@ -14,7 +14,9 @@ def main(sys, dipole, params):
     ###########################################################################
     # Flag evaluation
     user_out = params.user_out
+    save_file = params.save_file
     save_full = params.save_full
+    test = params.test
     
     # Unit converstion factors
     fs_conv = params.fs_conv
@@ -217,32 +219,26 @@ def main(sys, dipole, params):
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
     # Polarization (interband)
-    P_E_dir, P_ortho = polarization(dipole, paths, solution[:, :, :, 1], E_dir)
+    # P_E_dir, P_ortho = polarization(dipole, paths, solution[:, :, :, 1], E_dir)
     # Current (intraband)
-    J_E_dir, J_ortho = current(sys, paths, solution[:, :, :, 0],
-                               solution[:, :, :, 3], t, alpha, E_dir)
+    # J_E_dir, J_ortho = current(sys, paths, solution[:, :, :, 0],
+    #                            solution[:, :, :, 3], t, alpha, E_dir)
     # Emission in time
-    I_E_dir = diff(t, P_E_dir)*gaussian_envelope(t, alpha) \
-        + J_E_dir*gaussian_envelope(t, alpha)
-    I_ortho = diff(t, P_ortho)*gaussian_envelope(t, alpha) \
-        + J_ortho*gaussian_envelope(t, alpha)
-
-    # Polar emission in time
-    Ir = []
-    angles = np.linspace(0, 2.0*np.pi, 360)
-    for angle in angles:
-        Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(-angle)))
+    # I_E_dir = diff(t, P_E_dir)*gaussian_envelope(t, alpha) \
+    #     + J_E_dir*gaussian_envelope(t, alpha)
+    # I_ortho = diff(t, P_ortho)*gaussian_envelope(t, alpha) \
+    #     + J_ortho*gaussian_envelope(t, alpha)
 
     # Fourier transforms
     dt_out = t[1] - t[0]
     freq = fftshift(fftfreq(np.size(t), d=dt_out))
-    Iw_E_dir = fftshift(fft(I_E_dir, norm='ortho'))
-    Iw_ortho = fftshift(fft(I_ortho, norm='ortho'))
-    # Iw_r = fftshift(fft(Ir, norm='ortho'))
-    Pw_E_dir = fftshift(fft(diff(t, P_E_dir), norm='ortho'))
-    Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
-    Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
-    Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
+    # Iw_E_dir = fftshift(fft(I_E_dir, norm='ortho'))
+    # Iw_ortho = fftshift(fft(I_ortho, norm='ortho'))
+    # # Iw_r = fftshift(fft(Ir, norm='ortho'))
+    # Pw_E_dir = fftshift(fft(diff(t, P_E_dir), norm='ortho'))
+    # Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
+    # Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
+    # Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
 
     I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution,
                                                   E_dir, A_field)
@@ -254,8 +250,8 @@ def main(sys, dipole, params):
     Int_exact_ortho = (freq**2)*np.abs(Iw_exact_ortho)**2
 
     # Emission intensity
-    Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2
-    Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2
+    # Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2
+    # Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2
 
     # Save observables to file
     if (BZ_type == '2line'):
@@ -265,29 +261,48 @@ def main(sys, dipole, params):
     tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
         .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
 
-    I_exact_name = 'Iexact_' + tail
-    np.save(I_exact_name, [t, I_exact_E_dir, I_exact_ortho, freq/w,
-            Iw_exact_E_dir, Iw_exact_ortho,
-            Int_exact_E_dir, Int_exact_ortho])
+    if (save_file):
+        I_exact_name = 'Iexact_' + tail
+        np.save(I_exact_name, [t, I_exact_E_dir, I_exact_ortho, freq/w,
+                Iw_exact_E_dir, Iw_exact_ortho,
+                Int_exact_E_dir, Int_exact_ortho])
 
     if (save_full):
         S_name = 'Sol_' + tail
         np.savez(S_name, t=t, solution=solution, paths=paths,
                  electric_field=electric_field(t))
 
-    J_name = 'J_' + tail
-    np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
-    P_name = 'P_' + tail
-    np.save(P_name, [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
-    I_name = 'I_' + tail
-    np.save(I_name, [t, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir),
-                     np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+    if (test):
+        freq_lims = (0, 25)
+        log_limits = (1e-7, 1e1)
+        fig, ((ax_E_dir, ax_Ortho, ax_Total)) = pl.subplots(3, 1)
+        ax_E_dir.semilogy(freq/w, Int_exact_E_dir)
+        ax_E_dir.set_xlim(freq_lims)
+        ax_E_dir.set_ylim(log_limits)
+        ax_E_dir.grid(True, axis='x')
+        ax_Ortho.semilogy(freq/w, Int_exact_ortho)
+        ax_Ortho.set_xlim(freq_lims)
+        ax_Ortho.set_ylim(log_limits)
+        ax_Ortho.grid(True, axis='x')
+        ax_Total.semilogy(freq/w, Int_exact_E_dir + Int_exact_ortho)
+        ax_Total.set_xlim(freq_lims)
+        ax_Total.set_ylim(log_limits)
+        ax_Total.grid(True, axis='x')
+        pl.show()
 
-    driving_tail = 'w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_wc-{:4.3f}'\
-        .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
+    # J_name = 'J_' + tail
+    # np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
+    # P_name = 'P_' + tail
+    # np.save(P_name, [t, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
+    # I_name = 'I_' + tail
+    # np.save(I_name, [t, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir),
+    #                  np.abs(Iw_ortho), Int_E_dir, Int_ortho])
 
-    D_name = 'E_' + driving_tail
-    np.save(D_name, [t, electric_field(t)])
+    # driving_tail = 'w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_wc-{:4.3f}'\
+    #     .format(w/THz_conv, E0/E_conv, alpha/fs_conv, phase, chirp/THz_conv)
+
+    # D_name = 'E_' + driving_tail
+    # np.save(D_name, [t, electric_field(t)])
 
 
 ###############################################################################
@@ -534,33 +549,42 @@ def emission_exact(sys, paths, solution, E_dir, A_field):
             path = np.array(path)
             kx_in_path = path[:, 0]
             ky_in_path = path[:, 1]
-    
-            kx_in_path_shifted = kx_in_path - A_field[i_time]*E_dir[0]
-            ky_in_path_shifted = ky_in_path - A_field[i_time]*E_dir[1]
+
+            kx_in_path_shifted = kx_in_path  # - A_field[i_time]*E_dir[0]
+            ky_in_path_shifted = ky_in_path  # - A_field[i_time]*E_dir[1]
 
             h_deriv_x = ev_mat(sys.hderivfjit[0], kx=kx_in_path_shifted,
                                ky=ky_in_path_shifted)
             h_deriv_y = ev_mat(sys.hderivfjit[1], kx=kx_in_path_shifted,
                                ky=ky_in_path_shifted)
- 
+
             h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
             h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
             U = sys.Uf(kx=kx_in_path, ky=ky_in_path)
             U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path)
-    
+
             for i_k in range(np.size(kx_in_path)):
 
-                U_h_H_U_E_dir = np.matmul(U_h[:, :, i_k], np.matmul(h_deriv_E_dir[:, :, i_k], U[:, :, i_k]))
-                U_h_H_U_ortho = np.matmul(U_h[:, :, i_k], np.matmul(h_deriv_ortho[:, :, i_k], U[:, :, i_k]))
+                dH_U_E_dir = np.matmul(h_deriv_E_dir[:, :, i_k], U[:, :, i_k])
+                U_h_H_U_E_dir = np.matmul(U_h[:, :, i_k], dH_U_E_dir)
 
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])*np.real(solution[i_k, i_path, i_time, 0])
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])*np.real(solution[i_k, i_path, i_time, 3])
-                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]*solution[i_k, i_path, i_time, 2])
+                dH_U_ortho = np.matmul(h_deriv_ortho[:, :, i_k], U[:, :, i_k])
+                U_h_H_U_ortho = np.matmul(U_h[:, :, i_k], dH_U_ortho)
 
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])*np.real(solution[i_k, i_path, i_time, 0])
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])*np.real(solution[i_k, i_path, i_time, 3])
-                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]*solution[i_k, i_path, i_time, 2])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])\
+                    * np.real(solution[i_k, i_path, i_time, 0])
+                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])\
+                    * np.real(solution[i_k, i_path, i_time, 3])
+                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]
+                                             * solution[i_k, i_path, i_time, 2])
+
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])\
+                    * np.real(solution[i_k, i_path, i_time, 0])
+                I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])\
+                    * np.real(solution[i_k, i_path, i_time, 3])
+                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]
+                                             * solution[i_k, i_path, i_time, 2])
 
     return I_E_dir, I_ortho
 
@@ -607,7 +631,7 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field):
             x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) \
                 - gamma1*(y[i]-y0[i])
 
-            x[i+1] = (-1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
+            x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] \
                 - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
 
             x[i+2] = x[i+1].conjugate()
