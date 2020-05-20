@@ -212,6 +212,10 @@ def main():
         Nk1 = Nk_in_path
         Nk2 = 2
 
+    freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
+    freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
+    Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
+
     if print_J_P_I_files:  
         J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
@@ -219,6 +223,16 @@ def main():
         np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
         I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+
+        J_filename = str('J_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.savetxt(J_filename, np.c_[freq/w, np.abs(Jw_E_dir)/Int_tot_base_freq, np.abs(Jw_ortho)/Int_tot_base_freq])
+        P_filename = str('P_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.savetxt(P_filename, np.c_[freq/w, np.abs(Pw_E_dir)/Int_tot_base_freq, np.abs(Pw_ortho)/Int_tot_base_freq])
+        I_filename = str('I_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.savetxt(I_filename, np.c_[freq/w, np.abs(Iw_E_dir)/Int_tot_base_freq, np.abs(Iw_ortho)/Int_tot_base_freq])
+        Iex_filename = str('I_ex_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.savetxt(Iex_filename, np.c_[freq/w, np.abs(Int_exact_E_dir)/Int_tot_base_freq, np.abs(Int_exact_ortho)/Int_tot_base_freq, 
+                                      (np.abs(Int_exact_E_dir)+np.abs(Int_exact_ortho))/Int_tot_base_freq ])
 
     if (not test and user_out):
         real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
@@ -248,10 +262,6 @@ def main():
         axJ.plot(t/fs_conv,J_ortho)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-
-        freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
-        freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
-        Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
 
 ##########################
 
@@ -529,44 +539,42 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         if dynamics_type == 'wavefunction_dynamics':
            fermi_function.append(np.array(path_fermi_function)[:, :])
 
-        if ti % dt_out == 0:
+        solution = np.array(solution)
 
-            solution = np.array(solution)
+        # Slice solution along each path for easier observable calculation
+        if BZ_type == 'full' or BZ_type == 'full_for_velocity':
+            solution = np.array_split(solution, Nk1, axis=2)
+            if dynamics_type == 'wavefunction_dynamics':
+               fermi_function = np.array_split(fermi_function, Nk1, axis=2)
+        elif BZ_type == '2line':
+            solution = np.array_split(solution, Nk_in_path, axis=2)
+            if dynamics_type == 'wavefunction_dynamics':
+               fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
 
-            # Slice solution along each path for easier observable calculation
-            if BZ_type == 'full' or BZ_type == 'full_for_velocity':
-                solution = np.array_split(solution, Nk1, axis=2)
-                if dynamics_type == 'wavefunction_dynamics':
-                   fermi_function = np.array_split(fermi_function, Nk1, axis=2)
-            elif BZ_type == '2line':
-                solution = np.array_split(solution, Nk_in_path, axis=2)
-                if dynamics_type == 'wavefunction_dynamics':
-                   fermi_function = np.array_split(fermi_function, Nk_in_path, axis=2)
+        solution = np.array(solution)
 
-            solution = np.array(solution)
+        A_field  = np.array(path_solution)[:, -1]
 
-            A_field  = np.array(path_solution)[:, -1]
+        # COMPUTE OBSERVABLES
+        ###########################################################################
+        # Calculate parallel and orthogonal components of observables
+        # Polarization (interband)
+        P_E_dir, P_ortho = polarization(path, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path_num)
 
-            # COMPUTE OBSERVABLES
-            ###########################################################################
-            # Calculate parallel and orthogonal components of observables
-            # Polarization (interband)
-            P_E_dir, P_ortho = polarization(path, solution[:, :, :, 1], E_dir, P_E_dir, P_ortho, path_num)
+        # Current (intraband)
+        J_E_dir, J_ortho = current(path, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho, path_num)
 
-            # Current (intraband)
-            J_E_dir, J_ortho = current(path, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir, J_E_dir, J_ortho, path_num)
-
-            # emission with exact formula
-            if do_B_field:
-               I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir) 
-            else:
-               I_exact_E_dir, I_exact_ortho = emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_exact_E_dir, I_exact_ortho) 
-            # emission with exact formula with semiclassical formula
-#            if do_emission_wavep:
-#               I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
-#               I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+        # emission with exact formula
+        if do_B_field:
+           I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir) 
+        else:
+           I_exact_E_dir, I_exact_ortho = emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_exact_E_dir, I_exact_ortho) 
+        # emission with exact formula with semiclassical formula
+#        if do_emission_wavep:
+#           I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+#           I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
     
-            solution = []
+        solution = []
 
         # Flag that time array has been built up
         t_constructed = True
