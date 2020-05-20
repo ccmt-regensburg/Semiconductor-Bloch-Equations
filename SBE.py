@@ -269,8 +269,8 @@ def main():
            label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
            label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
-           label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
-           label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
+           label_emission_E_dir = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
+           label_emission_ortho = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
 
         five_fig, ((ax_I_E_dir,ax_I_ortho,ax_I_total)) = pl.subplots(3,1,figsize=(10,10))
         ax_I_E_dir.grid(True,axis='x')
@@ -902,8 +902,8 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
    
         for i_k in range(np.size(kx_in_path)):
 
-           P_E_dir += 2*np.real(d_E_dir[i_k]*solution[i_k, 0, i_time, 1])
-           P_ortho += 2*np.real(d_ortho[i_k]*solution[i_k, 0, i_time, 1])
+           P_E_dir[i_time] += 2*np.real(d_E_dir[i_k]*solution[i_k, 0, i_time, 1])
+           P_ortho[i_time] += 2*np.real(d_ortho[i_k]*solution[i_k, 0, i_time, 1])
 
         # INTRABAND CURRENT 
         evdx = sys.system.ederivfjit[0](kx=kx_in_path_backshift, ky=ky_in_path_backshift)
@@ -917,10 +917,9 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
         jv_E_dir = evdx*E_dir[0] + evdy*E_dir[1]
         jv_ortho = evdx*E_ort[0] + evdy*E_ort[1]
         
-        J_E_dir += np.real(np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2))
-        J_ortho += np.real(np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2))
-
-
+        for i_k in range(np.size(kx_in_path)):
+           J_E_dir[i_time] += np.real(jc_E_dir[i_k]*solution[i_k, 0, i_time, 3] + jv_E_dir[i_k]*solution[i_k, 0, i_time, 0])
+           J_ortho[i_time] += np.real(jc_ortho[i_k]*solution[i_k, 0, i_time, 3] + jv_ortho[i_k]*solution[i_k, 0, i_time, 0])
 
     return I_E_dir, I_ortho, P_E_dir, P_ortho, J_E_dir, J_ortho
 
