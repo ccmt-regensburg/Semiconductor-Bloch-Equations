@@ -25,8 +25,8 @@ class params:
     Nk2                 = 20          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 400        # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.05       # relative distance (in units of 2pi/a) of both paths to Gamma
+    Nk_in_path          = 800        # Number of kpoints in each of the two paths
+    rel_dist_to_Gamma   = 0.01       # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a  # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   = 0        # incoming angle of the E-field in degree

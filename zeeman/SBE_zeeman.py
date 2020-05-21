@@ -302,8 +302,7 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
         # Returns true if the point is in the hexagonal BZ.
         # Checks if the absolute values of x and y components of p are within
         # the first quadrant of the hexagon.
-        x = np.abs(p[0])
-        y = np.abs(p[1])
+        x, y = np.abs(p)
         return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and
                 (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
 
