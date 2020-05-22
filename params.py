@@ -59,7 +59,7 @@ class params:
     # Flags for testing and features
     ##########################################################################
     user_out      = True   # Set to True to get user plotting and progress output
-    save_file     = False  # To save exact data
+    save_file     = True   # To save exact data
     save_full     = False  # Save full information
-    test          = True   # Test plots of exact data
+    test          = False  # Test plots of exact data
 

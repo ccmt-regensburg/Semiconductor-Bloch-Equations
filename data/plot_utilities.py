@@ -119,7 +119,7 @@ def total_fourier(freqw, data_dir, data_ortho,
     plt.savefig(savename)
 
 
-def cep_plot(phases, x, y, z, xlims, zlabel):
+def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
     # Determine maximums of the spectra for color bar values
     x_indices = np.argwhere(np.logical_and(x < xlims[1], x > xlims[0]))
     log_max = np.log(np.max(z[:, x_indices]))/np.log(10)
@@ -147,6 +147,19 @@ def cep_plot(phases, x, y, z, xlims, zlabel):
     cbar.set_ticks(logticks)
     cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
+
+def cep_plot(freqw, phases, data):
+    data = np.real(data)
+    log_max = np.log(np.max(data))/np.log(10)
+    log_min = np.log(np.min(data[data > 1e-10]))/np.log(10)
+    F, P = np.meshgrid(freqw[0], phases)
+
+    # breakpoint()
+    logspace = np.logspace(log_min, log_max, 100)
+    cont = plt.contourf(F, P, data, levels=logspace, locator=ticker.LogLocator(),
+                        cmap=cm.nipy_spectral) #, vmin=log_min, vmax=log_max)
+    plt.colorbar(cont)
+    plt.show()
 
 def find_base_freq(freqw, data_dir, data_ortho):
     """
