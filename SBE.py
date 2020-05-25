@@ -73,12 +73,13 @@ def main():
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
     elif BZ_type == '2line':
         Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
-        Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
         rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
         length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
         Nk1   = params.Nk_in_path                         # for printing file names, we use Nk1 and ...
         Nk2   = params.num_paths                          # ... and Nk2 = 2
+        Nk    = Nk1*Nk2                                   # Total number of k points, we have 2 paths
+
 
     # Gauge: length versus velocity gauge
     gauge = params.gauge
@@ -95,6 +96,7 @@ def main():
     store_all_timesteps = params.store_all_timesteps
     Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics
     KK_emission         = params.KK_emission
+    normalize_emission  = params.normalize_emission
 
     # USER OUTPUT
     ###############################################################################################
@@ -214,14 +216,35 @@ def main():
     Int_exact_offd_E_dir = np.abs((freq**2)*Iw_exact_offd_E_dir**2.0)
     Int_exact_offd_ortho = np.abs((freq**2)*Iw_exact_offd_ortho**2.0)
 
+    freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
+    freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
+    if normalize_emission:
+        Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
+        log_limits = (1e-7,1e1)
+    else:
+        if BZ_type == '2line':
+            # no normalization, include k-point weights
+            Int_tot_base_freq = 1/(2*rel_dist_to_Gamma*length_path_in_BZ/(Nk_in_path-1))
+        else:
+            # no normalization at all, no k-point weights
+            Int_tot_base_freq = 1
+
+        I_max = (Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]) / Int_tot_base_freq
+
+        freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 19.9, freq/w < 20.1))
+        freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
+        I_min = (Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq] ) / Int_tot_base_freq
+
+        print("I_min", I_min, "ceil", 10**(np.ceil(np.log10(I_min))-1) )
+        print("I_max", I_max, "ceil", 10**(np.ceil(np.log10(I_max))) )
+
+        log_limits = ( 10**(np.ceil(np.log10(I_min))-2) , 10**(np.ceil(np.log10(I_max)) + 1) )
+
+
     # Save observables to file
     if (BZ_type == '2line'):
         Nk1 = Nk_in_path
         Nk2 = 2
-
-    freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
-    freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
-    Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
 
     if print_J_P_I_files:  
         J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
@@ -248,7 +271,6 @@ def main():
         real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
-        log_limits = (1e-7,1e1)
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv, driving_field(E0, t)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
