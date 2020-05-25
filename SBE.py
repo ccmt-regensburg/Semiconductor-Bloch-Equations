@@ -206,6 +206,18 @@ def main():
        Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
 
+    if BZ_type == '2line':
+        # include k-point weights
+        kpoint_weight = 2*rel_dist_to_Gamma*length_path_in_BZ/(Nk_in_path-1)
+        Pw_E_dir = Pw_E_dir*kpoint_weight
+        Pw_ortho = Pw_ortho*kpoint_weight
+        Jw_E_dir = Jw_E_dir*kpoint_weight
+        Jw_ortho = Jw_ortho*kpoint_weight
+        Iw_exact_E_dir = Iw_exact_E_dir*kpoint_weight
+        Iw_exact_ortho = Iw_exact_ortho*kpoint_weight
+        Iw_exact_offd_E_dir = Iw_exact_offd_E_dir*kpoint_weight
+        Iw_exact_offd_ortho = Iw_exact_offd_ortho*kpoint_weight
+
     # Emission intensity (approximate formula)
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2.0
     Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2.0
@@ -222,21 +234,14 @@ def main():
         Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
         log_limits = (1e-7,1e1)
     else:
-        if BZ_type == '2line':
-            # no normalization, include k-point weights
-            Int_tot_base_freq = 1/(2*rel_dist_to_Gamma*length_path_in_BZ/(Nk_in_path-1))
-        else:
-            # no normalization at all, no k-point weights
-            Int_tot_base_freq = 1
+        # no normalization at all, no k-point weights
+        Int_tot_base_freq = 1
 
         I_max = (Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]) / Int_tot_base_freq
 
         freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 19.9, freq/w < 20.1))
         freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
         I_min = (Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq] ) / Int_tot_base_freq
-
-        print("I_min", I_min, "ceil", 10**(np.ceil(np.log10(I_min))-1) )
-        print("I_max", I_max, "ceil", 10**(np.ceil(np.log10(I_max))) )
 
         log_limits = ( 10**(np.ceil(np.log10(I_min))-2) , 10**(np.ceil(np.log10(I_max)) + 1) )
 
