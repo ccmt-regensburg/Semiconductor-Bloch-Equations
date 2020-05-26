@@ -197,6 +197,8 @@ def main():
     Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_E_dir      = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_ortho      = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_exact_diag_E_dir = np.fft.fftshift(np.fft.fft(I_exact_diag_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
+    Iw_exact_diag_ortho = np.fft.fftshift(np.fft.fft(I_exact_diag_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_offd_E_dir = np.fft.fftshift(np.fft.fft(I_exact_offd_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_offd_ortho = np.fft.fftshift(np.fft.fft(I_exact_offd_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
 
@@ -215,6 +217,8 @@ def main():
         Jw_ortho = Jw_ortho*kpoint_weight
         Iw_exact_E_dir = Iw_exact_E_dir*kpoint_weight
         Iw_exact_ortho = Iw_exact_ortho*kpoint_weight
+        Iw_exact_diag_E_dir = Iw_exact_diag_E_dir*kpoint_weight
+        Iw_exact_diag_ortho = Iw_exact_diag_ortho*kpoint_weight
         Iw_exact_offd_E_dir = Iw_exact_offd_E_dir*kpoint_weight
         Iw_exact_offd_ortho = Iw_exact_offd_ortho*kpoint_weight
 
@@ -225,6 +229,8 @@ def main():
     # Emission intensity (exact formula)
     Int_exact_E_dir = np.abs((freq**2)*Iw_exact_E_dir**2.0)
     Int_exact_ortho = np.abs((freq**2)*Iw_exact_ortho**2.0)
+    Int_exact_diag_E_dir = np.abs((freq**2)*Iw_exact_diag_E_dir**2.0)
+    Int_exact_diag_ortho = np.abs((freq**2)*Iw_exact_diag_ortho**2.0)
     Int_exact_offd_E_dir = np.abs((freq**2)*Iw_exact_offd_E_dir**2.0)
     Int_exact_offd_ortho = np.abs((freq**2)*Iw_exact_offd_ortho**2.0)
 
@@ -267,6 +273,9 @@ def main():
         Iex_filename = str('I_ex_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(Iex_filename, np.c_[freq/w, np.abs(Int_exact_E_dir)/Int_tot_base_freq, np.abs(Int_exact_ortho)/Int_tot_base_freq, 
                                       (np.abs(Int_exact_E_dir)+np.abs(Int_exact_ortho))/Int_tot_base_freq ])
+        Iex_diag_filename = str('I_ex_diag_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        np.savetxt(Iex_diag_filename, np.c_[freq/w, np.abs(Int_exact_diag_E_dir)/Int_tot_base_freq, np.abs(Int_exact_diag_ortho)/Int_tot_base_freq, 
+                                      (np.abs(Int_exact_diag_E_dir)+np.abs(Int_exact_diag_ortho))/Int_tot_base_freq ])
         Iex_offd_filename = str('I_ex_offd_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(Iex_offd_filename, np.c_[freq/w, np.abs(Int_exact_offd_E_dir)/Int_tot_base_freq, np.abs(Int_exact_offd_ortho)/Int_tot_base_freq, 
                                       (np.abs(Int_exact_offd_E_dir)+np.abs(Int_exact_offd_ortho))/Int_tot_base_freq ])
@@ -314,6 +323,8 @@ def main():
            ax_I_E_dir.set_xlim(freq_lims)
            ax_I_E_dir.set_ylim(log_limits)
            ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
+           ax_I_E_dir.semilogy(freq/w, Int_exact_diag_E_dir / Int_tot_base_freq,
+               label='$I_{\mathrm{intra}\parallel E}(t) = q\sum_{n= n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
            ax_I_E_dir.semilogy(freq/w, Int_exact_offd_E_dir / Int_tot_base_freq, linestyle='dashed',
                label='$I_{\mathrm{inter}\parallel E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
 
@@ -331,6 +342,8 @@ def main():
            ax_I_ortho.set_xlim(freq_lims)
            ax_I_ortho.set_ylim(log_limits)
            ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
+           ax_I_ortho.semilogy(freq/w, Int_exact_diag_ortho / Int_tot_base_freq,
+               label='$I_{\mathrm{intra}\\bot E}(t) = q\sum_{n= n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
            ax_I_ortho.semilogy(freq/w, Int_exact_offd_ortho / Int_tot_base_freq, linestyle='dashed',
                label='$I_{\mathrm{inter}\\bot E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
            if not do_B_field:
