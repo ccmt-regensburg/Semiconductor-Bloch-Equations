@@ -263,7 +263,7 @@ def main():
         P_filename = str('P_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(P_filename, np.c_[freq/w, np.abs(freq**2*Pw_E_dir**2)/Int_tot_base_freq, np.abs(freq**2*Pw_ortho**2)/Int_tot_base_freq])
         I_filename = str('I_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-        np.savetxt(I_filename, np.c_[freq/w, np.abs(Iw_E_dir)/Int_tot_base_freq, np.abs(Iw_ortho)/Int_tot_base_freq,  np.abs(Iw_E_dir+Iw_ortho)/Int_tot_base_freq])
+        np.savetxt(I_filename, np.c_[freq/w, np.abs(Int_E_dir)/Int_tot_base_freq, np.abs(Int_ortho)/Int_tot_base_freq, (np.abs(Int_E_dir)+np.abs(Int_ortho))/Int_tot_base_freq])
         Iex_filename = str('I_ex_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(Iex_filename, np.c_[freq/w, np.abs(Int_exact_E_dir)/Int_tot_base_freq, np.abs(Int_exact_ortho)/Int_tot_base_freq, 
                                       (np.abs(Int_exact_E_dir)+np.abs(Int_exact_ortho))/Int_tot_base_freq ])
