@@ -315,7 +315,7 @@ def main():
            ax_I_E_dir.set_ylim(log_limits)
            ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
            ax_I_E_dir.semilogy(freq/w, Int_exact_offd_E_dir / Int_tot_base_freq, linestyle='dashed',
-               label='$I_{\parallel E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
+               label='$I_{\mathrm{inter}\parallel E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
 
            if not do_B_field:
               ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
@@ -332,7 +332,7 @@ def main():
            ax_I_ortho.set_ylim(log_limits)
            ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
            ax_I_ortho.semilogy(freq/w, Int_exact_offd_ortho / Int_tot_base_freq, linestyle='dashed',
-               label='$I_{\\bot E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
+               label='$I_{\mathrm{inter}\\bot E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
            if not do_B_field:
               ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
                  label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
