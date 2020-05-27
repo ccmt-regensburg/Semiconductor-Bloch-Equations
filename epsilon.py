@@ -14,14 +14,21 @@ def epsilon(params):
     dk, kpnts, paths = mesh(params, E_dir)
 
     epsilon = []
-
+    length = -paths[0,0,0]
     for i in range(0,100):
 
-        epsk = [paths[0,i,0],np.cos(paths[0,i,0])]
+        k=paths[0,i,0]
+        epsk = [k,np.cos(k/length*np.pi)]
         epsilon.append(epsk)
 
-    print(*epsilon)
-    
+
+    print(*epsilon, sep='\n')
+
+    x_val = [x[0] for x in epsilon]
+    y_val = [x[1] for x in epsilon]
+
+    pl.plot(x_val,y_val)
+    pl.show()
 
     return epsilon 
 
