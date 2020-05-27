@@ -567,6 +567,30 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 #################################################################################################
 # FUNCTIONS
 ################################################################################################
+
+def epsilon(params):
+
+    angle_inc_E_field = params.angle_inc_E_field
+    E_dir = np.array([np.cos(np.radians(angle_inc_E_field)), np.sin(np.radians(angle_inc_E_field))])
+    dk, kpnts, paths = mesh(params, E_dir)
+
+    epsilon = []
+
+    for i in range(0,100):
+
+        epsk = [paths[0,i,0],np.cos(paths[0,i,0])]
+        epsilon.append(epsk)
+
+    print(*epsilon)
+    shape=epsilon.shape
+    print(shape)
+    pl.scatter(epsilon[0,:],epsilon[1,:])
+    pl.show()
+
+    return epsilon 
+
+
+
 def mesh(params, E_dir):
     Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
@@ -1363,4 +1387,4 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     return
 
 if __name__ == "__main__":
-    main()
+    epsilon(params)
