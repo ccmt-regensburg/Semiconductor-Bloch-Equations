@@ -39,7 +39,7 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 20         # Number of kpoints in each of the two paths
+Nk_in_path          = 200         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -66,11 +66,11 @@ scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
-T1    = 1E3  # Phenomenological damping time for diagonal occupations
-T2    = 1       # Phenomenological damping time for off-diagonal polarizations
+T1    = 1e3  # Phenomenological damping time for diagonal occupations
+T2    = 1e2       # Phenomenological damping time for off-diagonal polarizations
 t0    = -5000 # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 5000  # End time
-dt    = 2.  # Time step
+dt    = .1  # Time step
 
 # Unit conversion factors
 ##########################################################################

@@ -30,7 +30,7 @@ def opt_pulses():
     nOpt[0]         = fOpt[0]*fOpt[1]
     nOpt[1]         = 1/nOpt[1]
     nOpt.append(nOpt[2])
-    nOpt[2]         = 0
+    nOpt[2]         = 0*fs_conv
     nOpt.append(0)
 
     return [tOpt, nOpt]

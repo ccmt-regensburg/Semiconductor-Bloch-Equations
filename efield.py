@@ -18,8 +18,9 @@ c   = nOpt[2]
 d   = nOpt[3]
 e   = nOpt[4]
 
-sigma   = tOpt[1]
-w       = nOpt[3]
+nir_sigma   = nOpt[1]
+nir_mu      = nOpt[2]
+nir_w       = nOpt[3]
 
 with_nir    = True
 

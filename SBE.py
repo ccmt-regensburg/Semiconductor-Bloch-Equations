@@ -46,11 +46,13 @@ def main():
     chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
     phase = params.phase                              # Carrier-envelope phase
     
+    ####### changes on the fitted parameters
     w     = params.w*params.THz_conv                         # Driving pulse frequency
     alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
     if params.fitted_pulse:
-        w       = efield.w
-        alpha   = efield.sigma
+        nir_t0  = efield.nir_mu
+        w       = efield.nir_w
+        alpha   = efield.nir_sigma
 
     # Dipole scaling to obtain semiclassical motion
     scale_dipole_eq_mot = params.scale_dipole_eq_mot
@@ -64,6 +66,8 @@ def main():
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     dt = params.dt*fs_conv                            # Integration time step
+    dt = 1/(21*w)
+
     dt_out = 1/(2*params.dt)                          # Solution output time step
 
     # Brillouin zone type
@@ -176,7 +180,7 @@ def main():
     
         #reduce the time window of the data to the time-domain of the nir-pulse
         time_window     = 500*fs_conv
-        time_indices    = np.where(np.abs(t) < time_window)[0]
+        time_indices    = np.where(np.abs(t-nir_t0) < time_window)[0]
 
         solution        = solution[ :, :, time_indices]
         t               = t[time_indices]
@@ -271,7 +275,7 @@ def main():
 
     if (not test and user_out):
         real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
-        t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
+        t_lims = ((-10*alpha+nir_t0)/fs_conv, (+10*alpha+nir_t0)/fs_conv)                   #### changes according to t0 of nir-pulse
         freq_lims = (0,25)
         log_limits = (1e-7,1e1)
         axE.set_xlim(t_lims)
@@ -404,7 +408,7 @@ def main():
         X, Y = np.meshgrid(t/fs_conv,kp_array)
         pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
         pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlim([(-5*alpha+nir_t0)/fs_conv,(10*alpha+nir_t0)/fs_conv])          #### changes according to t0 of nir-pulse
         pl.xlabel(r'$t\;(fs)$')
         pl.ylabel(r'$k$')
         pl.tight_layout()
@@ -412,7 +416,7 @@ def main():
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
         i_loop = 1
-        i_max = 20
+        i_max = 5
         while i_loop <= i_max:
             freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
             freq_index   = freq_indices[int(np.size(freq_indices)/2)]
