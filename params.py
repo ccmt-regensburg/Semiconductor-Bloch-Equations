@@ -26,7 +26,7 @@ class params:
 
     # 2line BZ parameters
     Nk_in_path          = 800        # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.01       # relative distance (in units of 2pi/a) of both paths to Gamma
+    rel_dist_to_Gamma   = 0.09       # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a  # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   = 0        # incoming angle of the E-field in degree
@@ -36,7 +36,7 @@ class params:
     align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
     E0                  = 5.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
-    chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
+    chirp               = -0.41        # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
     phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.py)
 

@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from matplotlib import ticker, cm
+from matplotlib import ticker, cm, colors
 import numpy as np
 import os
 
@@ -148,17 +148,27 @@ def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
     cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
 
-def cep_plot(freqw, phases, data):
+def cep_plot(freqw, phases, data, title, xlim=(0, 30)):
     data = np.real(data)
+    min = 1e-14
     log_max = np.log(np.max(data))/np.log(10)
-    log_min = np.log(np.min(data[data > 1e-10]))/np.log(10)
+    log_min = np.log(np.min(data[data > min]))/np.log(10)
     F, P = np.meshgrid(freqw[0], phases)
 
     # breakpoint()
     logspace = np.logspace(log_min, log_max, 100)
-    cont = plt.contourf(F, P, data, levels=logspace, locator=ticker.LogLocator(),
-                        cmap=cm.nipy_spectral) #, vmin=log_min, vmax=log_max)
-    plt.colorbar(cont)
+    cont = plt.contourf(F, P, data, levels=logspace,
+                        locator=ticker.LogLocator(),
+                        cmap=cm.nipy_spectral,
+                        norm=colors.LogNorm(vmin=min, vmax=1))
+    plt.xlim(xlim)
+    plt.xlabel(r'$\omega/\omega_0$')
+    plt.ylabel(r'phase $\phi$')
+    cb = plt.colorbar(cont, ticks=[1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0])
+    cb.set_label(r'$I/I_{\mathrm{max}}$')
+    # cb.ax.tick_params(labelsize=7)
+    # cb.ax.set_yticklabels(np.logspace(1e-14, 1, 11))
+    plt.title(title)
     plt.show()
 
 def find_base_freq(freqw, data_dir, data_ortho):
