@@ -102,7 +102,7 @@ def main(sys, dipole, params):
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
-        BZ_plot(kpnts, a, b1, b2, paths)
+        # BZ_plot(kpnts, a, b1, b2, paths)
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
