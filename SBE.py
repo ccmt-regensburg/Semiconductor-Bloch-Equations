@@ -318,7 +318,7 @@ def mesh(params, E_dir):
                               0.5 - (1/(2*Nk_in_path)), num=Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
 
-    vec_k_ortho = 2.0*np.pi/a*rel_dist_to_Gamma*np.array([E_dir[1], -E_dir[0]])
+    vec_k_ortho = 2.0*(np.pi/a)*rel_dist_to_Gamma*np.array([E_dir[1], -E_dir[0]])
 
     # Containers for the mesh, and BZ directional paths
     mesh = []
