@@ -3,7 +3,7 @@ import os
 from params import params
 
 import hfsbe.dipole
-import hfsbe.example
+from hfsbe.example import BiTeResummed
 import hfsbe.utility
 # Set BZ type independent parameters
 # Hamiltonian parameters
@@ -11,10 +11,13 @@ from SBE import main as solver
 
 
 def run():
-    A = 0.19732     # Fermi velocity
-    mz = 0.027562
-    # mz = 0.0
 
+    C0 = -0.00647156                  # C0
+    c2 = 0.0117598                    # k^2 coefficient
+    A = 0.0422927                     # Fermi velocity
+    r = 0.109031                      # k^3 coefficient
+    ksym = 0.0635012                  # k^2 coefficent dampening
+    kasym = 0.113773                  # k^3 coeffcient dampening
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
@@ -27,7 +30,8 @@ def run():
             os.mkdir(dirname)
         os.chdir(dirname)
 
-        system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mz=mz)
+        system = BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym)
+
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)

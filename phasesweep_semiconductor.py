@@ -12,7 +12,7 @@ from SBE import main as solver
 
 def run():
     A = 0.19732     # Fermi velocity
-    mz = 0.027562
+    mx = 0.027562
     # mz = 0.0
 
     # Initialize sympy bandstructure, energies/derivatives, dipoles
@@ -27,7 +27,7 @@ def run():
             os.mkdir(dirname)
         os.chdir(dirname)
 
-        system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mz=mz)
+        system = hfsbe.example.Semiconductor(A=A, mx=mx, a=params.a)
         h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
         dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
         solver(system, dipole, params)
