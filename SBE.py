@@ -155,8 +155,6 @@ def main(sys, dipole, params):
         # provided and a cutoff radius
         ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)
         ev = sys.efjit[0](kx=kx_in_path, ky=ky_in_path)
-        pl.plot(kx_in_path, ec)
-        pl.show()
         ecv_in_path = ec - ev
 
         # Initialize the values of of each k point vector
