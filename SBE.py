@@ -882,11 +882,8 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
 
         if KK_emission:
 
-           print("check 1")
-
            # KK emission only with length gauge
            if gauge == 'velocity': 
-              print("check2")
               exit("KK emission only implemented with the length gauge")
               
            # INTERBAND POLARIZATION 
