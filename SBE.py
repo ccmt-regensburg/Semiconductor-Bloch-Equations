@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from numba import njit
 import matplotlib.pyplot as pl
 from matplotlib import patches
@@ -881,10 +882,17 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
 
         if KK_emission:
 
+           print("check 1")
+
+           # KK emission only with length gauge
+           if gauge == 'velocity': 
+              print("check2")
+              exit("KK emission only implemented with the length gauge")
+              
            # INTERBAND POLARIZATION 
 
            # Evaluate the dipole moments in path
-           di_x, di_y = sys.dipole.evaluate(kx_in_path_backshift, ky_in_path_backshift)
+           di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
        
            # Append the dot product d.E
            d_E_dir = di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1]
@@ -896,10 +904,10 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
               P_ortho[i_time] += 2*np.real(d_ortho[i_k]*solution[i_k, 0, i_time, 1])
 
            # INTRABAND CURRENT 
-           evdx = sys.system.ederivfjit[0](kx=kx_in_path_backshift, ky=ky_in_path_backshift)
-           evdy = sys.system.ederivfjit[1](kx=kx_in_path_backshift, ky=ky_in_path_backshift)
-           ecdx = sys.system.ederivfjit[2](kx=kx_in_path_backshift, ky=ky_in_path_backshift)
-           ecdy = sys.system.ederivfjit[3](kx=kx_in_path_backshift, ky=ky_in_path_backshift)
+           evdx = sys.system.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
+           evdy = sys.system.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
+           ecdx = sys.system.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
+           ecdy = sys.system.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
            
            # 0: v, x 1: v,y 2: c, x 3: c, y
            jc_E_dir = ecdx*E_dir[0] + ecdy*E_dir[1]
