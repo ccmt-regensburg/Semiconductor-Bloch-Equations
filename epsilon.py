@@ -7,30 +7,67 @@ import matplotlib.pyplot as pl
 #from scipy.special import erf
 #from sys import exit
 
+
+
+def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_type):
+    e_v = bandstruct[i_k,1]
+    e_c = bandstruct[i_k,2]
+    if (temperature > 1e-5):
+        fermi_function = 1/(np.exp((e_c[i_k])/temperature)+1)
+        y0.extend([1.0,0.0,0.0,fermi_function,0.0,0.0,0.0,0.0])
+    else:
+        if (e_c>0):
+            y0_e_plus = 0
+        else:
+            y0_e_plus = 1
+
+        if (e_v>0):
+            y0_e_minus = 0
+        else:
+            y0_e_minus = 1
+
+        y0.extend([y0_e_minus,0.0,0.0,y0_e_plus,0.0,0.0,0.0,0.0])
+
+
+
+
+
 def epsilon(params):
+
+    
+    alpha = 0.1                                     # strength of spin-orbit coupling
+    Nk_in_path = params.Nk_in_path                  # Number of kpoints in each of the two paths
 
     angle_inc_E_field = params.angle_inc_E_field
     E_dir = np.array([np.cos(np.radians(angle_inc_E_field)), np.sin(np.radians(angle_inc_E_field))])
     dk, kpnts, paths = mesh(params, E_dir)
-
-    epsilon = []
+    
+    bandstruct = np.zeros(shape=(100,3))
+   # print(*bandstruct, sep='\n')
+   # return bandstruct
     length = -paths[0,0,0]
-    for i in range(0,100):
 
-        k=paths[0,i,0]
-        epsk = [k,np.cos(k/length*np.pi)]
-        epsilon.append(epsk)
+    for i in range(0,Nk_in_path):
 
+        k=-length+dk*i
+        e_k = np.cos(k/length*np.pi)
+        e_minus = e_k - alpha
+        e_plus = e_k + alpha
 
-    print(*epsilon, sep='\n')
+        bandstruct[i] = [k,e_minus,e_plus]
 
-    x_val = [x[0] for x in epsilon]
-    y_val = [x[1] for x in epsilon]
+    
+    '''
+    x_val = [x[0] for x in bandstruct]
+    y_val_m = [x[1] for x in bandstruct]
+    y_val_p = [x[2] for x in bandstruct]
 
-    pl.plot(x_val,y_val)
-    pl.show()
-
-    return epsilon 
+    pl.plot(x_val,y_val_m) 
+    pl.plot(x_val,y_val_p)
+    pl.show()  
+    '''
+   
+    return bandstruct
 
 
 
@@ -66,5 +103,3 @@ def mesh(params, E_dir):
     dk = 1.0/Nk_in_path*length_path_in_BZ
 
     return dk, np.array(mesh), np.array(paths)
-
-epsilon(params)
