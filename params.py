@@ -8,8 +8,8 @@ a                   = 8.308
 # Galium Selenide  lattice spacing = 5.429 Angstrom = 10.259 a.u.
 # Galium Arsenic   lattice spacing = 5.653 angstrom = 10.683 a.u.
 # Bismuth Teluride lattice spacing = 4.395 angstrom = 8.308
-e_fermi             = 0.2         # Fermi energy in eV
-temperature         = 0.03        # Temperature in eV
+e_fermi             = 0.0         # Fermi energy in eV
+temperature         = 0.0       # Temperature in eV
 
 # Model Hamiltonian parameters
 C0                  = 0          # Dirac point position
