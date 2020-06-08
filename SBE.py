@@ -98,6 +98,7 @@ def main():
     Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics
     KK_emission         = params.KK_emission
     normalize_emission  = params.normalize_emission
+    normalize_f_valence = params.normalize_f_valence
 
     # USER OUTPUT
     ###############################################################################################
@@ -167,16 +168,9 @@ def main():
     # here,the time evolution of the density matrix is done
     t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho = \
                 time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
-                               gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                               gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, normalize_f_valence, dt_out, BZ_type, Nk1, Nk_in_path, 
                                Bcurv_in_B_dynamics, 'density_matrix_dynamics', 
                                P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, KK_emission)
-
-#    if do_emission_wavep:
-#       wf_solution, t_wf, A_field_wf, fermi_function, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho = \
-#                                                       time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
-#                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-#                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics', 
-#                                                                      P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho)
 
     # Approximate emission in time
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
@@ -488,7 +482,7 @@ def main():
 
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, gamma1, gamma2, 
-                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, 
+                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, normalize_f_valence, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, 
                    dynamics_type, 
                    P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, KK_emission):
 
@@ -632,10 +626,10 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
         # emission with exact formula
         if do_B_field:
-           I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir, I_exact_E_dir, I_exact_ortho, path_num) 
+           I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir, I_exact_E_dir, I_exact_ortho, path_num, normalize_f_valence) 
         else:
            I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, P_E_dir, P_ortho, J_E_dir, J_ortho = \
-                                          emission_exact(path, solution, E_dir, A_field, gauge, path_num, 
+                                          emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, path_num, 
                                                          I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, 
                                                          P_E_dir, P_ortho, J_E_dir, J_ortho, KK_emission) 
         # emission with exact formula with semiclassical formula
@@ -827,13 +821,18 @@ def Gaussian_envelope(t, alpha):
     return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
-def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, 
+def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, path_num, I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, 
                    P_E_dir, P_ortho, J_E_dir, J_ortho, KK_emission):
                                                                                                                            
     E_ort = np.array([E_dir[1], -E_dir[0]])                                                                                
                                                                                                                            
     n_time_steps = np.size(solution[0,0,:,0])                                                                              
-                                                                                                                           
+
+    if normalize_f_valence:
+        subtract_from_f_v = 1
+    else:
+        subtract_from_f_v = 0
+
     for i_time in range(n_time_steps):                                                                                     
                                                                                                                            
         path = np.array(path)                                                                                              
@@ -866,17 +865,17 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
             U_h_H_U_E_dir = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_E_dir[:,:,i_k], U[:,:,i_k]))
             U_h_H_U_ortho = np.matmul(U_h[:,:,i_k], np.matmul(h_deriv_ortho[:,:,i_k], U[:,:,i_k]))
 
-            I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, 0, i_time, 0])
+            I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, 0, i_time, 3])
             I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, 0, i_time, 2])
-            I_exact_diag_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*np.real(solution[i_k, 0, i_time, 0])
+            I_exact_diag_E_dir[i_time] += np.real(U_h_H_U_E_dir[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_exact_diag_E_dir[i_time] += np.real(U_h_H_U_E_dir[1,1])*np.real(solution[i_k, 0, i_time, 3])
             I_exact_offd_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0,1]*solution[i_k, 0, i_time, 2])
 
-            I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, 0, i_time, 0])
+            I_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, 0, i_time, 3])
             I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
-            I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*np.real(solution[i_k, 0, i_time, 0])
+            I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, 0, i_time, 3])
             I_exact_offd_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
 
@@ -913,15 +912,20 @@ def emission_exact(path, solution, E_dir, A_field, gauge, path_num, I_E_dir, I_o
            jv_ortho = evdx*E_ort[0] + evdy*E_ort[1]
            
            for i_k in range(np.size(kx_in_path)):
-              J_E_dir[i_time] += np.real(jc_E_dir[i_k]*solution[i_k, 0, i_time, 3] + jv_E_dir[i_k]*solution[i_k, 0, i_time, 0])
-              J_ortho[i_time] += np.real(jc_ortho[i_k]*solution[i_k, 0, i_time, 3] + jv_ortho[i_k]*solution[i_k, 0, i_time, 0])
+              J_E_dir[i_time] += np.real(jc_E_dir[i_k]*solution[i_k, 0, i_time, 3] + jv_E_dir[i_k]*(solution[i_k, 0, i_time, 0] - subtract_from_f_v))
+              J_ortho[i_time] += np.real(jc_ortho[i_k]*solution[i_k, 0, i_time, 3] + jv_ortho[i_k]*(solution[i_k, 0, i_time, 0] - subtract_from_f_v))
 
     return I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, P_E_dir, P_ortho, J_E_dir, J_ortho
 
 
-def emission_semicl_B_field(path, solution, E_dir, I_exact_E_dir, I_exact_ortho, path_num):
+def emission_semicl_B_field(path, solution, E_dir, I_exact_E_dir, I_exact_ortho, path_num, normalize_f_valence):
 
     E_ort = np.array([E_dir[1], -E_dir[0]])
+
+    if normalize_f_valence:
+        subtract_from_f_v = 1
+    else:
+        subtract_from_f_v = 0
 
     n_time_steps = np.size(solution[0,0,:,0])
                                                                                                                            
@@ -961,10 +965,10 @@ def emission_semicl_B_field(path, solution, E_dir, I_exact_E_dir, I_exact_ortho,
             U_h_H_U_E_dir_c = np.matmul(U_shift_c_h[:,:], np.matmul(h_deriv_E_dir_c[:,:,0], U_shift_c[:,:]))
             U_h_H_U_ortho_c = np.matmul(U_shift_c_h[:,:], np.matmul(h_deriv_ortho_c[:,:,0], U_shift_c[:,:]))
 
-            I_exact_E_dir[i_time] += np.real(U_h_H_U_E_dir_v[0,0])*np.real(solution[i_k, 0, i_time, 0])
+            I_exact_E_dir[i_time] += np.real(U_h_H_U_E_dir_v[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_exact_E_dir[i_time] += np.real(U_h_H_U_E_dir_c[1,1])*np.real(solution[i_k, 0, i_time, 3])
 
-            I_exact_ortho[i_time] += np.real(U_h_H_U_ortho_v[0,0])*np.real(solution[i_k, 0, i_time, 0])
+            I_exact_ortho[i_time] += np.real(U_h_H_U_ortho_v[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_exact_ortho[i_time] += np.real(U_h_H_U_ortho_c[1,1])*np.real(solution[i_k, 0, i_time, 3])
 
     return I_exact_E_dir, I_exact_ortho
