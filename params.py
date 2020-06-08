@@ -92,4 +92,4 @@ store_all_timesteps = False
 fitted_pulse        = False
 KK_emission         = True
 normalize_emission  = False         
-normalize_f_valence = True
+normalize_f_valence = False
