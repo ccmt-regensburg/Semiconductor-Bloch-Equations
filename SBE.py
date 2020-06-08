@@ -10,6 +10,7 @@ from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
 import params
 import systems as sys
+import epsilon
 from efield import driving_field
 '''
 TO DO:
@@ -472,18 +473,21 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
         # in bite.evaluate, there is also an interpolation done if b1, b2
         # are provided and a cutoff radius
+        '''
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
         ecv_in_path = bandstruct[1] - bandstruct[0]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
-
         ec = bandstruct[1]
+        '''
+
+        bandstruct = epsilon.epsilon(params)
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []
         for i_k, k in enumerate(path):
-            initial_condition(y0,e_fermi,temperature,bandstruct[1],i_k, dynamics_type)
+            epsilon.initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k, dynamics_type)
 
         # append the A-field
         y0.append(0.0)
@@ -567,30 +571,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 #################################################################################################
 # FUNCTIONS
 ################################################################################################
-
-def epsilon(params):
-
-    angle_inc_E_field = params.angle_inc_E_field
-    E_dir = np.array([np.cos(np.radians(angle_inc_E_field)), np.sin(np.radians(angle_inc_E_field))])
-    dk, kpnts, paths = mesh(params, E_dir)
-
-    epsilon = []
-
-    for i in range(0,100):
-
-        epsk = [paths[0,i,0],np.cos(paths[0,i,0])]
-        epsilon.append(epsk)
-
-    print(*epsilon)
-    shape=epsilon.shape
-    print(shape)
-    pl.scatter(epsilon[0,:],epsilon[1,:])
-    pl.show()
-
-    return epsilon 
-
-
-
 def mesh(params, E_dir):
     Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
@@ -1387,4 +1367,4 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
     return
 
 if __name__ == "__main__":
-    epsilon(params)
+    main()
