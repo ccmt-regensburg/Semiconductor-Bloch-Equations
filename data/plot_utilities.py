@@ -148,8 +148,11 @@ def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
     cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
 
-def cep_plot(freqw, phases, data, title, xlim=(0, 30)):
+def cep_plot(freqw, phases, data, title, xlim=(0, 30), max=None):
     data = np.real(data)
+    if (max is not None):
+        data /= np.real(max)
+
     min = 1e-14
     log_max = np.log(np.max(data))/np.log(10)
     log_min = np.log(np.min(data[data > min]))/np.log(10)
@@ -165,11 +168,14 @@ def cep_plot(freqw, phases, data, title, xlim=(0, 30)):
     plt.xlabel(r'$\omega/\omega_0$')
     plt.ylabel(r'phase $\phi$')
     cb = plt.colorbar(cont, ticks=[1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0])
-    cb.set_label(r'$I/I_{\mathrm{max}}$')
+    cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
+    if (max is not None):
+        cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
     # cb.ax.tick_params(labelsize=7)
     # cb.ax.set_yticklabels(np.logspace(1e-14, 1, 11))
     plt.title(title)
     plt.show()
+
 
 def find_base_freq(freqw, data_dir, data_ortho):
     """
@@ -184,3 +190,17 @@ def find_base_freq(freqw, data_dir, data_ortho):
         base_frequency.append(data_dir[i, idx] + data_ortho[i, idx])
 
     return np.array(base_frequency)
+
+
+def find_max_intens(freqw, data_dir, data_ortho):
+    """
+    Find the amplitude at the base frequency for every data set
+    for normalizations
+    """
+    size = np.size(freqw, axis=1)
+    # Only take right half of results
+    data = data_dir[:, size//2:] + data_ortho[:, size//2:]
+    data_max = np.max(data, axis=1)
+    max = np.average(data_max)
+
+    return np.real(max)
