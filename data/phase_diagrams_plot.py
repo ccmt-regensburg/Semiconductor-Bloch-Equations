@@ -23,9 +23,15 @@ mlist = np.linspace(0, 0.0275620, 6)
 chirplist = np.linspace(0, 0.92, 6)
 chirplist[1:] *= -1
 
+mz = mlist[5]
+chirp = chirplist[5]
 dist = '0.03'
-dirpath = 'mz_' + '{:.7f}'.format(mlist[0]) + '/'
-dirpath += 'chirp_' + '{:.3f}'.format(chirplist[0]) + '/'
+
+mzstring = 'mz_' + '{:.7f}'.format(mz)
+chirpstring = 'chirp_' + '{:.3f}'.format(chirp) 
+
+dirpath = mzstring + '/'
+dirpath += chirpstring + '/'
 
 # # Evluation parameters for simple plots
 # dist = '0.07'
@@ -47,5 +53,8 @@ Int_exact_ortho = Iexactdata[:, 7]
 
 Int_max = find_max_intens(freqw, Int_exact_E_dir, Int_exact_ortho)
 
+mztitle = mzstring.replace('_', '=')
+chirptitle = chirpstring.replace('_', '=')
+
 cep_plot(freqw, phases, Int_exact_E_dir + Int_exact_ortho,
-         r'dist $' + dist + r'*2\pi/a$', max=Int_max)
+         mztitle + ' ' + chirptitle, max=Int_max)

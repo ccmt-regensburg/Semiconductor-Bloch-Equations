@@ -36,7 +36,7 @@ class params:
     align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
     E0                  = 5.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
-    chirp               = 0.92        # Pulse chirp ratio (chirp = c/w) (THz)
+    chirp               = -0.92        # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
     phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.py)
 
