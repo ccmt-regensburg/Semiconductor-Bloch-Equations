@@ -168,7 +168,13 @@ def main():
 
     ############### This is the part where the biggest changes are done #################
     # In this part the solver runs twice and the results are substracted from one another
-    for wahrheitswert in [True, False]:
+    substract_offset    = params.substract_offset
+    if substract_offset:
+        wahrheitswerte = [True, False]
+    else:
+        wahrheitswerte = [True]
+        
+    for wahrheitswert in wahrheitswerte:
         # Decide in this step if the nir-pulse is included or not
         efield.with_nir = wahrheitswert
         driving_field.recompile()
@@ -186,47 +192,165 @@ def main():
         t               = t[time_indices]
         A_field         = A_field[time_indices]
 
-        if do_emission_wavep:
-           wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                          Bcurv_in_B_dynamics, 'wavefunction_dynamics')
         n_time_steps = np.size(solution[0,0,:,0])
-    
+
         # COMPUTE OBSERVABLES
         ###########################################################################
-        # Calculate parallel and orthogonal components of observables
+        
         if wahrheitswert:
+            # Calculate parallel and orthogonal components of observables
             # Polarization (interband)
             P_E_dir, P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
             # Current (intraband)
             J_E_dir, J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
 
+            # Emission in time
+            I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
+                               diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
+
+            # emission with exact formula
+            if do_B_field:
+               I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
+            else:
+               I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
+            # emission with exact formula with semiclassical formula
+
         else:
-            Dummy_P_E_dir, Dummy_P_ortho    = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
-            Dummy_J_E_dir, Dummy_J_ortho   = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
+            dummy_P_E_dir, dummy_P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
+            # Current (intraband)
+            dummy_J_E_dir, dummy_J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
 
-            P_E_dir         -= Dummy_P_E_dir
-            P_ortho         -= Dummy_P_ortho
-            J_E_dir         -= Dummy_J_E_dir
-            J_ortho         -= Dummy_J_ortho
+            # Emission in time
+            dummy_I_E_dir, dummy_I_ortho = diff(t,dummy_P_E_dir)*Gaussian_envelope(t,alpha) + dummy_J_E_dir*Gaussian_envelope(t,alpha), \
+                               diff(t,dummy_P_ortho)*Gaussian_envelope(t,alpha) + dummy_J_ortho*Gaussian_envelope(t,alpha)
 
-            del Dummy_P_E_dir, Dummy_P_ortho, Dummy_J_E_dir, Dummy_J_ortho
+            # emission with exact formula
+            if do_B_field:
+               dummy_I_exact_E_dir, dummy_I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
+            else:
+               dummy_I_exact_E_dir, dummy_I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
+            # emission with exact formula with semiclassical formula
 
-    ############### These changes end here ###################
+            P_E_dir         -= dummy_P_E_dir      
+            P_ortho         -= dummy_P_ortho      
+            J_E_dir         -= dummy_J_E_dir      
+            J_ortho         -= dummy_J_ortho      
+            I_E_dir         -= dummy_I_E_dir      
+            I_ortho         -= dummy_I_ortho      
+            I_exact_E_dir   -= dummy_I_exact_E_dir
+            I_exact_ortho   -= dummy_I_exact_ortho
 
-    # Emission in time
+            del dummy_P_E_dir, dummy_P_ortho, dummy_J_E_dir, dummy_J_ortho, dummy_I_E_dir, dummy_I_ortho, dummy_I_exact_E_dir, dummy_I_exact_ortho
+
+    fc_k   = solution[:,0,:,3]
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
-                       diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
-    # emission with exact formula
-    if do_B_field:
-       I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
-    else:
-       I_exact_E_dir, I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
-    # emission with exact formula with semiclassical formula
-    if do_emission_wavep:
-       I_wavep_E_dir, I_wavep_ortho = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
-       I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
+                               diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
+        ############### These changes end here ###################
 
+    np.array([t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_E_dir, I_ortho, I_exact_E_dir, I_exact_ortho])
+
+    np.savetxt("../generated_data/velocity_100/emission.txt", np.array([t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_E_dir, I_ortho, I_exact_E_dir, I_exact_ortho]).real )
+    np.savetxt("../generated_data/velocity_100/besetzung.txt", fc_k.real )
+
+    return 0
+
+def constructPlots(t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_E_dir, I_ortho, I_exact_E_dir, I_exact_ortho, fc_k):
+    do_B_field = False
+    ################### A dirty copy and paste of the parameters from the main file #############
+    fs_conv  = params.fs_conv
+    E_conv   = params.E_conv
+    B_conv   = params.B_conv
+    THz_conv = params.THz_conv
+    amp_conv = params.amp_conv
+    eV_conv  = params.eV_conv
+
+    # Set BZ type independent parameters
+    # Hamiltonian parameters
+    C0 = params.C0                                    # Dirac point position
+    C2 = params.C2                                    # k^2 coefficient
+    A = params.A                                      # Fermi velocity
+    R = params.R                                      # k^3 coefficient
+    k_cut = params.k_cut                              # Model hamiltonian cutoff parameter
+
+    # System parameters
+    a = params.a                                      # Lattice spacing
+    e_fermi = params.e_fermi*eV_conv                  # Fermi energy for initial conditions
+    temperature = params.temperature*eV_conv          # Temperature for initial conditions
+
+    # Driving field parameters
+    E0    = params.E0*E_conv                          # Driving pulse field amplitude
+    B0    = params.B0*B_conv                          # Driving pulse magnetic field amplitude
+    chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
+    phase = params.phase                              # Carrier-envelope phase
+    
+    ####### changes on the fitted parameters
+    w     = params.w*params.THz_conv                         # Driving pulse frequency
+    alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
+    if params.fitted_pulse:
+        nir_t0  = efield.nir_mu
+        w       = efield.nir_w
+        alpha   = efield.nir_sigma
+
+    # Dipole scaling to obtain semiclassical motion
+    scale_dipole_eq_mot = params.scale_dipole_eq_mot
+    scale_dipole_emiss  = params.scale_dipole_emiss
+
+    # Time scales
+    T1 = params.T1*fs_conv                            # Occupation damping time
+    T2 = params.T2*fs_conv                            # Polarization damping time
+    gamma1 = 1/T1                                     # Occupation damping parameter
+    gamma2 = 1/T2                                     # Polarization damping parameter
+    t0 = int(params.t0*fs_conv)                       # Initial time condition
+    tf = int(params.tf*fs_conv)                       # Final time
+    dt = params.dt*fs_conv                            # Integration time step
+    dt = 1/(10*w)
+
+    dt_out = 1/(2*params.dt)                          # Solution output time step
+
+    # Brillouin zone type
+    BZ_type = params.BZ_type                          # Type of Brillouin zone to construct
+
+    # Brillouin zone type
+    if BZ_type == 'full':
+        Nk1   = params.Nk1                                # Number of kpoints in b1 direction
+        Nk2   = params.Nk2                                # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                   # Total number of kpoints
+        align = params.align                              # E-field alignment
+    elif BZ_type == 'full_for_velocity':
+        Nk1   = params.Nk1_vel                            # Number of kpoints in b1 direction
+        Nk2   = params.Nk2_vel                            # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                   # Total number of kpoints
+        angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
+    elif BZ_type == '2line':
+        Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
+        Nk = 2*Nk_in_path                                 # Total number of k points, we have 2 paths
+        rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
+        length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
+        angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
+        Nk1   = params.Nk_in_path                         # for printing file names, we use Nk1 and ...
+        Nk2   = 2                                         # ... and Nk2 = 2
+
+    # Gauge: length versus velocity gauge
+    gauge = params.gauge
+
+    b1 = params.b1                                        # Reciprocal lattice vectors
+    b2 = params.b2
+
+    user_out            = params.user_out
+    print_J_P_I_files   = params.print_J_P_I_files
+    energy_plots        = params.energy_plots
+    dipole_plots        = params.dipole_plots
+    test                = params.test                       # Testing flag for Travis
+    do_emission_wavep   = params.emission_wavep
+    store_all_timesteps = params.store_all_timesteps
+    Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics
+
+    if BZ_type == '2line':
+        E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
+                         np.sin(np.radians(angle_inc_E_field))])
+        dk, kpnts, paths = mesh(params, E_dir)
+
+    ####################### The copy and paste disgrace ends here ######################
     # Polar emission in time
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -250,7 +374,6 @@ def main():
        Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
        Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    fw_0     = np.fft.fftshift(np.fft.fft(solution[:,0,:,0], norm='ortho'),axes=(1,))
 
     # Emission intensity (approximate formula)
     Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2.0
@@ -406,7 +529,7 @@ def main():
         # Countour plots of occupations and gradients of occupations
         fig5 = pl.figure()
         X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+        pl.contourf(X, Y, np.real(fc_k), 100)
         pl.colorbar().set_label(r'$f_e(k)$ in path 0')
         pl.xlim([(-5*alpha+nir_t0)/fs_conv,(10*alpha+nir_t0)/fs_conv])          #### changes according to t0 of nir-pulse
         pl.xlabel(r'$t\;(fs)$')
@@ -752,8 +875,7 @@ def Gaussian_envelope(t, alpha):
     Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return 1
-    #return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
+    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
 
 
 def polarization(paths, pcv, E_dir, scale_dipole_emiss):

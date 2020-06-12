@@ -39,14 +39,14 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 200         # Number of kpoints in each of the two paths
+Nk_in_path          = 400        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
+length_path_in_BZ   = 4*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-gauge               = 'length'
-#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+#gauge               = 'length'
+gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -94,3 +94,4 @@ emission_wavep      = False  # additionally compute emission quasiclassically us
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
 fitted_pulse        = True
+substract_offset    = False
