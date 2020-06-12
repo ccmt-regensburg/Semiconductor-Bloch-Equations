@@ -12,15 +12,16 @@ from SBE import main as solver
 
 def run():
     A = 0.19732     # Fermi velocity
-    mz_max = 0.027562
-    mzlist = np.linspace(0, mz_max, 6)
-    mz = mzlist[0]
+    # mz_max = 0.027562
+    mz_max = 0.0165372
+    mzlist = np.linspace(0, mz_max, 7)
+    mz = mzlist[1]
 
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # ## Bismuth Teluride calls
     # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
     # Sweep Wilson mass
-    for chirp in np.linspace(0.184, 0.920, 5):
+    for chirp in np.linspace(0.000, -0.920, 5):
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
