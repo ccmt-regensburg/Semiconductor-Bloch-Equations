@@ -249,8 +249,8 @@ def main():
 
     np.array([t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_E_dir, I_ortho, I_exact_E_dir, I_exact_ortho])
 
-    np.savetxt("../generated_data/velocity_100/emission.txt", np.array([t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_E_dir, I_ortho, I_exact_E_dir, I_exact_ortho]).real )
-    np.savetxt("../generated_data/velocity_100/besetzung.txt", fc_k.real )
+    np.savetxt("../generated_data/" + gauge + "_" + str(Nk_in_path) + "/emission.txt", np.array([t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_E_dir, I_ortho, I_exact_E_dir, I_exact_ortho]).real )
+    np.savetxt("../generated_data/" + gauge + "_" + str(Nk_in_path) + "/besetzung.txt", fc_k.real )
 
     return 0
 
