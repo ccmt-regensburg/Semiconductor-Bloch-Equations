@@ -13,9 +13,9 @@ from SBE import main as solver
 def run():
     A = 0.19732     # Fermi velocity
     # mz_max = 0.027562
-    mz_max = 0.0165372
-    mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[5]
+    mx_max = 0.0165372
+    mxlist = np.linspace(0, mx_max, 7)
+    mx = mxlist[6]
 
     # Initialize sympy bandstructure, energies/derivatives, dipoles
     # ## Bismuth Teluride calls
@@ -37,7 +37,7 @@ def run():
                 os.mkdir(dirname_phase)
             os.chdir(dirname_phase)
 
-            system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mz=mz)
+            system = hfsbe.example.Semiconductor(A=A, mx=mx, a=params.a)
             h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
             dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
             solver(system, dipole, params)
