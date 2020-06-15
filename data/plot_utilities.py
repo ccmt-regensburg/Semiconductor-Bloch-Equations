@@ -99,7 +99,7 @@ def simple_fourier(freqw, data,
 def total_fourier(freqw, data_dir, data_ortho,
                   xlim=(0, 30), ylim=(10e-15, 1),
                   xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
-                  paramlegend=None, dirname='dir', savename='data'):
+                  paramlegend=None, dirname='dir', savename=None):
     """
     Plots parallel and orthogonal data
     """
@@ -116,7 +116,11 @@ def total_fourier(freqw, data_dir, data_ortho,
         ax.semilogy(freq, data)
     ax.legend(paramlegend)
     fig.suptitle(dirname)
-    plt.savefig(savename)
+
+    if (savename is None):
+        plt.show()
+    else:
+        plt.savefig(savename)
 
 
 def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
