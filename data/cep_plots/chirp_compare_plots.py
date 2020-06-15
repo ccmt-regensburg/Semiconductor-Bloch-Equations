@@ -22,7 +22,7 @@ orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
 mlist = np.linspace(0, 0.0275620, 6)
 chirplist = np.linspace(-0.92, 0.92, 11)
 
-mz = mlist[5]
+mz = mlist[0]
 dist = '0.03'
 
 mzstring = 'mz_' + '{:.7f}'.format(mz)
@@ -46,7 +46,15 @@ Int_exact_ortho = Iexactdata[:, 7]
 
 Int_exact_base_freq = find_base_freq(freqw, Int_exact_E_dir, Int_exact_ortho)
 
-Int_exact_E_dir = (Int_exact_E_dir.T/Int_exact_base_freq).T
-Int_exact_ortho = (Int_exact_ortho.T/Int_exact_base_freq).T
+size = np.size(freqw, axis=1)
+Int_pos_total = Int_exact_E_dir[:, size//2:] + Int_exact_ortho[:, size//2:]
+Int_exact_max = np.max(Int_pos_total, axis=1)
 
-total_fourier(freqw, Int_exact_E_dir, Int_exact_ortho)
+Int_exact_E_dir = (Int_exact_E_dir.T/Int_exact_max).T
+Int_exact_ortho = (Int_exact_ortho.T/Int_exact_max).T
+
+
+Int_exact_output = np.real(Int_exact_E_dir + Int_exact_ortho).T
+print(np.min(Int_exact_output))
+Output = np.hstack((np.real(freqw.T[:, 0, np.newaxis]), Int_exact_output))
+np.savetxt("intensity.dat", Output)

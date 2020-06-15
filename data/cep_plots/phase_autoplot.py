@@ -22,12 +22,15 @@ orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
 mlist = np.linspace(0, 0.0275620, 6)
 chirplist = np.linspace(-0.92, 0.92, 11)
 
-mz = mlist[5]
+mz = mlist[3]
 dist = '0.03'
 
 mzstring = 'mz_' + '{:.7f}'.format(mz)
 
-for chirp in chirplist:
+rescaledata = 2.920/np.array([2.980, 2.970, 2.960, 2.945, 2.930, 2.920, 2.905,
+                              2.890, 2.875, 2.855, 2.830])
+
+for i, chirp in enumerate(chirplist):
     chirpstring = 'chirp_' + '{:.3f}'.format(chirp) 
 
     dirpath = mzstring + '/'
@@ -55,6 +58,7 @@ for chirp in chirplist:
     mztitle = mzstring.replace('_', '=')
     chirptitle = chirpstring.replace('_', '=')
 
+    freqw *= rescaledata[i]
     cep_plot(freqw, phases, Int_exact_E_dir + Int_exact_ortho,
              mztitle + r'H ' + chirptitle + r'$\mathrm{MV}/\mathrm{cm}$',
              max=Int_max, show=False)

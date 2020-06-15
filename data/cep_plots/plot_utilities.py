@@ -112,9 +112,10 @@ def total_fourier(freqw, data_dir, data_ortho,
     ax.set_ylabel(ylabel)
     ax.set_title(r'Total Intensity')
     ax.set_xlabel(xlabel)
-    for freq, data in zip(freqw, data_dir+data_ortho):
+    data_total = data_dir + data_ortho
+    for freq, data in zip(freqw, data_total):
         ax.semilogy(freq, data)
-    ax.legend(paramlegend)
+    # ax.legend(paramlegend)
     fig.suptitle(dirname)
 
     if (savename is None):
