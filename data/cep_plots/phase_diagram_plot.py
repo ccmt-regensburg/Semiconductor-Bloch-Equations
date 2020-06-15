@@ -16,7 +16,7 @@ plt.rcParams['font.size'] = 20
 
 # Phase evaluation
 phases = np.linspace(0, np.pi, 20)
-orderpath = './data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
+orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
 
 # Evaluation parameters for fast scanning (phase diagram)
 mlist = np.linspace(0, 0.0275620, 6)
@@ -57,4 +57,5 @@ mztitle = mzstring.replace('_', '=')
 chirptitle = chirpstring.replace('_', '=')
 
 cep_plot(freqw, phases, Int_exact_E_dir + Int_exact_ortho,
-         mztitle + ' ' + chirptitle, max=Int_max)
+         mztitle + r'H ' + chirptitle + r'$\mathrm{MV}/\mathrm{cm}$',
+         max=Int_max)
