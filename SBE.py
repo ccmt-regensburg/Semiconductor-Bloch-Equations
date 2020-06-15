@@ -160,13 +160,12 @@ def main():
 
     # here,the time evolution of the density matrix is done
     solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
+                                                          gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, angle_inc_E_field, 
                                                           Bcurv_in_B_dynamics, 'density_matrix_dynamics')
 
     if do_emission_wavep:
        wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
-                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
+                                                                      gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, angle_inc_E_field,                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
     # COMPUTE OBSERVABLES
@@ -420,7 +419,7 @@ def main():
 
 
 def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, gamma1, gamma2, 
-                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, Bcurv_in_B_dynamics, 
+                   E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, angle_inc_E_field, Bcurv_in_B_dynamics, 
                    dynamics_type):
 
     if dynamics_type == 'density_matrix_dynamics' and user_out:
@@ -475,14 +474,16 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         # are provided and a cutoff radius
         '''
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
-        ecv_in_path = bandstruct[1] - bandstruct[0]
+        '''
+        bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field)
+        ecv_in_path = bandstruct[:,2] - bandstruct[:,1]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
-        ec = bandstruct[1]
-        '''
+        ec = bandstruct[:,2]
+    
 
-        bandstruct = epsilon.epsilon(params)
-
+        #print(*bandstruct, sep='\n')
+        #return bandstruct
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = []

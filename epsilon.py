@@ -32,20 +32,18 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
 
 
 
-def epsilon(params):
+def epsilon(Nk_in_Path, angle_inc_E_field):
 
     
     alpha = 0.1                                     # strength of spin-orbit coupling
-    Nk_in_path = params.Nk_in_path                  # Number of kpoints in each of the two paths
+                                                  # Number of kpoints in each of the two paths
 
-    angle_inc_E_field = params.angle_inc_E_field
     E_dir = np.array([np.cos(np.radians(angle_inc_E_field)), np.sin(np.radians(angle_inc_E_field))])
     dk, kpnts, paths = mesh(params, E_dir)
     
-    bandstruct = np.zeros(shape=(100,3))
-   # print(*bandstruct, sep='\n')
-   # return bandstruct
     length = -paths[0,0,0]
+    '''
+    bandstruct = np.zeros(shape=(100,3))
 
     for i in range(0,Nk_in_path):
 
@@ -55,8 +53,16 @@ def epsilon(params):
         e_plus = e_k + alpha
 
         bandstruct[i] = [k,e_minus,e_plus]
-
     
+    print(*bandstruct, sep='\n')
+    '''
+    
+    bandstruct = np.zeros(shape=(100,3))
+    bandstruct[:,0] = np.arange(-length, length+dk, dk)
+    bandstruct[:,1] = np.cos(bandstruct[:,0]/length*np.pi) -  alpha
+    bandstruct[:,2] = np.cos(bandstruct[:,0]/length*np.pi) + alpha
+
+    print(*bandstruct, sep='\n')
     '''
     x_val = [x[0] for x in bandstruct]
     y_val_m = [x[1] for x in bandstruct]
@@ -103,3 +109,6 @@ def mesh(params, E_dir):
     dk = 1.0/Nk_in_path*length_path_in_BZ
 
     return dk, np.array(mesh), np.array(paths)
+
+
+
