@@ -153,7 +153,7 @@ def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
     cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
 
-def cep_plot(freqw, phases, data, title, xlim=(0, 30), max=None, show=True):
+def cep_plot(freqw, phases, data, title, xlim=(0, 25), max=None, show=True):
     data = np.real(data)
     if (max is not None):
         data /= np.real(max)
@@ -163,22 +163,25 @@ def cep_plot(freqw, phases, data, title, xlim=(0, 30), max=None, show=True):
     log_min = np.log(np.min(data[data > min]))/np.log(10)
     F, P = np.meshgrid(freqw[0], phases)
 
-    # breakpoint()
+    fig, ax = plt.subplots()
     logspace = np.logspace(log_min, log_max, 100)
-    cont = plt.contourf(F, P, data, levels=logspace,
-                        locator=ticker.LogLocator(),
-                        cmap=cm.nipy_spectral,
-                        norm=colors.LogNorm(vmin=min, vmax=1))
-    plt.xlim(xlim)
-    plt.xlabel(r'$\omega/\omega_0$')
-    plt.ylabel(r'phase $\phi$')
+    cont = ax.contourf(F, P, data, levels=logspace,
+                       locator=ticker.LogLocator(),
+                       cmap=cm.nipy_spectral,
+                       norm=colors.LogNorm(vmin=min, vmax=1))
+
     cb = plt.colorbar(cont, ticks=[1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0])
     cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
     if (max is not None):
         cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
-    # cb.ax.tick_params(labelsize=7)
-    # cb.ax.set_yticklabels(np.logspace(1e-14, 1, 11))
+
+    ax.set_xticks(np.arange(xlim[1] + 1))
+    ax.grid(True, axis='x', ls='--')
+    ax.set_xlim(xlim)
+    ax.set_xlabel(r'$\omega/\omega_0$')
+    ax.set_ylabel(r'phase $\phi$')
     plt.title(title)
+
     if (show):
         plt.show()
 
