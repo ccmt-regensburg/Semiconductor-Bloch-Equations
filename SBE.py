@@ -178,16 +178,17 @@ def main():
 
     # Polar emission in time
     Ir = []
-    angles = np.linspace(0,2.0*np.pi,360)
+    angles = np.linspace(0,2.0*np.pi,361)
     for angle in angles:
-        Ir.append((I_E_dir*np.cos(angle) + I_ortho*np.sin(-angle)))
+        print("angle", angle, angle/np.pi*180, np.cos(angle), np.sin(-angle))
+        Ir.append((I_exact_E_dir*np.cos(angle) + I_exact_ortho*np.sin(-angle)))
 
     # Fourier transforms
     dt_out   = t[1]-t[0]
     freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t), d=dt_out))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
     Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
-    Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
+    Iw_r     = np.fft.fftshift(np.fft.fft(Ir*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_E_dir = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir), norm='ortho'))
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho), norm='ortho'))
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
@@ -440,7 +441,7 @@ def main():
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
         i_loop = 1
-        i_max = 20
+        i_max = 30
         while i_loop <= i_max:
             freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
             freq_index   = freq_indices[int(np.size(freq_indices)/2)]
@@ -458,6 +459,14 @@ def main():
                 pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/2.0))
                 pax.set_xticklabels([""])
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
+
+            if print_J_P_I_files:
+               if i_loop < 10:
+                  polar_filename = 'polar_0'+str(i_loop)
+               else:
+                  polar_filename = 'polar_'+str(i_loop)
+               np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,freq_index])/np.amax(np.abs(Iw_r[:,freq_index])) ]  )
+
             i_loop += 1
 
         # Plot Brilluoin zone with paths
