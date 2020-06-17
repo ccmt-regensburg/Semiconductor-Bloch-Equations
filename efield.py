@@ -18,11 +18,23 @@ c   = nOpt[2]
 d   = nOpt[3]
 e   = nOpt[4]
 
+nir_E0      = nOpt[0]
 nir_sigma   = nOpt[1]
 nir_mu      = nOpt[2]
 nir_w       = nOpt[3]
+nir_phi     = nOpt[4]
 
 with_nir    = True
+
+#if fitted_pulse:
+#    parameters = nir.opt_pulses()
+#
+#    print("Amplitude (without unit) =", parameters[0] )
+#    print("Broadening Gauss [fs]    =", parameters[1]/params.fs_conv  )
+#    print("Time shift [fs]          =", parameters[2]/params.fs_conv  )
+#    print("Frequency [THz]          =", parameters[3]/params.THz_conv )
+#    print("Chirp [THz]              =", parameters[4]/params.THz_conv )
+#    print("Phase                    =", parameters[5] )
 
 @njit
 def driving_field(Amplitude, t):
@@ -40,6 +52,5 @@ def driving_field(Amplitude, t):
             return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4])
 
     else:
-        return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)\
-                * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+        return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
