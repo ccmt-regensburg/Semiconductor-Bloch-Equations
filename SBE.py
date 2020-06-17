@@ -159,12 +159,12 @@ def main():
         do_B_field = False
 
     # here,the time evolution of the density matrix is done
-    solution, t, A_field, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+    solution, t, A_field, fermi_function, bandstruct = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                           gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, angle_inc_E_field, 
                                                           Bcurv_in_B_dynamics, 'density_matrix_dynamics')
 
     if do_emission_wavep:
-       wf_solution, t_wf, A_field_wf, fermi_function = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
+       wf_solution, t_wf, A_field_wf, fermi_function, bandstruct = time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fermi, temperature, dk, 
                                                                       gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, angle_inc_E_field,                                                                      Bcurv_in_B_dynamics, 'wavefunction_dynamics')
     n_time_steps = np.size(solution[0,0,:,0])
 
@@ -399,6 +399,14 @@ def main():
 
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
+        
+        fig6 = pl.figure()
+        x_val = [x[0] for x in bandstruct]
+        y_val_m = [x[1] for x in bandstruct]
+        y_val_p = [x[2] for x in bandstruct]
+        pl.plot(x_val,y_val_m) 
+        pl.plot(x_val,y_val_p)
+      
 
         pl.show()
 
@@ -459,7 +467,20 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+        #di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+
+        di_x = np.ones((2,2,100))
+        di_y = np.zeros((2,2,100))
+
+        print("------- di_x ---------")
+        print(*di_x,sep='\n')
+        
+        print("------- di_y ---------")
+        print(*di_y,sep='\n')
+
+        print(np.shape(di_x))
+
+
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
@@ -475,7 +496,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         '''
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
         '''
-        bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field)
+        bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field, paths, dk, E_dir)
         ecv_in_path = bandstruct[:,2] - bandstruct[:,1]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
@@ -567,7 +588,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         if dynamics_type == 'wavefunction_dynamics':
             fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
-    return solution, t, A_field, fermi_function
+    return solution, t, A_field, fermi_function, bandstruct
 
 #################################################################################################
 # FUNCTIONS
