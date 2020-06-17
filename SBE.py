@@ -176,25 +176,11 @@ def main():
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
 
-    # Polar emission in time
-#    Ir = []
-#    angles = np.linspace(0,2.0*np.pi,361)
-#    for angle in angles:
-#       print("angle", angle, angle/np.pi*180, np.cos(angle), np.sin(-angle))
-#       Ir.append((I_exact_E_dir*np.cos(angle) + I_exact_ortho*np.sin(-angle)))
-
-#    print("np.shape(np.array(Ir))", np.shape(np.array(Ir)))
-#
-#    print("Ir 0°  ", np.array(Ir)[0,:])
-#    print("Ir 360°", np.array(Ir)[-1,:])
-#    print("maxdiff Ir 0°  ", np.amax(np.abs(   np.array(Ir)[0,:] - np.array(Ir)[-1,:]   )   ))
-
     # Fourier transforms
     dt_out   = t[1]-t[0]
     freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t), d=dt_out))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
     Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
-#    Iw_r     = np.fft.fftshift(np.fft.fft(Ir*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_E_dir = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir), norm='ortho'))
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho), norm='ortho'))
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
@@ -209,13 +195,8 @@ def main():
     Iw_r = []
     angles = np.linspace(0,2.0*np.pi,361)
     for angle in angles:
-       print("angle", angle, angle/np.pi*180, np.cos(angle), np.sin(-angle))
        Iw_r.append(np.fft.fftshift(np.fft.fft( Gaussian_envelope(t,alpha) * (I_exact_E_dir*np.cos(angle) + I_exact_ortho*np.sin(-angle)))) )
-
     Iw_r = np.array(Iw_r)
-
-    print("Iw_r 0°  ", Iw_r[0,:])
-    print("Iw_r 360°", Iw_r[-1,:])
 
     if do_emission_wavep:
        Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
