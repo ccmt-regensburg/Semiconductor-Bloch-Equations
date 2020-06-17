@@ -177,18 +177,24 @@ def main():
                        diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
 
     # Polar emission in time
-    Ir = []
-    angles = np.linspace(0,2.0*np.pi,361)
-    for angle in angles:
-        print("angle", angle, angle/np.pi*180, np.cos(angle), np.sin(-angle))
-        Ir.append((I_exact_E_dir*np.cos(angle) + I_exact_ortho*np.sin(-angle)))
+#    Ir = []
+#    angles = np.linspace(0,2.0*np.pi,361)
+#    for angle in angles:
+#       print("angle", angle, angle/np.pi*180, np.cos(angle), np.sin(-angle))
+#       Ir.append((I_exact_E_dir*np.cos(angle) + I_exact_ortho*np.sin(-angle)))
+
+#    print("np.shape(np.array(Ir))", np.shape(np.array(Ir)))
+#
+#    print("Ir 0°  ", np.array(Ir)[0,:])
+#    print("Ir 360°", np.array(Ir)[-1,:])
+#    print("maxdiff Ir 0°  ", np.amax(np.abs(   np.array(Ir)[0,:] - np.array(Ir)[-1,:]   )   ))
 
     # Fourier transforms
     dt_out   = t[1]-t[0]
     freq     = np.fft.fftshift(np.fft.fftfreq(np.size(t), d=dt_out))
     Iw_E_dir = np.fft.fftshift(np.fft.fft(I_E_dir, norm='ortho'))
     Iw_ortho = np.fft.fftshift(np.fft.fft(I_ortho, norm='ortho'))
-    Iw_r     = np.fft.fftshift(np.fft.fft(Ir*Gaussian_envelope(t,alpha), norm='ortho'))
+#    Iw_r     = np.fft.fftshift(np.fft.fft(Ir*Gaussian_envelope(t,alpha), norm='ortho'))
     Pw_E_dir = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir), norm='ortho'))
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho), norm='ortho'))
     Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
@@ -199,6 +205,17 @@ def main():
     Iw_exact_diag_ortho = np.fft.fftshift(np.fft.fft(I_exact_diag_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_offd_E_dir = np.fft.fftshift(np.fft.fft(I_exact_offd_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
     Iw_exact_offd_ortho = np.fft.fftshift(np.fft.fft(I_exact_offd_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+
+    Iw_r = []
+    angles = np.linspace(0,2.0*np.pi,361)
+    for angle in angles:
+       print("angle", angle, angle/np.pi*180, np.cos(angle), np.sin(-angle))
+       Iw_r.append(np.fft.fftshift(np.fft.fft( Gaussian_envelope(t,alpha) * (I_exact_E_dir*np.cos(angle) + I_exact_ortho*np.sin(-angle)))) )
+
+    Iw_r = np.array(Iw_r)
+
+    print("Iw_r 0°  ", Iw_r[0,:])
+    print("Iw_r 360°", Iw_r[-1,:])
 
     if do_emission_wavep:
        Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
@@ -229,8 +246,8 @@ def main():
     Int_exact_diag_ortho = np.abs((freq**2)*Iw_exact_diag_ortho**2.0)
     Int_exact_offd_E_dir = np.abs((freq**2)*Iw_exact_offd_E_dir**2.0)
     Int_exact_offd_ortho = np.abs((freq**2)*Iw_exact_offd_ortho**2.0)
-    Iw_E_dir             = np.abs((freq**2)*Iw_E_dir**2.0)
-    Iw_ortho             = np.abs((freq**2)*Iw_ortho**2.0)
+    Int_E_dir            = np.abs((freq**2)*Iw_E_dir**2.0)
+    Int_ortho            = np.abs((freq**2)*Iw_ortho**2.0)
 
     freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
     freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
@@ -260,14 +277,14 @@ def main():
         P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
         I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-        np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Iw_E_dir, Iw_ortho])
+        np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Int_E_dir), np.abs(Int_ortho), Int_E_dir, Int_ortho])
 
         J_filename = str('J_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(J_filename, np.c_[freq/w, np.abs(freq**2*Jw_E_dir**2)/Int_tot_base_freq, np.abs(freq**2*Jw_ortho**2)/Int_tot_base_freq])
         P_filename = str('P_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(P_filename, np.c_[freq/w, np.abs(freq**2*Pw_E_dir**2)/Int_tot_base_freq, np.abs(freq**2*Pw_ortho**2)/Int_tot_base_freq])
         I_filename = str('I_KK_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
-        np.savetxt(I_filename, np.c_[freq/w, np.abs(Iw_E_dir)/Int_tot_base_freq, np.abs(Iw_ortho)/Int_tot_base_freq, (np.abs(Iw_E_dir)+np.abs(Iw_ortho))/Int_tot_base_freq])
+        np.savetxt(I_filename, np.c_[freq/w, np.abs(Int_E_dir)/Int_tot_base_freq, np.abs(Int_ortho)/Int_tot_base_freq, (np.abs(Int_E_dir)+np.abs(Int_ortho))/Int_tot_base_freq])
         Iex_filename = str('I_ex_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.savetxt(Iex_filename, np.c_[freq/w, np.abs(Int_exact_E_dir)/Int_tot_base_freq, np.abs(Int_exact_ortho)/Int_tot_base_freq, 
                                       (np.abs(Int_exact_E_dir)+np.abs(Int_exact_ortho))/Int_tot_base_freq ])
@@ -327,7 +344,7 @@ def main():
                label='$I_{\mathrm{inter}\parallel E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
 
            if not do_B_field:
-              ax_I_E_dir.semilogy(freq/w, Iw_E_dir / Int_tot_base_freq, 
+              ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
                  label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
               ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
                  label='$I_{\mathrm{intra} \parallel E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
@@ -345,7 +362,7 @@ def main():
            ax_I_ortho.semilogy(freq/w, Int_exact_offd_ortho / Int_tot_base_freq, linestyle='dashed',
                label='$I_{\mathrm{inter}\\bot E}(t) = q\sum_{n\\neq n\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$')
            if not do_B_field:
-              ax_I_ortho.semilogy(freq/w,Iw_ortho / Int_tot_base_freq, 
+              ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
                  label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
               ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
                  label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
@@ -360,7 +377,7 @@ def main():
            ax_I_total.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
               label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
            if not do_B_field:
-              ax_I_total.semilogy(freq/w,(Iw_E_dir+Iw_ortho) / Int_tot_base_freq, 
+              ax_I_total.semilogy(freq/w,(Int_E_dir+Int_ortho) / Int_tot_base_freq, 
                  label='$I_{\mathrm{i+i}}(t) = I_{\mathrm{i+i} \parallel E}(t) + I_{\mathrm{i+i} \\bot E}(t)$')
            ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
            ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
