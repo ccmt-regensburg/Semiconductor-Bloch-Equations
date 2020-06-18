@@ -28,13 +28,11 @@ dist = '0.03'
 mzstring = 'mz_' + '{:.7f}'.format(mz)
 
 dirpath = mzstring + '/'
-# dirpath += chirpstring + '/'
 
-# # Evluation parameters for simple plots
-# dist = '0.07'
-# dirpath = dist + '_dist_to_gamma/'
+phasename = 'phase_0.83'
 
-parampaths = ['chirp_' + '{:.3f}'.format(chirp) + '/phase_0.00/' for chirp in chirplist]
+parampaths = ['chirp_' + '{:.3f}'.format(chirp) + '/' + phasename + '/'
+              for chirp in chirplist]
 paramlegend = [m.strip('/').replace('_', '=') for m in parampaths]
 
 Idata, Iexactdata, Jdata, Pdata = read_data(orderpath, dirpath, parampaths)
@@ -55,6 +53,5 @@ Int_exact_ortho = (Int_exact_ortho.T/Int_exact_max).T
 
 
 Int_exact_output = np.real(Int_exact_E_dir + Int_exact_ortho).T
-print(np.min(Int_exact_output))
 Output = np.hstack((np.real(freqw.T[:, 0, np.newaxis]), Int_exact_output))
-np.savetxt("intensity.dat", Output)
+np.savetxt("intensity_" + phasename + ".dat", Output)
