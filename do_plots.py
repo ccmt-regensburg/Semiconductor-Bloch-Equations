@@ -67,11 +67,6 @@ def construct_plots():
     os.chdir(directory)
     print(os.getcwd() )
 
-    Int_tot_base_freq                                                   = np.load("Normalization.npy")[0]
-    freq, Int_exact_E_dir, Int_exact_ortho, Int_exact                   = np.transpose(np.loadtxt('I_ex') )/Int_tot_base_freq
-    freq, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_diag    = np.transpose(np.loadtxt('I_ex_diag') )/Int_tot_base_freq
-    freq, Int_exact_offd_E_dir, Int_exact_offd_ortho, Int_exact_offd    = np.transpose(np.loadtxt('I_ex_offd') )/Int_tot_base_freq
-
     t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho = np.transpose(np.loadtxt('time.txt') )
     freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho = np.transpose(np.loadtxt('frequency.txt') )
     
@@ -130,7 +125,7 @@ def construct_plots():
         axJ.plot(t/fs_conv,I_exact_ortho)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-        pl.savefig("EAI.pdf", dpi=300)
+        pl.savefig("EAJ.pdf", dpi=300)
 
 ##########################
 
@@ -252,6 +247,8 @@ def construct_plots():
         test_out['values'] = np.array([pol[t_zero],curr[t_zero],N_gamma[Nt-1],emis[f_5],emis[f_125],emis[f_15]])
         np.savetxt('test.dat',test_out, fmt='%16s %.16e')
 
+    return
+
 def diff(x, y):
     '''
     Takes the derivative of y w.r.t. x
@@ -320,8 +317,6 @@ def mesh(params, E_dir):
     # Create the kpoint mesh and the paths
 #    for path_index in [-1, 1]:
     for path_index in np.linspace(-num_paths+1,num_paths-1, num = num_paths):
-
-        print("path_index",path_index)
 
         # Container for a single path
         path = []
