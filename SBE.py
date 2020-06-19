@@ -476,12 +476,8 @@ def main():
 
            for i_freq in range(np.size(Int_exact_total)-1):
 
-#           local_maxima = np.r_[ True, Int_exact_total[1:] > Int_exact_total[:-1] ] & np.r_[ Int_exact_total[:-1] > Int_exact_total[1:], True ]
-
                if Int_exact_total[i_freq] > Int_exact_total[i_freq-1] and Int_exact_total[i_freq] > Int_exact_total[i_freq+1]:
                  local_maxima.append(i_freq)
-
-           print("local_maxima =", freq[local_maxima] / w )
 
            for local_maximum in local_maxima:
 
@@ -489,15 +485,11 @@ def main():
                   continue
 
                if freq[local_maximum]/w < 10:
-#                  polar_filename = 'polar_0'+str(freq[local_maximum]/w )
                   polar_filename = 'polar_0'+str('{:1.2f}').format(freq[local_maximum]/w)
                else:
                   polar_filename = 'polar_'+str('{:2.2f}').format(freq[local_maximum]/w)
 
-
-
                np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,local_maximum])/np.amax(np.abs(Iw_r[:,local_maximum])) ]  )
-
 
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
