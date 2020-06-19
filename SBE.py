@@ -459,6 +459,7 @@ def main():
                 pax.set_title('HH'+str(i_loop), va='top', pad=15)
 
             if print_J_P_I_files:
+
                if i_loop < 10:
                   polar_filename = 'polar_0'+str(i_loop)
                else:
@@ -466,6 +467,37 @@ def main():
                np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,freq_index])/np.amax(np.abs(Iw_r[:,freq_index])) ]  )
 
             i_loop += 1
+
+        if print_J_P_I_files:
+
+           Int_exact_total = Int_exact_E_dir + Int_exact_ortho
+
+           local_maxima = []
+
+           for i_freq in range(np.size(Int_exact_total)-1):
+
+#           local_maxima = np.r_[ True, Int_exact_total[1:] > Int_exact_total[:-1] ] & np.r_[ Int_exact_total[:-1] > Int_exact_total[1:], True ]
+
+               if Int_exact_total[i_freq] > Int_exact_total[i_freq-1] and Int_exact_total[i_freq] > Int_exact_total[i_freq+1]:
+                 local_maxima.append(i_freq)
+
+           print("local_maxima =", freq[local_maxima] / w )
+
+           for local_maximum in local_maxima:
+
+               if freq[local_maximum]/w < 0:
+                  continue
+
+               if freq[local_maximum]/w < 10:
+#                  polar_filename = 'polar_0'+str(freq[local_maximum]/w )
+                  polar_filename = 'polar_0'+str('{:1.2f}').format(freq[local_maximum]/w)
+               else:
+                  polar_filename = 'polar_'+str('{:2.2f}').format(freq[local_maximum]/w)
+
+
+
+               np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,local_maximum])/np.amax(np.abs(Iw_r[:,local_maximum])) ]  )
+
 
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
