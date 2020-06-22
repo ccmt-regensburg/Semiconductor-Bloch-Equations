@@ -1,3 +1,4 @@
+import params
 import numpy as np
 import os
 from numba import njit
@@ -9,7 +10,6 @@ from sys import exit
 
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
-import params
 import systems as sys
 import efield
 from efield import driving_field
@@ -191,7 +191,7 @@ def main():
         [], [], [], [], [], [], [], [], [], [], [], [], [], []
 
         # here,the time evolution of the density matrix is done
-        t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho = \
+        t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c = \
                     time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                    gamma1, gamma2, E0, B0, w, chirp, alpha, phase, nir_t0, do_B_field, gauge, normalize_f_valence, dt_out, BZ_type, Nk1, Nk_in_path, 
                                    Bcurv_in_B_dynamics, 'density_matrix_dynamics',
@@ -311,7 +311,8 @@ def main():
 
     if print_J_P_I_files:  
         old_directory   = os.getcwd()
-        os.chdir("../generated_data/" + gauge)
+        #os.chdir("../generated_data/" + gauge)
+        os.chdir("/loctmp/nim60855/generated_data/" + gauge)
         directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
 
         if not os.path.exists(directory):
@@ -323,6 +324,7 @@ def main():
         np.savetxt("time.txt", np.transpose(data ) )
         data    = [freq/w, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho]
         np.savetxt("frequency.txt", np.transpose(data ) )
+        np.savetxt("conduction_occupation.txt", np.transpose(f_c).real)
 
         os.chdir(old_directory)
 
@@ -469,6 +471,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
         # COMPUTE OBSERVABLES
         ###########################################################################
+        f_c     = solution[:,0,:,3]         #Occupation of the conduction band
 
         if path_num == 1:                                                                                                      
             n_time_steps = np.size(solution[0,0,:,0]) 
@@ -523,7 +526,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         solution = shift_solution(solution, A_field, dk, dynamics_type)
         fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
-    return t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho
+    return t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c
 
 #################################################################################################
 # FUNCTIONS
