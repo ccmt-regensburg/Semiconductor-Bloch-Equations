@@ -400,15 +400,8 @@ def main():
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
         
-        fig6 = pl.figure()
-        x_val = [x[0] for x in bandstruct]
-        y_val_m = [x[1] for x in bandstruct]
-        y_val_p = [x[2] for x in bandstruct]
-        pl.plot(x_val,y_val_m) 
-        pl.plot(x_val,y_val_p)
-      
-
-        pl.show()
+        #fig6 = pl.figure()
+        
 
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -469,16 +462,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         # Calculate the dipole components along the path
         #di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
 
-        di_x = np.ones((2,2,100))
-        di_y = np.zeros((2,2,100))
-
-        print("------- di_x ---------")
-        print(*di_x,sep='\n')
-        
-        print("------- di_y ---------")
-        print(*di_y,sep='\n')
-
-        print(np.shape(di_x))
+        di_x, di_y = epsilon.dipole() 
 
 
 
@@ -502,8 +486,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         ec_in_path = ecv_in_path/2
         ec = bandstruct[:,2]
     
-
-        #print(*bandstruct, sep='\n')
         #return bandstruct
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
@@ -623,6 +605,7 @@ def mesh(params, E_dir):
         paths.append(path)
 
     dk = 1.0/Nk_in_path*length_path_in_BZ
+
 
     return dk, np.array(mesh), np.array(paths)
 
@@ -756,8 +739,8 @@ def polarization(paths, pcv, E_dir, scale_dipole_emiss):
         ky_in_path = path[:, 1]
 
         # Evaluate the dipole moments in path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
-
+        di_x, di_y = epsilon.dipole()
+        
         # Append the dot product d.E
         d_E_dir.append(di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1])
         d_ortho.append(di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1])
