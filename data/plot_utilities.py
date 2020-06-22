@@ -153,12 +153,12 @@ def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
     cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
 
-def cep_plot(freqw, phases, data, title, xlim=(0, 25), max=None, show=True):
+def cep_plot(freqw, phases, data, title, xlim=(0, 35), max=None, show=True):
     data = np.real(data)
     if (max is not None):
         data /= np.real(max)
 
-    min = 1e-14
+    min = 1e-12
     log_max = np.log(np.max(data))/np.log(10)
     log_min = np.log(np.min(data[data > min]))/np.log(10)
     F, P = np.meshgrid(freqw[0], phases)
@@ -167,10 +167,13 @@ def cep_plot(freqw, phases, data, title, xlim=(0, 25), max=None, show=True):
     logspace = np.logspace(log_min, log_max, 100)
     cont = ax.contourf(F, P, data, levels=logspace,
                        locator=ticker.LogLocator(),
-                       cmap=cm.nipy_spectral,
-                       norm=colors.LogNorm(vmin=min, vmax=1))
+                       cmap=cm.gist_ncar,
+                       norm=colors.LogNorm(vmin=min, vmax=1e-0))
 
-    cb = plt.colorbar(cont, ticks=[1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0])
+    # tickposition = [1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0]
+    tickposition = [1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0] 
+    # tickposition = [1e-16, 1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0]
+    cb = plt.colorbar(cont, ticks=tickposition)
     cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
     if (max is not None):
         cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
@@ -212,4 +215,4 @@ def find_max_intens(freqw, data_dir, data_ortho):
     data_max = np.max(data, axis=1)
     max = np.average(data_max)
 
-    return np.real(max)
+    return np.real(max), data_max

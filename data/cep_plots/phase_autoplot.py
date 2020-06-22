@@ -17,21 +17,19 @@ plt.rcParams['font.size'] = 20
 # Phase evaluation
 phases = np.linspace(0, np.pi, 20)
 orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
+# orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/0.03_dist_to_gamma/'
 
 # Evaluation parameters for fast scanning (phase diagram)
-mlist = np.linspace(0, 0.0275620, 6)
+mlist = np.linspace(0, 0.0165372, 7)
 chirplist = np.linspace(-0.92, 0.92, 11)
 
-mz = mlist[3]
+mz = mlist[1]
 dist = '0.03'
 
 mzstring = 'mz_' + '{:.7f}'.format(mz)
 
-rescaledata = 2.920/np.array([2.980, 2.970, 2.960, 2.945, 2.930, 2.920, 2.905,
-                              2.890, 2.875, 2.855, 2.830])
-
 for i, chirp in enumerate(chirplist):
-    chirpstring = 'chirp_' + '{:.3f}'.format(chirp) 
+    chirpstring = 'chirp_' + '{:.3f}'.format(chirp)
 
     dirpath = mzstring + '/'
     dirpath += chirpstring + '/'
@@ -53,14 +51,18 @@ for i, chirp in enumerate(chirplist):
     # Int_exact_E_dir = (Int_exact_E_dir.T/Int_exact_base_freq).T
     # Int_exact_ortho = (Int_exact_ortho.T/Int_exact_base_freq).T
 
-    Int_max = find_max_intens(freqw, Int_exact_E_dir, Int_exact_ortho)
+    Int_avg_max, Int_max = find_max_intens(freqw, Int_exact_E_dir,
+                                           Int_exact_ortho)
 
+    # breakpoint()
     mztitle = mzstring.replace('_', '=')
     chirptitle = chirpstring.replace('_', '=')
 
-    freqw *= rescaledata[i]
-    cep_plot(freqw, phases, Int_exact_E_dir + Int_exact_ortho,
+    # freqw *= rescaledata[i]
+    Int_data = ((Int_exact_E_dir + Int_exact_ortho).T/np.real(Int_max)).T
+    cep_plot(freqw, phases, Int_data,
              mztitle + r'H ' + chirptitle + r'$\mathrm{MV}/\mathrm{cm}$',
-             max=Int_max, show=False)
-    plt.savefig(mzstring + '_' + chirpstring + '.png')
+             max=None, show=False)
+    numberstring = '{:02d}'.format(i)
+    plt.savefig(numberstring + '_' + mzstring + '_' + chirpstring + '.png')
     plt.clf()
