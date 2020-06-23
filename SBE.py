@@ -484,6 +484,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         ecv_in_path = bandstruct[:,2] - bandstruct[:,1]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
+        ecv_in_path     = ecv_in_path.astype(complex)
         ec = bandstruct[:,2]
     
         #return bandstruct

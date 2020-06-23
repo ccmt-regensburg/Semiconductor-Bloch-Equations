@@ -1,13 +1,13 @@
 import numpy as np
 import params
-#from numba import njit
+from numba import njit
 import matplotlib.pyplot as pl
 #from matplotlib import patches
 #from scipy.integrate import ode
 #from scipy.special import erf
 #from sys import exit
-
-
+from matplotlib import rc
+rc("text", usetex=False)
 
 def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_type):
     e_v = bandstruct[i_k,1]
@@ -27,7 +27,6 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
             y0_e_minus = 1
 
         y0.extend([y0_e_minus,0.0,0.0,y0_e_plus,0.0,0.0,0.0,0.0])
-
 
 
 def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
@@ -52,7 +51,6 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     x_val = [x[0] for x in bandstruct]
     y_val_m = [x[1] for x in bandstruct]
     y_val_p = [x[2] for x in bandstruct]
-
     pl.plot(x_val,y_val_m) 
     pl.plot(x_val,y_val_p)
     pl.show()
@@ -61,19 +59,23 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     x_val = [x[0] for x in bandstruct]
     y_val_m = [x[1] for x in bandstruct]
     y_val_p = [x[2] for x in bandstruct]
-
-    fig6, axis = pl.subplots(figsize=(10,10))
-    axis.plot(x_val,y_val_m,label= "e_minus") 
-    axis.plot(x_val,y_val_p, label = "e_plus")
-    #pl.xlabel(r'$k_x$ ($1/a_0$)')
-    pl.show()
+  
+    fig6 = pl.figure()
+    pl.plot(x_val,y_val_m,label=r'$\epsilon_{minus}$') 
+    pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
+    pl.xlabel(r'$k_x$')
+    pl.ylabel(r'$\epsilon$')
+    pl.legend()
+    pl.title("Bandstructure")
+    #pl.show()
     return bandstruct
 
+@njit
 def dipole():
-    part1 = np.ones(100)
-    part0 = np.zeros(100)
+    part1 = np.ones(100, dtype=np.complex128)
+    part0 = np.zeros(100, dtype=np.complex128)
     di_x = np.concatenate((part0,part1,part1,part0)).reshape(2,2,100)
-    di_y = np.zeros((2,2,100))
+    di_y = np.zeros((2,2,100), dtype=np.complex128)
 
     '''
     print("------- di_x ---------")
