@@ -400,8 +400,19 @@ def main():
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
         
-        #fig6 = pl.figure()
-        
+        fig6 = pl.figure()
+        x_val = [x[0] for x in bandstruct]
+        y_val_m = [x[1] for x in bandstruct]
+        y_val_p = [x[2] for x in bandstruct]
+  
+        pl.plot(x_val,y_val_m,label=r'$\epsilon_{minus}$') 
+        pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
+        pl.xlabel(r'$k_x$')
+        pl.ylabel(r'$\epsilon$')
+        pl.legend()
+        pl.title("Bandstructure")
+        pl.show()               
+                                  
 
     # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -461,7 +472,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
         # Calculate the dipole components along the path
         #di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
-
         di_x, di_y = epsilon.dipole() 
 
 
@@ -484,7 +494,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
         ecv_in_path = bandstruct[:,2] - bandstruct[:,1]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
-        ecv_in_path     = ecv_in_path.astype(complex)
         ec = bandstruct[:,2]
     
         #return bandstruct
@@ -740,6 +749,7 @@ def polarization(paths, pcv, E_dir, scale_dipole_emiss):
         ky_in_path = path[:, 1]
 
         # Evaluate the dipole moments in path
+        #di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
         di_x, di_y = epsilon.dipole()
         
         # Append the dot product d.E

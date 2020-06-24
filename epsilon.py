@@ -46,31 +46,9 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     bandstruct[:,1] = -1*(np.cos(bandstruct[:,0]/length*np.pi) +  np.sqrt((k_x2+k_y2)))  # e_minus or e_v
     bandstruct[:,2] = -1*(np.cos(bandstruct[:,0]/length*np.pi) -  np.sqrt((k_x2+k_y2)))  # e_plus or e_c
 
-    #print(*bandstruct, sep='\n')
-    '''
-    x_val = [x[0] for x in bandstruct]
-    y_val_m = [x[1] for x in bandstruct]
-    y_val_p = [x[2] for x in bandstruct]
-    pl.plot(x_val,y_val_m) 
-    pl.plot(x_val,y_val_p)
-    pl.show()
-    '''
-  
-    x_val = [x[0] for x in bandstruct]
-    y_val_m = [x[1] for x in bandstruct]
-    y_val_p = [x[2] for x in bandstruct]
-  
-    fig6 = pl.figure()
-    pl.plot(x_val,y_val_m,label=r'$\epsilon_{minus}$') 
-    pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
-    pl.xlabel(r'$k_x$')
-    pl.ylabel(r'$\epsilon$')
-    pl.legend()
-    pl.title("Bandstructure")
-    #pl.show()
     return bandstruct
 
-@njit
+
 def dipole():
     part1 = np.ones(100, dtype=np.complex128)
     part0 = np.zeros(100, dtype=np.complex128)
