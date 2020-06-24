@@ -13,8 +13,9 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
     e_v = bandstruct[i_k,1]
     e_c = bandstruct[i_k,2]
     if (temperature > 1e-5):
-        fermi_function = 1/(np.exp((e_c[i_k])/temperature)+1)
-        y0.extend([1.0,0.0,0.0,fermi_function,0.0,0.0,0.0,0.0])
+        fermi_function_e_c = 1/(np.exp((e_c-e_fermi)/temperature)+1)
+        fermi_function_e_v = 1/(np.exp((e_v-e_fermi)/temperature)+1)
+        y0.extend([fermi_function_e_v,0.0,0.0,fermi_function_e_c,0.0,0.0,0.0,0.0])
     else:
         if (e_c>0):
             y0_e_plus = 0
@@ -45,7 +46,6 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     
     bandstruct[:,1] = -1*(np.cos(bandstruct[:,0]/length*np.pi) +  np.sqrt((k_x2+k_y2)))  # e_minus or e_v
     bandstruct[:,2] = -1*(np.cos(bandstruct[:,0]/length*np.pi) -  np.sqrt((k_x2+k_y2)))  # e_plus or e_c
-
     return bandstruct
 
 

@@ -407,7 +407,7 @@ def main():
   
         pl.plot(x_val,y_val_m,label=r'$\epsilon_{minus}$') 
         pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
-        pl.xlabel(r'$k_x$')
+        pl.xlabel(r'$k_x$ / ($1/a_0$)')
         pl.ylabel(r'$\epsilon$')
         pl.legend()
         pl.title("Bandstructure")
