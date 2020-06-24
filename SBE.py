@@ -436,60 +436,69 @@ def main():
 #        pl.ylabel(r'$k$')
 #        pl.tight_layout()
 
-        # High-harmonic emission polar plots
-        polar_fig = pl.figure(figsize=(10, 10))
-        i_loop = 1
-        i_max = 30
-        while i_loop <= i_max:
-            freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
-            freq_index   = freq_indices[int(np.size(freq_indices)/2)]
-            pax          = polar_fig.add_subplot(1,i_max,i_loop,projection='polar')
-            pax.plot(angles,np.abs(Iw_r[:,freq_index]))
-            rmax = pax.get_rmax()
-            pax.set_rmax(1.1*rmax)
-            pax.set_yticklabels([""])
-            if i_loop == 1:
-                pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax,1.0*rmax],labels=None, angle=None, fmt=None)
-                pax.set_title('HH'+str(i_loop), va='top', pad=30)
-                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
-            else:
-                pax.set_rgrids([0.0],labels=None, angle=None, fmt=None)
-                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/2.0))
-                pax.set_xticklabels([""])
-                pax.set_title('HH'+str(i_loop), va='top', pad=15)
 
-            if print_J_P_I_files:
 
-               if i_loop < 10:
-                  polar_filename = 'polar_0'+str(i_loop)
-               else:
-                  polar_filename = 'polar_'+str(i_loop)
-               np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,freq_index])/np.amax(np.abs(Iw_r[:,freq_index])) ]  )
+    if (not test and user_out):
+       # High-harmonic emission polar plots
+       polar_fig = pl.figure(figsize=(10, 10))
 
-            i_loop += 1
+    i_loop = 1
+    i_max = 30
+    while i_loop <= i_max:
+        freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
+        freq_index   = freq_indices[int(np.size(freq_indices)/2)]
+
+        if (not test and user_out):
+           pax          = polar_fig.add_subplot(1,i_max,i_loop,projection='polar')
+           pax.plot(angles,np.abs(Iw_r[:,freq_index]))
+           rmax = pax.get_rmax()
+           pax.set_rmax(1.1*rmax)
+           pax.set_yticklabels([""])
+           if i_loop == 1:
+               pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax,1.0*rmax],labels=None, angle=None, fmt=None)
+               pax.set_title('HH'+str(i_loop), va='top', pad=30)
+               pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/6.0))
+           else:
+               pax.set_rgrids([0.0],labels=None, angle=None, fmt=None)
+               pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/2.0))
+               pax.set_xticklabels([""])
+               pax.set_title('HH'+str(i_loop), va='top', pad=15)
 
         if print_J_P_I_files:
 
-           Int_exact_total = Int_exact_E_dir + Int_exact_ortho
+           if i_loop < 10:
+              polar_filename = 'polar_0'+str(i_loop)
+           else:
+              polar_filename = 'polar_'+str(i_loop)
+           np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,freq_index])/np.amax(np.abs(Iw_r[:,freq_index])) ]  )
 
-           local_maxima = []
+        i_loop += 1
 
-           for i_freq in range(np.size(Int_exact_total)-1):
+    if print_J_P_I_files:
 
-               if Int_exact_total[i_freq] > Int_exact_total[i_freq-1] and Int_exact_total[i_freq] > Int_exact_total[i_freq+1]:
-                 local_maxima.append(i_freq)
+       Int_exact_total = Int_exact_E_dir + Int_exact_ortho
 
-           for local_maximum in local_maxima:
+       local_maxima = []
 
-               if freq[local_maximum]/w < 0:
-                  continue
+       for i_freq in range(np.size(Int_exact_total)-1):
 
-               if freq[local_maximum]/w < 10:
-                  polar_filename = 'polar_0'+str('{:1.2f}').format(freq[local_maximum]/w)
-               else:
-                  polar_filename = 'polar_'+str('{:2.2f}').format(freq[local_maximum]/w)
+           if Int_exact_total[i_freq] > Int_exact_total[i_freq-1] and Int_exact_total[i_freq] > Int_exact_total[i_freq+1]:
+             local_maxima.append(i_freq)
 
-               np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,local_maximum])/np.amax(np.abs(Iw_r[:,local_maximum])) ]  )
+       for local_maximum in local_maxima:
+
+           if freq[local_maximum]/w < 0:
+              continue
+
+           if freq[local_maximum]/w < 10:
+              polar_filename = 'polar_0'+str('{:1.2f}').format(freq[local_maximum]/w)
+           else:
+              polar_filename = 'polar_'+str('{:2.2f}').format(freq[local_maximum]/w)
+
+           np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,local_maximum])/np.amax(np.abs(Iw_r[:,local_maximum])) ]  )
+
+
+    if (not test and user_out):
 
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
