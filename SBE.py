@@ -221,14 +221,15 @@ def main():
         Iw_exact_offd_ortho = Iw_exact_offd_ortho*kpoint_weight
 
     # Emission intensity (exact formula)
-    Int_exact_E_dir      = np.abs((freq**2)*Iw_exact_E_dir**2.0)
-    Int_exact_ortho      = np.abs((freq**2)*Iw_exact_ortho**2.0)
-    Int_exact_diag_E_dir = np.abs((freq**2)*Iw_exact_diag_E_dir**2.0)
-    Int_exact_diag_ortho = np.abs((freq**2)*Iw_exact_diag_ortho**2.0)
-    Int_exact_offd_E_dir = np.abs((freq**2)*Iw_exact_offd_E_dir**2.0)
-    Int_exact_offd_ortho = np.abs((freq**2)*Iw_exact_offd_ortho**2.0)
-    Int_E_dir            = np.abs((freq**2)*Iw_E_dir**2.0)
-    Int_ortho            = np.abs((freq**2)*Iw_ortho**2.0)
+    prefac_emission      = 1/(3*(137.036**3)) # 1/(3c^3) in atomic units
+    Int_exact_E_dir      = prefac_emission*np.abs((freq**2)*Iw_exact_E_dir**2.0)
+    Int_exact_ortho      = prefac_emission*np.abs((freq**2)*Iw_exact_ortho**2.0)
+    Int_exact_diag_E_dir = prefac_emission*np.abs((freq**2)*Iw_exact_diag_E_dir**2.0)
+    Int_exact_diag_ortho = prefac_emission*np.abs((freq**2)*Iw_exact_diag_ortho**2.0)
+    Int_exact_offd_E_dir = prefac_emission*np.abs((freq**2)*Iw_exact_offd_E_dir**2.0)
+    Int_exact_offd_ortho = prefac_emission*np.abs((freq**2)*Iw_exact_offd_ortho**2.0)
+    Int_E_dir            = prefac_emission*np.abs((freq**2)*Iw_E_dir**2.0)
+    Int_ortho            = prefac_emission*np.abs((freq**2)*Iw_ortho**2.0)
 
     freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
     freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
@@ -327,9 +328,9 @@ def main():
            if not do_B_field:
               ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
                  label='$I_{\mathrm{i+i} \parallel E}(t) = I_{\mathrm{intra} \parallel E}(t) + I_{\mathrm{inter} \parallel E}(t)$')
-              ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
+              ax_I_E_dir.semilogy(freq/w, prefac_emission*np.abs(freq**2*Jw_E_dir**2) / Int_tot_base_freq,  linestyle='dashed',
                  label='$I_{\mathrm{intra} \parallel E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_E\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
-              ax_I_E_dir.semilogy(freq/w,np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
+              ax_I_E_dir.semilogy(freq/w, prefac_emission*np.abs(freq**2*Pw_E_dir**2) / Int_tot_base_freq, linestyle='dashed', 
                  label='$I_{\mathrm{inter} \parallel E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_E\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
            ax_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
            ax_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
@@ -345,9 +346,9 @@ def main():
            if not do_B_field:
               ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
                  label='$I_{\mathrm{i+i} \\bot E}(t) = I_{\mathrm{intra} \\bot E}(t) + I_{\mathrm{inter} \\bot E}(t)$')
-              ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
+              ax_I_ortho.semilogy(freq/w, prefac_emission*np.abs(freq**2*Jw_ortho**2) / Int_tot_base_freq,  linestyle='dashed',
                  label='$I_{\mathrm{intra} \\bot E}(t) = q\sum_{n}\int d\mathbf{k}\; \hat{e}_{\\bot E}\cdot\partial \\epsilon_n/\partial\mathbf{k}\;\\rho_{nn(\mathbf{k},t)}$')
-              ax_I_ortho.semilogy(freq/w,np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, linestyle='dashed',
+              ax_I_ortho.semilogy(freq/w, prefac_emission*np.abs(freq**2*Pw_ortho**2) / Int_tot_base_freq, linestyle='dashed',
                  label='$I_{\mathrm{inter} \\bot E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_{\\bot E}\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
            ax_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
            ax_I_ortho.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
