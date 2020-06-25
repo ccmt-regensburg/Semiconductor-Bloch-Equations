@@ -37,7 +37,7 @@ def run():
                 os.mkdir(dirname_phase)
             os.chdir(dirname_phase)
 
-            system = hfsbe.example.Semiconductor(A=A, mx=mx, a=params.a)
+            system = hfsbe.example.Semiconductor(A=A, mx=mx, a=params.a, align=True)
             h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
             dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
             solver(system, dipole, params)
