@@ -6,7 +6,7 @@ class params:
 # System parameters
 #########################################################################
     a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
-    e_fermi             = 0.2         # Fermi energy in eV
+    e_fermi             = 0.0         # Fermi energy in eV
     temperature         = 0.03        # Temperature in eV
 
     # Model Hamiltonian parameters
@@ -14,7 +14,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = '2line'
+    BZ_type = 'full'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
