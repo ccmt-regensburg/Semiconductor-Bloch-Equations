@@ -653,10 +653,12 @@ def initial_condition(e_fermi, temperature, e_c):
     ones = np.ones(knum)
     zeros = np.zeros(knum)
     if (temperature > 1e-5):
-        distrib = 1/(np.exp((e_c-e_fermi)/temperature)+1)
+        distrib = 1/(np.exp((e_c-e_fermi)/temperature) + 1)
         return np.array([ones, zeros, zeros, distrib]).flatten('F')
     else:
-        return np.array([ones, zeros, zeros, zeros]).flatten('F')
+        smaller_e_fermi = (e_fermi - e_c) < 0
+        distrib = ones[smaller_e_fermi]
+        return np.array([ones, zeros, zeros, distrib]).flatten('F')
 
 
 def BZ_plot(kpnts, a, b1, b2, paths):

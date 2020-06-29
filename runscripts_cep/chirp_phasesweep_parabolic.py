@@ -17,10 +17,8 @@ def run():
     mzlist = np.linspace(0, mz_max, 7)
     mz = mzlist[1]
 
-    # Initialize sympy bandstructure, energies/derivatives, dipoles
-    # ## Bismuth Teluride calls
-    # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
-    # Sweep Wilson mass
+
+
     for chirp in np.linspace(-0.920, 0.920, 11):
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
