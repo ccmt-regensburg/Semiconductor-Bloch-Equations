@@ -59,24 +59,36 @@ def construct_plots():
 
     ############ load the data from the files in the given path ###########
     old_directory   = os.getcwd()
-    os.chdir("../generated_data/" + gauge)
-    directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
-    local_dir       = "/loctmp/nim60855/generated_data/" + gauge + "/" + directory + "/"
 
+    if not params.with_transient:
+        zusatz      = "without_transient/"
+    else:
+        zusatz      = ""
+
+    os.chdir("../generated_data/" + zusatz + gauge)
+    directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
+
+
+    local_dir       = "/loctmp/nim60855/generated_data/" + zusatz + gauge + "/" + directory + "/"
     if not os.path.exists(local_dir):
-        print("This parameter configuration has not yet been calculated")
-        return 0
+        local_dir   = "/home/maximilian/Documents/studium/generated_data/" + zusatz + gauge + "/" + directory + "/"
+        if not os.path.exists(local_dir):
+            print("This parameter configuration has not yet been calculated")
+            return 0
 
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     os.chdir(directory)
-    home_dir        = os.getcwd() 
-    print(home_dir)
+    print("Currently plotting:", gauge, Nk1)
 
     t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt(local_dir + 'time.txt') )
     freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho  = np.transpose(np.loadtxt(local_dir + 'frequency.txt') )
     f_c             = np.transpose(np.loadtxt(local_dir + "conduction_occupation.txt") )
+    print(np.amax(I_exact_diag_ortho) )
+    print(np.amax(I_exact_diag_E_dir) )
+    print(np.amax(I_exact_offd_ortho) )
+    print(np.amax(I_exact_offd_E_dir) )
 
     t       *= fs_conv
     freq    *= w
@@ -117,9 +129,13 @@ def construct_plots():
 
     ############ generate plots ###########
     if (not test and user_out):
-        real_fig, (axE,axA,axI,axP,axJ) = pl.subplots(5,1,figsize=(10,10))
+        real_fig, (axE,axA,axI,axJ,axP) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
+
+        E_constructed   = -np.diff(A_field/E_conv)/(t[1]-t[0])*1.602
+        axE.plot(t[1:]/fs_conv, E_constructed)
+
         axE.set_xlim(t_lims)
         axE.plot(t/fs_conv, driving_field(E0, t)/E_conv)
         axE.set_xlabel(r'$t$ in fs')
@@ -134,19 +150,19 @@ def construct_plots():
         axI.plot(t/fs_conv,I_exact_E_dir)
         axI.plot(t/fs_conv,I_exact_ortho)
         axI.set_xlabel(r'$t$ in fs')
-        axI.set_ylabel(r'$I$ in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
-
-        axP.set_xlim(t_lims)
-        axP.plot(t/fs_conv,I_exact_diag_E_dir)
-        axP.plot(t/fs_conv,I_exact_diag_ortho)
-        axP.set_xlabel(r'$t$ in fs')
-        axP.set_ylabel(r'$P$ in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axI.set_ylabel(r'$J$ in at.u.')
 
         axJ.set_xlim(t_lims)
-        axJ.plot(t/fs_conv,I_exact_offd_E_dir)
-        axJ.plot(t/fs_conv,I_exact_offd_ortho)
+        axJ.plot(t/fs_conv,I_exact_diag_E_dir)
+        axJ.plot(t/fs_conv,I_exact_diag_ortho)
         axJ.set_xlabel(r'$t$ in fs')
-        axJ.set_ylabel(r'$J$ in a.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axJ.set_ylabel(r'$J_{diag}$ in at.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+
+        axP.set_xlim(t_lims)
+        axP.plot(t/fs_conv,I_exact_offd_E_dir)
+        axP.plot(t/fs_conv,I_exact_offd_ortho)
+        axP.set_xlabel(r'$t$ in fs')
+        axP.set_ylabel(r'$J_{offdiag}$ in at.u.')
 
         pl.savefig("EAJ.pdf", dpi=300)
 
@@ -257,7 +273,9 @@ def construct_plots():
         # Countour plots of occupations and gradients of occupations
         fig5    = pl.figure()
         X, Y = np.meshgrid(t/fs_conv,kp_array)
-        pl.contourf(X, Y+A_field, np.real(f_c), 100)
+        if gauge == "velocity":
+            Y += A_field
+        pl.contourf(X, Y, np.real(f_c), 100)
         pl.colorbar().set_label(r'$f_c(k)$ in path 0')
         pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
         pl.xlabel(r'$t\;(fs)$')
@@ -265,7 +283,7 @@ def construct_plots():
         pl.tight_layout()
         pl.savefig("conduction.pdf", dpi=300)
 
-        pl.show()
+        #pl.show()
 
    # OUTPUT STANDARD TEST VALUES
     ##############################################################################################

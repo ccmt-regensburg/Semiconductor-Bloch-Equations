@@ -11,11 +11,19 @@ a                   = 8.308
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
+#C0 = -0.00647156                  # C0
+#c2 = 0.0117598                    # k^2 coefficient
+#A = 0.0422927                     # Fermi velocity
+#r = 0.109031                      # k^3 coefficient
+#ksym = 0.0635012                  # k^2 coefficent dampening
+#kasym = 0.113773                  # k^3 coeffcient dampening
+#mb = 0.000373195                  # Splitting of cones.(10 meV)
+
 # Model Hamiltonian parameters
 C0                  = 0          # Dirac point position
 C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
-R                   = 5.53        # k^3 coefficient
+R                   = 0.        # k^3 coefficient
 k_cut               = 0.05       # Model hamiltonian cutoff
 
 # Brillouin zone parameters
@@ -39,7 +47,7 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 1000        # Number of kpoints in each of the two paths
+Nk_in_path          = 3000        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -93,6 +101,7 @@ Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvatu
 store_all_timesteps = False
 fitted_pulse        = True
 substract_offset    = False
+with_transient      = True
 KK_emission         = False
 normalize_emission  = False         
 normalize_f_valence = True

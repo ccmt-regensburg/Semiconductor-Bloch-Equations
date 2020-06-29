@@ -65,10 +65,10 @@ def main():
     gamma2 = 1/T2                                     # Polarization damping parameter
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
-    dt = params.dt*fs_conv                            # Integration time step
+    #dt = params.dt*fs_conv                            # Integration time step
     dt = 1/(21*2*w)
 
-    dt_out = 1                                        # Solution output time step
+    dt_out = 1                                      # Solution output time step
 
     # Brillouin zone type
     BZ_type = params.BZ_type                          # Type of Brillouin zone to construct
@@ -180,7 +180,8 @@ def main():
         
     for wahrheitswert in wahrheitswerte:
         # Decide in this step if the nir-pulse is included or not
-        efield.with_nir = wahrheitswert
+        efield.with_transient   = params.with_transient
+        efield.with_nir         = wahrheitswert
         driving_field.recompile()
 
         print ("do_B_field", do_B_field)
@@ -312,13 +313,22 @@ def main():
     if print_J_P_I_files:  
         old_directory   = os.getcwd()
         #os.chdir("../generated_data/" + gauge)
-        os.chdir("/loctmp/nim60855/generated_data/" + gauge)
+        if not params.with_transient:
+            zusatz      = "without_transient/"
+        else:
+            zusatz      = ""
+
+        data_base       = "/loctmp/nim60855/generated_data/" + zusatz + gauge
+        if not os.path.exists(data_base):
+            data_base   = "/home/maximilian/Documents/studium/generated_data/" + zusatz + gauge + "/"
+        os.chdir(data_base)
+
         directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
 
         if not os.path.exists(directory):
             os.makedirs(directory)
-
         os.chdir(directory)
+        print(os.getcwd() )
        
         data    = np.array([t/fs_conv, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho]).real
         np.savetxt("time.txt", np.transpose(data ) )
@@ -422,7 +432,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         # Propagate through time
         ti = 0
         while solver.successful() and ti < Nt:
-
+            if ti > max_ti:
+                break
             # User output of integration progress
             if (ti % 1000 == 0 and user_out):
                 print('{:5.2f}%'.format(ti/Nt*100))
@@ -439,6 +450,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
                 # Construct time array only once
                 if not t_constructed:
                     t.append(solver.t)
+
 
             # Increment time counter
             ti += 1
@@ -778,6 +790,7 @@ def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, p
            for i_k in range(np.size(kx_in_path)):
               J_E_dir[i_time] += np.real(jc_E_dir[i_k]*solution[i_k, 0, i_time, 3] + jv_E_dir[i_k]*(solution[i_k, 0, i_time, 0] - subtract_from_f_v))
               J_ortho[i_time] += np.real(jc_ortho[i_k]*solution[i_k, 0, i_time, 3] + jv_ortho[i_k]*(solution[i_k, 0, i_time, 0] - subtract_from_f_v))
+
 
     return I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, P_E_dir, P_ortho, J_E_dir, J_ortho
 

@@ -12,6 +12,11 @@ phase = params.phase                              # Carrier-envelope phase
 
 fitted_pulse    = params.fitted_pulse
 tOpt, nOpt      = nir.opt_pulses()
+
+#nOpt            = tOpt
+#nOpt[4]         = 0
+#nOpt[3]         *= 4
+
 a   = nOpt[0]
 b   = nOpt[1]
 c   = nOpt[2]
@@ -24,7 +29,7 @@ nir_mu      = nOpt[2]
 nir_w       = nOpt[3]
 nir_phi     = nOpt[4]
 
-with_nir    = True
+with_transient  = True
 
 #if fitted_pulse:
 #    parameters = nir.opt_pulses()
@@ -45,11 +50,11 @@ def driving_field(Amplitude, t):
     # return E0*np.sin(2.0*np.pi*w*t)
     # Chirped Gaussian pulse
     if fitted_pulse:
-        if with_nir:
+        if with_transient:
             return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir.nir(t, a, b, c, d, e)
 
         else:
-            return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4])
+            return nir.nir(t, a, b, c, d, e)
 
     else:
         return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
