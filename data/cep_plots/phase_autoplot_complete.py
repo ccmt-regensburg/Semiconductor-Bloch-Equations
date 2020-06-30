@@ -17,7 +17,8 @@ plt.rcParams['font.size'] = 20
 # Phase evaluation
 phases = np.linspace(0, np.pi, 20)
 # orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
-orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
+orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/' + \
+            '0.03_dist_to_gamma/'
 
 # Evaluation parameters for fast scanning (phase diagram)
 mlist = np.linspace(0, 0.0165372, 7)
@@ -27,9 +28,9 @@ chirplist = np.linspace(-0.92, 0.92, 11)
 dist = '0.03'
 
 k = 0
-for i, mz in enumerate(mlist[0:]):
+for i, mz in enumerate(mlist[1:]):
 
-    mzstring = 'mz_' + '{:.7f}'.format(mz)
+    mzstring = 'mx_' + '{:.7f}'.format(mz)
 
     for j, chirp in enumerate(chirplist):
         chirpstring = 'chirp_' + '{:.3f}'.format(chirp)
