@@ -11,20 +11,21 @@ a                   = 8.308
 e_fermi             = 0.2         # Fermi energy in eV
 temperature         = 0.03        # Temperature in eV
 
-#C0 = -0.00647156                  # C0
-#c2 = 0.0117598                    # k^2 coefficient
-#A = 0.0422927                     # Fermi velocity
-#r = 0.109031                      # k^3 coefficient
-#ksym = 0.0635012                  # k^2 coefficent dampening
-#kasym = 0.113773                  # k^3 coeffcient dampening
-#mb = 0.000373195                  # Splitting of cones.(10 meV)
-
 # Model Hamiltonian parameters
 C0                  = 0          # Dirac point position
 C2                  = 0           # k^2 coefficient
 A                   = 0.1974      # Fermi velocity
 R                   = 0.        # k^3 coefficient
 k_cut               = 0.05       # Model hamiltonian cutoff
+
+# Realistic Hamiltonian parameters
+C0_n = -0.00647156                  # C0
+c2_n = 0.0117598                    # k^2 coefficient
+A_n = 0.0422927                     # Fermi velocity
+r_n = 0.109031                      # k^3 coefficient
+ksym_n = 0.0635012                  # k^2 coefficent dampening
+kasym_n = 0.113773                  # k^3 coeffcient dampening
+mb_n = 0.000373195                  # Splitting of cones.(10 meV)
 
 # Brillouin zone parameters
 ##########################################################################
@@ -47,7 +48,7 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 3000        # Number of kpoints in each of the two paths
+Nk_in_path          = 100        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -56,7 +57,6 @@ num_paths           = 2
 # Gauge
 gauge               = 'length'
 #gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
-gauge		    = 'velocity'
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -69,6 +69,10 @@ w                   = 25.0         # Pulse frequency (THz)
 chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
 phase               = (0/5)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
+
+# Nir Pulse
+##########################################################################
+nir_mu              = 200
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
@@ -102,6 +106,7 @@ store_all_timesteps = False
 fitted_pulse        = True
 substract_offset    = False
 with_transient      = True
+realistic_system    = True
 KK_emission         = False
 normalize_emission  = False         
 normalize_f_valence = True

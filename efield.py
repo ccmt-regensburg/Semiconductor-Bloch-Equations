@@ -12,6 +12,7 @@ phase = params.phase                              # Carrier-envelope phase
 
 fitted_pulse    = params.fitted_pulse
 tOpt, nOpt      = nir.opt_pulses()
+nOpt[2]         = params.nir_mu*params.fs_conv
 
 #nOpt            = tOpt
 #nOpt[4]         = 0

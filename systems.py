@@ -14,7 +14,11 @@ k_cut = params.k_cut                       # Model hamiltonian cutoff parameter
 
 # Initialize sympy bandstructure, energies/derivatives, dipoles
 # ## Bismuth Teluride calls
-system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
+if params.realistic_system:
+    system = hfsbe.example.BiTeResummed(C0=params.C0_n, c2=params.c2_n, A=params.A_n, r=params.r_n, ksym=params.ksym_n, kasym=params.kasym_n)
+else:
+    print("Du Idiot!")
+    system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
 # ## Trivial Bismuth Teluride call
 # system = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
 # ## Periodic Bismuth Teluride call

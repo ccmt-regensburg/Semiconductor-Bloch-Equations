@@ -192,7 +192,7 @@ def main():
         [], [], [], [], [], [], [], [], [], [], [], [], [], []
 
         # here,the time evolution of the density matrix is done
-        t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c = \
+        t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c, f_v = \
                     time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                    gamma1, gamma2, E0, B0, w, chirp, alpha, phase, nir_t0, do_B_field, gauge, normalize_f_valence, dt_out, BZ_type, Nk1, Nk_in_path, 
                                    Bcurv_in_B_dynamics, 'density_matrix_dynamics',
@@ -201,38 +201,10 @@ def main():
 
         # COMPUTE OBSERVABLES
         ###########################################################################
-        
         if wahrheitswert:
             # Approximate emission in time
-            I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha) + J_E_dir*Gaussian_envelope(t,alpha), \
-                           diff(t,P_ortho)*Gaussian_envelope(t,alpha) + J_ortho*Gaussian_envelope(t,alpha)
- 
-        else:
-            dummy_P_E_dir, dummy_P_ortho = polarization(paths, solution[:, :, :, 1], E_dir, scale_dipole_emiss)
-            # Current (intraband)
-            dummy_J_E_dir, dummy_J_ortho = current( paths, solution[:, :, :, 0], solution[:, :, :, 3], t, alpha, E_dir)
-
-            # Emission in time
-            dummy_I_E_dir, dummy_I_ortho = diff(t,dummy_P_E_dir)*Gaussian_envelope(t,alpha) + dummy_J_E_dir*Gaussian_envelope(t,alpha), \
-                               diff(t,dummy_P_ortho)*Gaussian_envelope(t,alpha) + dummy_J_ortho*Gaussian_envelope(t,alpha)
-
-            # emission with exact formula
-            if do_B_field:
-               dummy_I_exact_E_dir, dummy_I_exact_ortho = emission_semicl_B_field(paths, solution, E_dir) 
-            else:
-               dummy_I_exact_E_dir, dummy_I_exact_ortho = emission_exact(paths, solution, E_dir, A_field) 
-            # emission with exact formula with semiclassical formula
-
-            P_E_dir         -= dummy_P_E_dir      
-            P_ortho         -= dummy_P_ortho      
-            J_E_dir         -= dummy_J_E_dir      
-            J_ortho         -= dummy_J_ortho      
-            I_E_dir         -= dummy_I_E_dir      
-            I_ortho         -= dummy_I_ortho      
-            I_exact_E_dir   -= dummy_I_exact_E_dir
-            I_exact_ortho   -= dummy_I_exact_ortho
-
-            del dummy_P_E_dir, dummy_P_ortho, dummy_J_E_dir, dummy_J_ortho, dummy_I_E_dir, dummy_I_ortho, dummy_I_exact_E_dir, dummy_I_exact_ortho
+            I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha,nir_t0) + J_E_dir*Gaussian_envelope(t,alpha,nir_t0), \
+                           diff(t,P_ortho)*Gaussian_envelope(t,alpha,nir_t0) + J_ortho*Gaussian_envelope(t,alpha,nir_t0)
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -247,20 +219,20 @@ def main():
     Iw_r     = np.fft.fftshift(np.fft.fft(Ir, norm='ortho'))
     Pw_E_dir = np.fft.fftshift(np.fft.fft(diff(t,P_E_dir), norm='ortho'))
     Pw_ortho = np.fft.fftshift(np.fft.fft(diff(t,P_ortho), norm='ortho'))
-    Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_E_dir      = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_ortho      = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_diag_E_dir = np.fft.fftshift(np.fft.fft(I_exact_diag_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_diag_ortho = np.fft.fftshift(np.fft.fft(I_exact_diag_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_offd_E_dir = np.fft.fftshift(np.fft.fft(I_exact_offd_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-    Iw_exact_offd_ortho = np.fft.fftshift(np.fft.fft(I_exact_offd_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+    Jw_E_dir = np.fft.fftshift(np.fft.fft(J_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Jw_ortho = np.fft.fftshift(np.fft.fft(J_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Iw_exact_E_dir      = np.fft.fftshift(np.fft.fft(I_exact_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Iw_exact_ortho      = np.fft.fftshift(np.fft.fft(I_exact_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Iw_exact_diag_E_dir = np.fft.fftshift(np.fft.fft(I_exact_diag_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Iw_exact_diag_ortho = np.fft.fftshift(np.fft.fft(I_exact_diag_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Iw_exact_offd_E_dir = np.fft.fftshift(np.fft.fft(I_exact_offd_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+    Iw_exact_offd_ortho = np.fft.fftshift(np.fft.fft(I_exact_offd_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
 
     if do_emission_wavep:
-       Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-       Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
-       Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha), norm='ortho'))
-       Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha), norm='ortho'))
+       Iw_wavep_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+       Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+       Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
+       Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
 
     if BZ_type == '2line':
         # include k-point weights
@@ -312,16 +284,33 @@ def main():
 
     if print_J_P_I_files:  
         old_directory   = os.getcwd()
-        #os.chdir("../generated_data/" + gauge)
-        if not params.with_transient:
-            zusatz      = "without_transient/"
-        else:
-            zusatz      = ""
 
-        data_base       = "/loctmp/nim60855/generated_data/" + zusatz + gauge
+        data_base       = "/loctmp/nim60855/generated_data/"
         if not os.path.exists(data_base):
-            data_base   = "/home/maximilian/Documents/studium/generated_data/" + zusatz + gauge + "/"
+            data_base   = "/home/maximilian/Documents/studium/generated_data/"
         os.chdir(data_base)
+
+        if params.realistic_system:
+            next_step      = "realistic_ham/"
+        else:
+            next_step      = "sym_ham/"
+        
+        if not os.path.exists(next_step):
+            os.makedirs(next_step)
+        os.chdir(next_step)
+
+        if params.with_transient:
+            next_step      = "with_transient/"
+        else:
+            next_step      = "without_transient/"
+
+        if not os.path.exists(next_step):
+            os.makedirs(next_step)
+        os.chdir(next_step)
+
+        if not os.path.exists(gauge):
+            os.makedirs(gauge)
+        os.chdir(gauge)
 
         directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
 
@@ -335,6 +324,7 @@ def main():
         data    = [freq/w, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho]
         np.savetxt("frequency.txt", np.transpose(data ) )
         np.savetxt("conduction_occupation.txt", np.transpose(f_c).real)
+        np.savetxt("valence_occupation.txt", np.transpose(f_v).real)
 
         os.chdir(old_directory)
 
@@ -483,7 +473,12 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 
         # COMPUTE OBSERVABLES
         ###########################################################################
-        f_c     = solution[:,0,:,3]         #Occupation of the conduction band
+        factor  = 1
+        if Nk_in_path > 1000:
+            factor  = int(Nk_in_path/1000)
+
+        f_v     = solution[::factor,0,:,0]
+        f_c     = solution[::factor,0,:,3]         #Occupation of the conduction band
 
         if path_num == 1:                                                                                                      
             n_time_steps = np.size(solution[0,0,:,0]) 
@@ -538,7 +533,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         solution = shift_solution(solution, A_field, dk, dynamics_type)
         fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
 
-    return t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c
+    return t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c, f_v
 
 #################################################################################################
 # FUNCTIONS
@@ -689,12 +684,12 @@ def diff(x, y):
         return dy/dx
 
 
-def Gaussian_envelope(t, alpha):
+def Gaussian_envelope(t, alpha, mu):
     '''
     Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*1.0*alpha)**2)
+    return np.exp(-(t-mu)**2.0/(2.0*alpha)**2)
 
 
 def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, path_num, I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, 
