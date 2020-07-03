@@ -31,21 +31,17 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
 
 
 def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
-
-    
-    alpha = 0.1                                     # strength of spin-orbit coupling
-
     length = -paths[0,0,0]
-   
 
     bandstruct = np.zeros(shape=(100,3))
     bandstruct[:,0] = np.arange(-length, length+dk, dk)
     
-    k_x2 = (bandstruct[:,0])**2
-    k_y2 = (paths[0,0,1])**2
-    
-    bandstruct[:,1] = -1*(np.cos(bandstruct[:,0]/length*np.pi) +  np.sqrt((k_x2+k_y2)))  # e_minus or e_v
-    bandstruct[:,2] = -1*(np.cos(bandstruct[:,0]/length*np.pi) -  np.sqrt((k_x2+k_y2)))  # e_plus or e_c
+    k_x = (bandstruct[:,0])
+    k_y = (paths[0,0,1])
+   
+    if params.structure_type == "zinc-blende":
+        bandstruct[:,1] = -1*params.eV_conv*(np.cos((k_x+k_y)/length*np.pi) +  np.sqrt((k_x**2+k_y**2)))  # e_minus or e_v
+        bandstruct[:,2] = -1*params.eV_conv*(np.cos((k_x+k_y)/length*np.pi) -  np.sqrt((k_x**2+k_y**2)))  # e_plus or e_c
     return bandstruct
 
 
@@ -54,15 +50,4 @@ def dipole():
     part0 = np.zeros(100, dtype=np.complex128)
     di_x = np.concatenate((part0,part1,part1,part0)).reshape(2,2,100)
     di_y = np.zeros((2,2,100), dtype=np.complex128)
-
-    '''
-    print("------- di_x ---------")
-    print(*di_x,sep='\n')
-        
-    print("------- di_y ---------")
-    print(*di_y,sep='\n')
-
-    print(np.shape(di_x))
-    '''
-
     return di_x, di_y

@@ -84,7 +84,7 @@ eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
 # Flags for testing and features
 ##########################################################################
 user_out            = True  # Set to True to get user plotting and progress output
-print_J_P_I_files   = False  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
+print_J_P_I_files   = True  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 energy_plots        = False  # Set to True to plot 3d energy bands and contours
 dipole_plots        = False  # Set tp True to plot dipoles (currently not working?)
 test                = False  # Set to True to output travis testing parameters
@@ -92,3 +92,5 @@ matrix_method       = False  # Set to True to use old matrix method for solving
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
+save_figures        = True
+structure_type      = 'zinc-blende' 

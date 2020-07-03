@@ -5,6 +5,7 @@ from matplotlib import patches
 from scipy.integrate import ode
 from scipy.special import erf
 from sys import exit
+import os
 
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
@@ -227,13 +228,44 @@ def main():
         Nk2 = 2
 
     if print_J_P_I_files:  
+        """
         J_filename = str('J_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.save(J_filename, [t/fs_conv, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
         P_filename = str('P_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.save(P_filename, [t/fs_conv, P_E_dir, P_ortho, freq/w, Pw_E_dir, Pw_ortho])
         I_filename = str('I_Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
         np.save(I_filename, [t/fs_conv, I_E_dir, I_ortho, freq/w, np.abs(Iw_E_dir), np.abs(Iw_ortho), Int_E_dir, Int_ortho])
+        """
 
+        old_directory   = os.getcwd() 
+        data_base       = "/home/evb28117/Bachelorarbeit/generated_data"
+        if not os.path.exists(data_base):
+            data_base   = "/home/evb28117/Documents/"
+        os.chdir(data_base)
+
+        if not os.path.exists(params.structure_type):
+            os.makedirs(params.structure_type)
+        os.chdir(params.structure_type)
+
+        if not os.path.exists(gauge):
+            os.makedirs(gauge)
+        os.chdir(gauge)
+
+        directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        os.chdir(directory)
+        print(os.getcwd() )
+       
+        data    = np.array([t/fs_conv, A_field]).real
+        np.savetxt("time.txt", np.transpose(data ) )
+        data    = [freq/w]
+        np.savetxt("frequency.txt", np.transpose(data ) )
+        png_base = os.getcwd()
+
+        os.chdir(old_directory)
+     
     if (not test and user_out):
         real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
@@ -398,7 +430,7 @@ def main():
             i_loop += 1
 
         # Plot Brilluoin zone with paths
-        BZ_plot(kpnts,a,b1,b2,E_dir,paths)
+        BZ_fig = BZ_plot(kpnts,a,b1,b2,E_dir,paths)
         
         fig6 = pl.figure()
         x_val = [x[0] for x in bandstruct]
@@ -411,6 +443,13 @@ def main():
         pl.ylabel(r'$\epsilon$')
         pl.legend()
         pl.title("Bandstructure")
+        if params.save_figures:
+            real_fig.savefig(png_base+'/1.png')
+            five_fig.savefig(png_base+'/2.png')
+            BZ_fig.savefig(png_base+'/3.png')
+            fig5.savefig(png_base+'/4.png')
+            polar_fig.savefig(png_base+'/5.png')
+            fig6.savefig(png_base+'/6.png')
         pl.show()               
                                   
 
@@ -1380,7 +1419,7 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
         path = np.array(path)
         pl.plot(path[:,0],path[:,1])
 
-    return
+    return BZ_fig
 
 if __name__ == "__main__":
     main()
