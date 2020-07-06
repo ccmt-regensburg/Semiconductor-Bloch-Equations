@@ -102,7 +102,7 @@ def main(sys, dipole, params):
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
-        # BZ_plot(kpnts, a, b1, b2, paths)
+        BZ_plot(kpnts, a, b1, b2, paths)
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)
@@ -215,8 +215,6 @@ def main(sys, dipole, params):
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
-    # pl.imshow(np.real(solution[:, 0, :, 3]))
-    # pl.show()
     # COMPUTE OBSERVABLES
     ###########################################################################
     # Calculate parallel and orthogonal components of observables
@@ -663,7 +661,16 @@ def initial_condition(e_fermi, temperature, e_c):
         return np.array([ones, zeros, zeros, distrib]).flatten('F')
 
 
-def BZ_plot(kpnts, a, b1, b2, paths):
+def BZ_plot(kpnts, a, b1, b2, paths, si_units=True):
+
+    as_to_au = 1.88973
+    au_to_as = 0.529177
+
+    if (si_units):
+        a *= au_to_as
+        kpnts *= as_to_au
+        b1 *= as_to_au
+        b2 *= as_to_au
 
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
@@ -684,11 +691,16 @@ def BZ_plot(kpnts, a, b1, b2, paths):
     pl.text(r*np.cos(-np.pi/6)+0.01, r*np.sin(-np.pi/6)-0.05, r'$M$')
     pl.scatter(R, 0, s=15, c='black')
     pl.text(R, 0.02, r'$K$')
-    pl.scatter(kpnts[:, 0], kpnts[:, 1], s=15)
+    pl.scatter(kpnts[:, 0], kpnts[:, 1], s=10)
     pl.xlim(-7.0/a, 7.0/a)
     pl.ylim(-7.0/a, 7.0/a)
-    pl.xlabel(r'$k_x$ ($1/a_0$)')
-    pl.ylabel(r'$k_y$ ($1/a_0$)')
+
+    if (si_units):
+        pl.xlabel(r'$k_x \text{ in } 1/\si{\angstrom}$')
+        pl.ylabel(r'$k_y \text{ in } 1/\si{\angstrom}$')
+    else:
+        pl.xlabel(r'$k_x \text{ in } 1/a_0$')
+        pl.ylabel(r'$k_y \text{ in } 1/a_0$')
 
     for path in paths:
         path = np.array(path)

@@ -470,18 +470,18 @@ def emission_exact(sys, paths, tarr, solution, E_dir, A_field, zeeman_field,
             ky_in_path = path[:, 1]
 
             if gauge == 'length':
-                kx_in_path_h_deriv = kx_in_path - A_field[i_time]*E_dir[0]
-                ky_in_path_h_deriv = ky_in_path - A_field[i_time]*E_dir[1]
+                kx_in_path_h_deriv = kx_in_path
+                ky_in_path_h_deriv = ky_in_path
 
                 kx_in_path_U = kx_in_path
                 ky_in_path_U = ky_in_path
 
             elif gauge == 'velocity' or gauge == 'velocity_extra':
-                kx_in_path_h_deriv = kx_in_path - 2*A_field[i_time]*E_dir[0]
-                ky_in_path_h_deriv = ky_in_path - 2*A_field[i_time]*E_dir[1]
+                kx_in_path_h_deriv = kx_in_path + A_field[i_time]*E_dir[0]
+                ky_in_path_h_deriv = ky_in_path + A_field[i_time]*E_dir[1]
 
-                kx_in_path_U = kx_in_path - A_field[i_time]*E_dir[0]
-                ky_in_path_U = ky_in_path - A_field[i_time]*E_dir[1]
+                kx_in_path_U = kx_in_path + A_field[i_time]*E_dir[0]
+                ky_in_path_U = ky_in_path + A_field[i_time]*E_dir[1]
 
             h_deriv_x = evmat(sys.hderivfjit[0],
                               kx=kx_in_path_h_deriv, ky=ky_in_path_h_deriv,
@@ -639,7 +639,7 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
         mx = m_zee[0]
         my = m_zee[1]
         mz = m_zee[2]
-        k_shift = -y[-1].real
+        k_shift = y[-1].real
 
         kx = kpath[:, 0] + E_dir[0]*k_shift
         ky = kpath[:, 1] + E_dir[1]*k_shift
@@ -704,7 +704,7 @@ def make_fnumba(sys, dipole_k, dipole_B, gamma1, gamma2, E_dir,
         mx = m_zee[0]
         my = m_zee[1]
         mz = m_zee[2]
-        k_shift = -y[-1].real
+        k_shift = y[-1].real
 
         kx = kpath[:, 0] + E_dir[0]*k_shift
         ky = kpath[:, 1] + E_dir[1]*k_shift
@@ -842,10 +842,12 @@ def initial_condition(e_fermi, temperature, e_c):
     ones = np.ones(knum)
     zeros = np.zeros(knum)
     if (temperature > 1e-5):
-        distrib = 1/(np.exp((e_c-e_fermi)/temperature)+1)
+        distrib = 1/(np.exp((e_c-e_fermi)/temperature) + 1)
         return np.array([ones, zeros, zeros, distrib]).flatten('F')
     else:
-        return np.array([ones, zeros, zeros, zeros]).flatten('F')
+        smaller_e_fermi = (e_fermi - e_c) < 0
+        distrib = ones[smaller_e_fermi]
+        return np.array([ones, zeros, zeros, distrib]).flatten('F')
 
 
 def BZ_plot(kpnts, a, b1, b2, paths):
