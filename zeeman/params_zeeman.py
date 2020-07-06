@@ -15,7 +15,7 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = 'full'
+    BZ_type = '2line'
     gauge = 'velocity_extra'
 
     # Reciprocal lattice vectors
@@ -28,15 +28,15 @@ class params:
 
     # 2line BZ parameters
     Nk_in_path          = 800         # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
+    rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 5*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
-    angle_inc_E_field   = 30          # incoming angle of the E-field in degree
+    angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
     # Driving field parameters
     ##########################################################################
     align               = 'M'         # E-field direction (gamma-'K' or gamma-'M')
-    E0                  = 5.00        # Pulse amplitude (MV/cm)
+    E0                  = 4.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.0         # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
@@ -44,9 +44,9 @@ class params:
 
     B0                  = 10          # Magnetic field Amplitude (T)
     incident_angle      = 45          # Theta angle to the z-axis
-    mu_x                = 1           # Magnetic dipole moment in x direction (mu_b)
-    mu_y                = 1           # Magnetic dipole moment in y direction (mu_b)
-    mu_z                = 1           # Magnetic dipole moment in z direction (mu_b)
+    mu_x                = 0           # Magnetic dipole moment in x direction (mu_b)
+    mu_y                = 0           # Magnetic dipole moment in y direction (mu_b)
+    mu_z                = 0           # Magnetic dipole moment in z direction (mu_b)
 
     # Time scales (all units in femtoseconds)
     ##########################################################################

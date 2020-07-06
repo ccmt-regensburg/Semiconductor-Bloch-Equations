@@ -18,7 +18,7 @@ def run():
     # mb                  = 0.000373195 # Splitting of cones.(10 meV)
     # k_cut               = 0.05        # Model hamiltonian cutoff
     # Sweep electric field
-    for mu_z in [0, 1, 10, 30, 50]:
+    for mu_z in [0, 5, 10, 15, 20, 25]:
 
         params.mu_z = mu_z
         print("Current mu_z: ", params.mu_z)
