@@ -153,12 +153,12 @@ def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
     cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
 
 
-def cep_plot(freqw, phases, data, title, xlim=(0, 35), max=None, show=True):
+def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=None, show=True):
     data = np.real(data)
     if (max is not None):
         data /= np.real(max)
 
-    min = np.min(data[:, 2001:3500])
+    min = 1e-14 # np.min(data[:, 2001:3500])
     log_max = np.log(np.max(data))/np.log(10)
     log_min = np.log(np.min(data[data > min]))/np.log(10)
     F, P = np.meshgrid(freqw[0], phases)
@@ -171,9 +171,9 @@ def cep_plot(freqw, phases, data, title, xlim=(0, 35), max=None, show=True):
                        norm=colors.LogNorm(vmin=min, vmax=1e-0))
 
     # tickposition = [1e-6, 1e-4, 1e-2, 1e-0]
-    # tickposition = [1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0] 
+    tickposition = [1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2] 
     # tickposition = [1e-16, 1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0]
-    cb = plt.colorbar(cont)#, ticks=tickposition)
+    cb = plt.colorbar(cont, ticks=tickposition)
     cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
     if (max is not None):
         cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
@@ -183,7 +183,8 @@ def cep_plot(freqw, phases, data, title, xlim=(0, 35), max=None, show=True):
     ax.set_xlim(xlim)
     ax.set_xlabel(r'$\omega/\omega_0$')
     ax.set_ylabel(r'phase $\phi$')
-    plt.title(title)
+    if(title is not None):
+        plt.title(title)
 
     if (show):
         plt.show()

@@ -17,8 +17,8 @@ plt.rcParams['font.size'] = 20
 # Phase evaluation
 phases = np.linspace(0, np.pi, 20)
 # orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
-orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/' + \
-            '0.03_dist_to_gamma_mx_0.00165372/'
+orderpath = '../data-sbe/dirac/cep_phase_diagram/' + \
+            '0.03_dist_to_gamma/'
 
 # Evaluation parameters for fast scanning (phase diagram)
 mlist = np.linspace(0, 0.0165372, 7)
@@ -65,8 +65,9 @@ for i, mz in enumerate(mlist[0:]):
         Int_data = (Int_exact_E_dir + Int_exact_ortho)
         # freqw *= rescaledata[i]
         cep_plot(freqw, phases, Int_data,
-                 mztitle + r'H ' + chirptitle + r'$\mathrm{MV}/\mathrm{cm}$',
                  xlim=(0, 30), max=Int_avg_max, show=False)
+                 # mztitle + r'H ' + chirptitle + r'$\mathrm{THz}$',
+
         numberstring = '{:02d}'.format(k)
         k += 1
         plt.savefig(numberstring + '_' + mzstring + '_' + chirpstring + '.png')
