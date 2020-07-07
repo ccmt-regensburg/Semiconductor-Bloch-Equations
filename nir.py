@@ -32,6 +32,7 @@ def opt_pulses():
     nOpt.append(nOpt[2])
     nOpt[2]         = 0
     nOpt.append(0)
+    np.savetxt("driving_field_parameters.txt", np.transpose([tOpt, nOpt]), header="Transient, NIR" )
 
     return [tOpt, nOpt]
 
@@ -45,5 +46,7 @@ def nir(x, aN, sigmaN, muN, freqN, phiN):
 
 def gaussSpec(x, A, sigma, mu):
     return A*np.exp(-(2*np.pi*(x-mu)/sigma)**2/2)
+
+opt_pulses()
 
 

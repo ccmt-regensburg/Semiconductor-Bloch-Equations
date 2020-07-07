@@ -1,7 +1,6 @@
 from numba import njit
 import numpy as np
 import params 
-import nir
 
 # Driving field parameters
 
@@ -11,7 +10,7 @@ alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
 phase = params.phase                              # Carrier-envelope phase
 
 fitted_pulse    = params.fitted_pulse
-tOpt, nOpt      = nir.opt_pulses()
+tOpt, nOpt      = np.transpose(np.loadtxt("driving_field_parameters.txt") ) 
 nOpt[2]         = params.nir_mu*params.fs_conv
 
 #nOpt            = tOpt
@@ -52,11 +51,20 @@ def driving_field(Amplitude, t):
     # Chirped Gaussian pulse
     if fitted_pulse:
         if with_transient:
-            return nir.transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir.nir(t, a, b, c, d, e)
+            return transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir(t, a, b, c, d, e)
 
         else:
             return nir.nir(t, a, b, c, d, e)
 
     else:
         return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
+
+
+@njit
+def transient(x, aT, sigmaT, muT, freqT, chirpT):
+    return aT*np.exp(-((x-muT)/sigmaT)**2/2)*np.cos(2*np.pi*(1+chirpT*x)*freqT*x)
+
+@njit
+def nir(x, aN, sigmaN, muN, freqN, phiN):
+    return aN*np.exp(-(x-muN)**2/sigmaN**2/2)*np.cos(2*np.pi*freqN*(x-muN)+phiN )
 

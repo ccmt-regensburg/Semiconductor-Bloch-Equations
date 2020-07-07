@@ -66,9 +66,9 @@ def main():
     t0 = int(params.t0*fs_conv)                       # Initial time condition
     tf = int(params.tf*fs_conv)                       # Final time
     #dt = params.dt*fs_conv                            # Integration time step
-    dt = 1/(21*2*w)
+    dt = 1/(21*2*w)/3
 
-    dt_out = 1                                      # Solution output time step
+    dt_out = 3                                      # Solution output time step
 
     # Brillouin zone type
     BZ_type = params.BZ_type                          # Type of Brillouin zone to construct
@@ -284,6 +284,7 @@ def main():
 
     if print_J_P_I_files:  
         old_directory   = os.getcwd()
+        print("Beginning to construct directory.")
 
         data_base       = "/loctmp/nim60855/generated_data/"
         if not os.path.exists(data_base):
@@ -314,10 +315,11 @@ def main():
 
         directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
 
+        print("Check if directory already exists.")
         if not os.path.exists(directory):
             os.makedirs(directory)
         os.chdir(directory)
-        print(os.getcwd() )
+        print("Saving data into directory: ", os.getcwd() )
        
         data    = np.array([t/fs_conv, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho]).real
         np.savetxt("time.txt", np.transpose(data ) )
@@ -325,6 +327,7 @@ def main():
         np.savetxt("frequency.txt", np.transpose(data ) )
         np.savetxt("conduction_occupation.txt", np.transpose(f_c).real)
         np.savetxt("valence_occupation.txt", np.transpose(f_v).real)
+        print("Data has been saved succesfully.")
 
         os.chdir(old_directory)
 

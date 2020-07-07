@@ -48,7 +48,7 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 100        # Number of kpoints in each of the two paths
+Nk_in_path          = 10000        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -72,7 +72,7 @@ phase               = (0/5)*np.pi  # Carrier envelope phase (edited by cep-scan.
 
 # Nir Pulse
 ##########################################################################
-nir_mu              = 200
+nir_mu              = -200
 
 # Time scales (all units in femtoseconds)
 ##########################################################################

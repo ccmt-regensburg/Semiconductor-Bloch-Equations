@@ -81,13 +81,13 @@ def construct_plots():
     print("Loading data out of " + directory)
 
     if not os.path.exists(directory):
-        print("Looking into: ", directory)
+        print("Failing to load: ", directory)
         print("This parameter configuration has not yet been calculated")
+        print()
         return 0
     else:
         os.chdir(directory)
 
-    print()
 
     t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
     freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho  = np.transpose(np.loadtxt('frequency.txt') )
@@ -95,6 +95,21 @@ def construct_plots():
 
     t       *= fs_conv
     freq    *= w
+    w_min       = np.argmin(np.abs(freq/w - 0.5 ) )
+    integrated_super    = 4*np.trapz(np.sqrt(Int_exact_E_dir[w_min:]*Int_exact_ortho[w_min:]), dx = freq[1]-freq[0])
+    integrated_E_dir    = 2*np.trapz(Int_exact_E_dir[w_min:], dx = freq[1]-freq[0])
+    print("Power of the parallel component:", integrated_E_dir)
+
+    integrated_ortho    = 2*np.trapz(Int_exact_ortho[w_min:], dx = freq[1]-freq[0])
+    print("Power of the orthogonal component:", integrated_ortho)
+    print("Resulting angle in mrad:", integrated_super/(integrated_ortho+integrated_E_dir)*1e3 )
+
+    print()
+
+    valence_calculated  = os.path.exists("valence_occupation.txt")
+    if valence_calculated:
+        f_v         = np.transpose(np.loadtxt("valence_occupation.txt") )
+
     #os.chdir(old_directory)
 
     if BZ_type == '2line':
@@ -129,7 +144,7 @@ def construct_plots():
         I_min = (Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq] ) / Int_tot_base_freq
 
         log_limits = ( 10**(np.ceil(np.log10(I_min))-2) , 10**(np.ceil(np.log10(I_max)) + 1) )
-        log_limits = ( 1e-18, 1e-7 )
+        log_limits = ( 1e-22, 1e-7 )
 
     ############ generate plots ###########
     if (not test and user_out):
@@ -273,6 +288,10 @@ def construct_plots():
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
         # Countour plots of occupations and gradients of occupations
         fig5    = pl.figure()
+        if f_c[:,0].size != kp_array.size:
+            factor = int(kp_array.size/f_c[:,0].size )
+            kp_array    = kp_array[::factor]
+
         X, Y = np.meshgrid(t/fs_conv,kp_array)
         if gauge == "velocity":
             Y += A_field
@@ -283,6 +302,19 @@ def construct_plots():
         pl.ylabel(r'$k$')
         pl.tight_layout()
         pl.savefig("conduction.pdf", dpi=300)
+
+        if valence_calculated:
+            fig6    = pl.figure()
+            X, Y = np.meshgrid(t/fs_conv,kp_array)
+            if gauge == "velocity":
+                Y += A_field
+            pl.contourf(X, Y, np.real(f_v), 100)
+            pl.colorbar().set_label(r'$f_v(k)$ in path 0')
+            pl.xlim([t[0]/fs_conv,t[-1]/fs_conv])
+            pl.xlabel(r'$t\;(fs)$')
+            pl.ylabel(r'$k$')
+            pl.tight_layout()
+            pl.savefig("valence.pdf", dpi=300)
 
         #pl.show()
 
