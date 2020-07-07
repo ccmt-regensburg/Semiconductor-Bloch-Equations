@@ -124,33 +124,36 @@ def total_fourier(freqw, data_dir, data_ortho,
         plt.savefig(savename)
 
 
-def cep_plot_tmp(phases, x, y, z, xlims, zlabel):
-    # Determine maximums of the spectra for color bar values
-    x_indices = np.argwhere(np.logical_and(x < xlims[1], x > xlims[0]))
-    log_max = np.log(np.max(z[:, x_indices]))/np.log(10)
-    log_min = np.log(np.min(z[:, x_indices]))/np.log(10)
-    log_min = log_max - np.ceil(log_max-log_min)
+def cep_plot_time(time, phases, data, title=None, xlim=(-8000, 8000), max=None,
+                  show=True):
+    data = np.real(data)
+    if (max is not None):
+        data /= np.real(max)
 
-    # Set contour spacing
-    logspace = np.flip(np.logspace(log_max, log_min, 100))
-    # Set color bar ticks
-    exp_of_ticks = np.linspace(log_min, log_max, int(log_max)-int(log_min)+1)
-    logticks = np.exp(exp_of_ticks*np.log(10))
+    F, P = np.meshgrid(time[0], phases)
+    data_min = np.min(data)
+    data_max = np.max(data)
 
-    # Meshgrid for xy-plane
-    X, Y = np.meshgrid(x[x_indices[:, 0]], y)
-    # Do the plotting
     fig, ax = plt.subplots()
-    ax.set_xlabel(r'$\omega/\omega_0$')
-    ax.set_ylabel(r'$CEP\ \phi$')
-    ax.set_yticks([0, phases[-1]/2, phases[-1]])
-    ax.set_yticklabels([0, str(r'$\pi/2$'), str(r'$\pi$')])
-    ax.set_xlim(xlims)
-    cont = ax.contourf(X, Y, z[:, x_indices[:, 0]], levels=logspace,
-                       locator=ticker.LogLocator(), cmap=cm.nipy_spectral)
-    cbar = fig.colorbar(cont, ax=ax, label=zlabel)
-    cbar.set_ticks(logticks)
-    cbar.set_ticklabels(['$10^{{{}}}$'.format(int(round(tick-exp_of_ticks[-1]))) for tick in exp_of_ticks])
+    levels = np.linspace(data_min, data_max, 1000)
+    cont = ax.contourf(F, P, data, vmin=data_min, vmax=data_max,
+                       cmap=cm.cool, levels=levels)
+
+    cb = plt.colorbar(cont)
+    cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
+    if (max is not None):
+        cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
+
+    # ax.set_xticks(np.arange(xlim[1] + 1))
+    # ax.grid(True, axis='x', ls='--')
+    ax.set_xlim(xlim)
+    ax.set_xlabel(r'$time$')
+    ax.set_ylabel(r'phase $\phi$')
+    if(title is not None):
+        plt.title(title)
+
+    if (show):
+        plt.show()
 
 
 def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=None, show=True):
