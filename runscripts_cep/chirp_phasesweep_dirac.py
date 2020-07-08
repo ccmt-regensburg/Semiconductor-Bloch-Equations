@@ -15,12 +15,16 @@ def run():
     # mz_max = 0.027562
     mz_max = 0.0165372
     mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[1]
+    mz = mzlist[6]
 
-    # Initialize sympy bandstructure, energies/derivatives, dipoles
-    # ## Bismuth Teluride calls
-    # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
-    # Sweep Wilson mass
+    params.e_fermi = 0.2
+    params.rel_dist_to_Gamma = 0.03
+
+    dirname_mz = 'mz_{:.7f}'.format(mz)
+    if (not os.path.exists(dirname_mz)):
+        os.mkdir(dirname_mz)
+    os.chdir(dirname_mz)
+
     for chirp in np.linspace(-0.920, 0.920, 11):
         params.chirp = chirp
         print("Current chirp: ", params.chirp)

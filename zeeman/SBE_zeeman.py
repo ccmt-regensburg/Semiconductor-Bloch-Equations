@@ -104,12 +104,12 @@ def sbe_zeeman_solver(sys, dipole_k, dipole_B, params):
         elif align == 'M':
             E_dir = np.array([np.cos(np.radians(-30)),
                              np.sin(np.radians(-30))])
-        BZ_plot(kpnts, a, b1, b2, paths)
+        # BZ_plot(kpnts, a, b1, b2, paths)
     elif BZ_type == '2line':
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
-        BZ_plot(kpnts, a, b1, b2, paths)
+        # BZ_plot(kpnts, a, b1, b2, paths)
 
     # Number of integration steps, time array construction flag
     Nt = int((tf-t0)/dt)

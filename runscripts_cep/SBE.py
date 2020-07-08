@@ -115,7 +115,7 @@ def main(sys, dipole, params):
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
         dk, kpnts, paths = mesh(params, E_dir)
-        BZ_plot(kpnts, a, b1, b2, paths)
+        # BZ_plot(kpnts, a, b1, b2, paths)
 
     t_constructed = False
 
@@ -223,7 +223,7 @@ def main(sys, dipole, params):
 
     # Convert lists into numpy arrays
     solution = np.array(solution)
-    breakpoint()
+
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 

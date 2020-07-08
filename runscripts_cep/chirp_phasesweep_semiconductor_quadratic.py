@@ -16,7 +16,7 @@ def run():
     # Gaps used in the dirac system
     mz_max = 0.0165372
     mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[6]
+    mz = mzlist[4]
 
     # Adjust bandwidth to the gap and dirac bandwidth
     At = 0.5*(A*3*np.pi/(2*params.a) - mz)
@@ -31,7 +31,7 @@ def run():
         os.mkdir(dirname)
     os.chdir(dirname)
 
-    for chirp in np.linspace(-0.920, 0.920, 11):
+    for chirp in np.linspace(0.920, 0.920, 1):
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
