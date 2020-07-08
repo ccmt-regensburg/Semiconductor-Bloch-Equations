@@ -31,6 +31,8 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
 
 
 def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
+    alpha = 1                         #strength of H_diag
+    gamma = 10                        #strength of H_SO
     length = -paths[0,0,0]
 
     bandstruct = np.zeros(shape=(100,3))
@@ -38,10 +40,11 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     
     k_x = (bandstruct[:,0])
     k_y = (paths[0,0,1])
+
    
     if params.structure_type == "zinc-blende":
-        bandstruct[:,1] = -1*params.eV_conv*(np.cos((k_x+k_y)/length*np.pi) +  np.sqrt((k_x**2+k_y**2)))  # e_minus or e_v
-        bandstruct[:,2] = -1*params.eV_conv*(np.cos((k_x+k_y)/length*np.pi) -  np.sqrt((k_x**2+k_y**2)))  # e_plus or e_c
+        bandstruct[:,1] = -1*params.eV_conv*(alpha*np.cos((k_x+k_y)/length*np.pi) + 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))       # e_minus or e_v
+        bandstruct[:,2] = -1*params.eV_conv*(alpha*np.cos((k_x+k_y)/length*np.pi) - 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))       # e_plus or e_c
     return bandstruct
 
 

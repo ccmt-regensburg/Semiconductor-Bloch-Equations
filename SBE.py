@@ -251,7 +251,7 @@ def main():
             os.makedirs(gauge)
         os.chdir(gauge)
 
-        directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        directory       = str('Nk1-{}_Nk2-{}_efermi-{:4.2}_T-{:4.2f}_w-{:4.2f}_E-{:4.2f}_a-{:4.2f}_ph-{:3.2f}_T-{:05.2f}').format(Nk1,Nk2,e_fermi/eV_conv,temperature/eV_conv,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
 
         if not os.path.exists(directory):
             os.makedirs(directory)
