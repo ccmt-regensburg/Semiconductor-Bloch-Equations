@@ -2,13 +2,14 @@
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
+from math import ceil
 import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
 from scipy.integrate import ode
 
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
-# Flags for plotting
+
 def main(sys, dipole, params):
     # RETRIEVE PARAMETERS
     ###########################################################################
@@ -17,7 +18,7 @@ def main(sys, dipole, params):
     save_file = params.save_file
     save_full = params.save_full
     test = params.test
-    
+
     # Unit converstion factors
     fs_conv = params.fs_conv
     E_conv = params.E_conv
@@ -42,10 +43,22 @@ def main(sys, dipole, params):
     T2 = params.T2*fs_conv                      # Polarization damping time
     gamma1 = 1/T1                               # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
-    t0 = int(params.t0*fs_conv)                 # Initial time condition
-    tf = int(params.tf*fs_conv)                 # Final time
-    dt = params.dt*fs_conv                      # Integration time step
-    dt_out = 1/(2*params.dt)                    # Solution output time step
+
+    Nf = int((abs(2*params.t0))/params.dt)
+    # Find out integer times Nt fits into total time steps
+    dt_out = int(ceil(Nf/params.Nt))
+
+    # Expand time window to fit Nf output steps
+    Nt = dt_out*params.Nt
+    total_fs = Nt*params.dt
+    t0 = (-total_fs/2)*fs_conv
+    tf = (total_fs/2)*fs_conv
+    dt = params.dt*fs_conv
+
+    # t0 = int(params.t0*fs_conv)                 # Initial time condition
+    # tf = int(params.tf*fs_conv)                 # Final time
+    # dt = params.dt*fs_conv                      # Integration time step
+    # dt_out = 1/(2*params.dt)                    # Solution output time step
 
     # Brillouin zone type
     BZ_type = params.BZ_type                    # Type of Brillouin zone
@@ -104,8 +117,6 @@ def main(sys, dipole, params):
         dk, kpnts, paths = mesh(params, E_dir)
         BZ_plot(kpnts, a, b1, b2, paths)
 
-    # Number of integration steps, time array construction flag
-    Nt = int((tf-t0)/dt)
     t_constructed = False
 
     # Solution containers
@@ -170,6 +181,7 @@ def main(sys, dipole, params):
         ti = 0
         while solver.successful() and ti < Nt:
             # User output of integration progress
+            # print(ti)
             if (ti % 1000 == 0 and user_out):
                 print('{:5.2f}%'.format(ti/Nt*100))
 
@@ -195,7 +207,6 @@ def main(sys, dipole, params):
 
         # Append path solutions to the total solution arrays
         solution.append(path_solution)
-        print(np.shape(path_solution))
 
     # Convert solution and time array to numpy arrays
     t = np.array(t)
@@ -212,6 +223,7 @@ def main(sys, dipole, params):
 
     # Convert lists into numpy arrays
     solution = np.array(solution)
+    breakpoint()
     # The solution array is structred as: first index is Nk1-index,
     # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
@@ -436,7 +448,7 @@ def make_electric_field(E0, w, alpha, chirp, phase):
         # Non-pulse
         # return E0*np.sin(2.0*np.pi*w*t)
         # Chirped Gaussian pulse
-        return E0*np.exp(-t**2.0/(2.0*alpha)**2) \
+        return E0*np.exp(-t**2/(2*alpha)**2) \
             * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
     return electric_field
@@ -461,7 +473,8 @@ def gaussian_envelope(t, alpha):
     Function to multiply a Function f(t) before Fourier transform
     to ensure no step in time between t_final and t_final + delta
     '''
-    return np.exp(-t**2.0/(2.0*alpha)**2)
+    # sigma = sqrt(2)*alpha
+    return 1/(2*np.sqrt(np.pi)*alpha)*np.exp(-t**2/(2*alpha)**2)
 
 
 def polarization(dip, paths, pcv, E_dir):

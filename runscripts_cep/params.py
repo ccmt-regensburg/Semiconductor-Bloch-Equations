@@ -44,9 +44,10 @@ class params:
     ##########################################################################
     T1    = 1E3    # Phenomenological diagonal damping time
     T2    = 1      # Phenomenological polarization damping time
-    t0    = -1000  # Start time *pulse centered @ t=0, use t0 << 0
-    tf    = 1000   # End time
-    dt    = 0.01    # Time step
+    t0    = -200   # Start time *pulse centered @ t=0, use t0 << 0
+    # tf    = 200    # End time
+    dt    = 0.01   # Time step
+    Nt    = 4096   # Length of result time array
 
     # Unit conversion factors
     ##########################################################################
