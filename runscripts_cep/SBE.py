@@ -477,7 +477,8 @@ def gaussian_envelope(t, alpha):
     to ensure no step in time between t_final and t_final + delta
     '''
     # sigma = sqrt(2)*alpha
-    return 1/(2*np.sqrt(np.pi)*alpha)*np.exp(-t**2/(2*alpha)**2)
+    # # 1/(2*np.sqrt(np.pi)*alpha)*np.exp(-t**2/(2*alpha)**2)
+    return np.exp(-t**2/(2*alpha)**2) 
 
 
 def polarization(dip, paths, pcv, E_dir):
