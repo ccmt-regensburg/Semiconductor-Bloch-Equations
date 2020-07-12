@@ -25,10 +25,7 @@ def run():
 
     params.E0 = E
     params.e_fermi = 0
-    # Initialize sympy bandstructure, energies/derivatives, dipoles
-    # ## Bismuth Teluride calls
-    # system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
-    # Sweep Wilson mass
+
     dirname_E = 'E_{:.1f}'.format(params.E0)
     if (not os.path.exists(dirname_E)):
         os.mkdir(dirname_E)
