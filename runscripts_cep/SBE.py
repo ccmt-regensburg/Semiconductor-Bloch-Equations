@@ -125,9 +125,6 @@ def main(sys, dipole, params):
 
     # Initalise electric_field, create fnumba and initalise ode solver
     electric_field = make_electric_field(E0, w, alpha, chirp, phase)
-    testtimes = np.linspace(t0, tf, 1001)
-    pl.plot(testtimes, electric_field(testtimes))
-    pl.show()
     fnumba = make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
