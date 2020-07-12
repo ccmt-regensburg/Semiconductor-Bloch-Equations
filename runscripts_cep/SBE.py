@@ -18,6 +18,7 @@ def main(sys, dipole, params):
     save_file = params.save_file
     save_full = params.save_full
     test = params.test
+    dipole_off = params.dipole_off
 
     # Unit converstion factors
     fs_conv = params.fs_conv
@@ -147,13 +148,22 @@ def main(sys, dipole, params):
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
 
-        # Calculate the dipole components along the path
-        di_00x = dipole.Axfjit[0][0](kx=kx_in_path, ky=ky_in_path)
-        di_01x = dipole.Axfjit[0][1](kx=kx_in_path, ky=ky_in_path)
-        di_11x = dipole.Axfjit[1][1](kx=kx_in_path, ky=ky_in_path)
-        di_00y = dipole.Ayfjit[0][0](kx=kx_in_path, ky=ky_in_path)
-        di_01y = dipole.Ayfjit[0][1](kx=kx_in_path, ky=ky_in_path)
-        di_11y = dipole.Ayfjit[1][1](kx=kx_in_path, ky=ky_in_path)
+        if (dipole_off):
+            zeros = np.zeros(np.size(kx_in_path), dtype=np.complex)
+            di_00x = zeros
+            di_01x = zeros
+            di_11x = zeros
+            di_00y = zeros
+            di_01y = zeros
+            di_11y = zeros
+        else:
+            # Calculate the dipole components along the path
+            di_00x = dipole.Axfjit[0][0](kx=kx_in_path, ky=ky_in_path)
+            di_01x = dipole.Axfjit[0][1](kx=kx_in_path, ky=ky_in_path)
+            di_11x = dipole.Axfjit[1][1](kx=kx_in_path, ky=ky_in_path)
+            di_00y = dipole.Ayfjit[0][0](kx=kx_in_path, ky=ky_in_path)
+            di_01y = dipole.Ayfjit[0][1](kx=kx_in_path, ky=ky_in_path)
+            di_11y = dipole.Ayfjit[1][1](kx=kx_in_path, ky=ky_in_path)
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
