@@ -59,9 +59,9 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
-    dipole_off    = False  # Turn all dipoles to 0
+    dipole_off    = True   # Turn all dipoles to 0
     user_out      = True   # Set to True to get user plotting and progress output
     save_file     = True   # To save exact data
-    save_full     = False  # Save full information
+    save_full     = True   # Save full information
     test          = False  # Test plots of exact data
 

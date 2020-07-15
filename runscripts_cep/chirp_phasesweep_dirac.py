@@ -25,7 +25,9 @@ def run():
         os.mkdir(dirname_mz)
     os.chdir(dirname_mz)
 
-    for chirp in np.linspace(-0.920, 0.920, 11):
+    chirplist = np.linspace(-0.920, 0.920, 11)
+    # [-0.920, -0.736, -0.552, -0.368, -0.184, 0.000, 0.184, 0.368, 0.552, 0.736, 0.920]
+    for chirp in chirplist[6:]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
