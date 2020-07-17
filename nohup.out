@@ -1,0 +1,5502 @@
+Matplotlib is building the font cache using fc-list. This may take a moment.
+Traceback (most recent call last):
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 1341, in <module>
+    fontManager = json_load(_fmcache)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 936, in json_load
+    with open(filename, 'r') as fh:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/xdg-cache-evb28117/matplotlib/fontlist-v310.json'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "SBE.py", line 3, in <module>
+    import matplotlib.pyplot as pl
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/pyplot.py", line 32, in <module>
+    import matplotlib.colorbar
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/colorbar.py", line 31, in <module>
+    import matplotlib.contour as contour
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/contour.py", line 16, in <module>
+    import matplotlib.font_manager as font_manager
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 1343, in <module>
+    _rebuild()
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 1334, in _rebuild
+    fontManager = FontManager()
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 989, in __init__
+    *findSystemFonts(fontext=fontext)]:
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 316, in findSystemFonts
+    fontfiles.update(get_fontconfig_fonts(fontext))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 292, in get_fontconfig_fonts
+    return [fname for fname in _call_fc_list()
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/matplotlib/font_manager.py", line 280, in _call_fc_list
+    out = subprocess.check_output(['fc-list', '--format=%{file}\\n'])
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/subprocess.py", line 411, in check_output
+    **kwargs).stdout
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/subprocess.py", line 490, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/subprocess.py", line 951, in communicate
+    stdout = self.stdout.read()
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "SBE.py", line 13, in <module>
+    import systems as sys
+  File "/home/evb28117/Bachelorarbeit/Code/sbe-solver/systems.py", line 51, in <module>
+    dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym, offdiagonal_k=True)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/dipole/symbolic_dipole.py", line 141, in __init__
+    self.Axfjit = matrix_to_njit_functions(self.Ax, self.hsymbols)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in matrix_to_njit_functions
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in <listcomp>
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in <listcomp>
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 41, in to_njit_function
+    return __to_njit_function_k(sf, hsymbols, kx, ky)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 50, in __to_njit_function_k
+    return njit(lambdify(hsymbols, sf, "numpy"))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/utilities/lambdify.py", line 863, in lambdify
+    expr_str = str(expr)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/basic.py", line 426, in __str__
+    return sstr(self, order=None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 901, in sstr
+    s = p.doprint(expr)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 251, in doprint
+    return self._str(self._print(expr))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 56, in _print_Add
+    t = self._print(term)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 316, in _print_Mul
+    b_str = [self.parenthesize(x, prec, strict=False) for x in b]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 316, in <listcomp>
+    b_str = [self.parenthesize(x, prec, strict=False) for x in b]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 37, in parenthesize
+    return self._print(item)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 587, in _print_Pow
+    return "sqrt(%s)" % self._print(expr.base)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 56, in _print_Add
+    t = self._print(term)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 605, in _print_Pow
+    return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 35, in parenthesize
+    return "(%s)" % self._print(item)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 56, in _print_Add
+    t = self._print(term)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 315, in _print_Mul
+    a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 315, in <listcomp>
+    a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 37, in parenthesize
+    return self._print(item)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 587, in _print_Pow
+    return "sqrt(%s)" % self._print(expr.base)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 56, in _print_Add
+    t = self._print(term)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 605, in _print_Pow
+    return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 37, in parenthesize
+    return self._print(item)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 275, in _print
+    if AppliedUndef in classes:
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "SBE.py", line 13, in <module>
+    import systems as sys
+  File "/home/evb28117/Bachelorarbeit/Code/sbe-solver/systems.py", line 51, in <module>
+    dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym, offdiagonal_k=True)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/dipole/symbolic_dipole.py", line 159, in __init__
+    self.offdiagonal_k(wf)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/dipole/symbolic_dipole.py", line 194, in offdiagonal_k
+    self.hsymbols, kpflag=True)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in matrix_to_njit_functions
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in <listcomp>
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in <listcomp>
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 39, in to_njit_function
+    return __to_njit_function_kp(sf, hsymbols, kx, ky, kxp, kyp)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 64, in __to_njit_function_kp
+    return njit(lambdify(hsymbols, sf, "numpy"))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/utilities/lambdify.py", line 863, in lambdify
+    expr_str = str(expr)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/basic.py", line 426, in __str__
+    return sstr(self, order=None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 901, in sstr
+    s = p.doprint(expr)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 251, in doprint
+    return self._str(self._print(expr))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 56, in _print_Add
+    t = self._print(term)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 315, in _print_Mul
+    a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 315, in <listcomp>
+    a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 35, in parenthesize
+    return "(%s)" % self._print(item)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 56, in _print_Add
+    t = self._print(term)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 315, in _print_Mul
+    a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 315, in <listcomp>
+    a_str = [self.parenthesize(x, prec, strict=False) for x in a]
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 35, in parenthesize
+    return "(%s)" % self._print(item)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 51, in _print_Add
+    terms = self._as_ordered_terms(expr, order=order)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 308, in _as_ordered_terms
+    return expr.as_ordered_terms(order=order)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 1129, in as_ordered_terms
+    from .numbers import Number, NumberSymbol
+  File "<frozen importlib._bootstrap>", line 1019, in _handle_fromlist
+KeyboardInterrupt
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.00_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.00_efermi- 0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.00_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.00_efermi--0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.00_efermi- 0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi- 0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi- 0.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi--0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi- 0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi--0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.00_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi--0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi- 0.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi- 0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi- 0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi--0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-0.20_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi- 0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi--0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi- 0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi--0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-100_Nk2-2_T-0.20_efermi- 0.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 534, in time_evolution
+    bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field, paths, dk, E_dir)
+  File "/home/evb28117/Bachelorarbeit/Code/sbe-solver/epsilon.py", line 39, in epsilon
+    bandstruct[:,0] = np.arange(-length, length+dk, dk)
+ValueError: could not broadcast input array from shape (200) into shape (100)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 534, in time_evolution
+    bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field, paths, dk, E_dir)
+  File "/home/evb28117/Bachelorarbeit/Code/sbe-solver/epsilon.py", line 39, in epsilon
+    bandstruct[:,0] = np.arange(-length, length+dk, dk)
+ValueError: could not broadcast input array from shape (200) into shape (100)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 534, in time_evolution
+    bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field, paths, dk, E_dir)
+  File "/home/evb28117/Bachelorarbeit/Code/sbe-solver/epsilon.py", line 39, in epsilon
+    bandstruct[:,0] = np.arange(-length, length+dk, dk)
+ValueError: could not broadcast input array from shape (200) into shape (100)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 588, in time_evolution
+    solution.append(np.array(path_solution)[:, 0:-1])
+MemoryError: Unable to allocate 489. MiB for an array with shape (19999, 1601) and data type complex128
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-0.20_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-0.20_efermi--0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-0.20_efermi--0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-200_Nk2-2_T-0.20_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-200_Nk2-2_T-0.20_efermi- 0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-200_Nk2-2_T-0.20_efermi- 0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-0.20_efermi- 0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-0.20_efermi- 0.8_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-0.20_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 609, in time_evolution
+    solution = np.array(solution)
+MemoryError: Unable to allocate 977. MiB for an array with shape (200, 2, 19999, 8) and data type complex128
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 594, in time_evolution
+    solution       = np.array(solution)
+MemoryError: Unable to allocate 977. MiB for an array with shape (2, 19999, 1600) and data type complex128
+qt.qpa.screen: QXcbConnection: Could not connect to display :0
+Could not connect to any X display.
+Matplotlib is building the font cache using fc-list. This may take a moment.
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 588, in time_evolution
+    solution.append(np.array(path_solution)[:, 0:-1])
+MemoryError: Unable to allocate 977. MiB for an array with shape (19999, 3201) and data type complex128
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 588, in time_evolution
+    solution.append(np.array(path_solution)[:, 0:-1])
+MemoryError: Unable to allocate 977. MiB for an array with shape (19999, 3201) and data type complex128
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-0.20_efermi--0.5_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 1600
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 594, in time_evolution
+    solution       = np.array(solution)
+MemoryError: Unable to allocate 3.81 GiB for an array with shape (2, 19999, 6400) and data type complex128
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 1600
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 594, in time_evolution
+    solution       = np.array(solution)
+MemoryError: Unable to allocate 3.81 GiB for an array with shape (2, 19999, 6400) and data type complex128
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 609, in time_evolution
+    solution = np.array(solution)
+MemoryError: Unable to allocate 977. MiB for an array with shape (200, 2, 19999, 8) and data type complex128
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1427, in <module>
+    main()
+  File "SBE.py", line 165, in main
+    Bcurv_in_B_dynamics, 'density_matrix_dynamics')
+  File "SBE.py", line 594, in time_evolution
+    solution       = np.array(solution)
+MemoryError: Unable to allocate 977. MiB for an array with shape (2, 19999, 1600) and data type complex128
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-10.00_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-10.00_efermi--1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi--1e+01_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi-1e+01_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi- 1.0_gamma-10.00_w-25.00_E-10.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-1.00_efermi- 1.0_gamma-10.00_w-25.00_E-1.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-1.00_a-25.00_ph-0.00_T-01.00
+Traceback (most recent call last):
+  File "SBE.py", line 13, in <module>
+    import systems as sys
+  File "/home/evb28117/Bachelorarbeit/Code/sbe-solver/systems.py", line 64, in <module>
+    curv = hfsbe.dipole.SymbolicCurvature(h_sym, dipole.Ax, dipole.Ay)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/dipole/symbolic_curvature.py", line 34, in __init__
+    self.Bfjit = matrix_to_njit_functions(self.B, hsymbols)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in matrix_to_njit_functions
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in <listcomp>
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 16, in <listcomp>
+    for i in range(shp[0])] for j in range(shp[1])]
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 41, in to_njit_function
+    return __to_njit_function_k(sf, hsymbols, kx, ky)
+  File "/home/evb28117/Bachelorarbeit/Code/hfsbe/hfsbe/utility/utility.py", line 50, in __to_njit_function_k
+    return njit(lambdify(hsymbols, sf, "numpy"))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/utilities/lambdify.py", line 863, in lambdify
+    expr_str = str(expr)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/basic.py", line 426, in __str__
+    return sstr(self, order=None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 901, in sstr
+    s = p.doprint(expr)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 251, in doprint
+    return self._str(self._print(expr))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 289, in _print
+    return getattr(self, printmethod)(expr, **kwargs)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/str.py", line 51, in _print_Add
+    terms = self._as_ordered_terms(expr, order=order)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/printing/printer.py", line 308, in _as_ordered_terms
+    return expr.as_ordered_terms(order=order)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 1147, in as_ordered_terms
+    terms, gens = self.as_terms()
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 1179, in as_terms
+    coeff = complex(coeff)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/expr.py", line 332, in __complex__
+    return complex(float(re), float(im))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/numbers.py", line 673, in __float__
+    return mlib.to_float(self._as_mpf_val(53))
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/numbers.py", line 1237, in _as_mpf_val
+    rv = mpf_norm(self._mpf_, prec)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/sympy/core/numbers.py", line 175, in mpf_norm
+    rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
+KeyboardInterrupt
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi- 1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+  File "SBE.py", line 310
+    five_fig.xticks([np.arange(0,25,step=1i),np.arange(0,25,step=1),np.arange(0,25,step=1)])
+                                          ^
+SyntaxError: invalid syntax
+  File "SBE.py", line 310
+    five_fig.xticks([np.arange(0,25,step=1i),np.arange(0,25,step=1),np.arange(0,25,step=1)])
+                                          ^
+SyntaxError: invalid syntax
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi- 1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+Traceback (most recent call last):
+  File "SBE.py", line 1431, in <module>
+    main()
+  File "SBE.py", line 310, in main
+    five_fig.xticks([np.arange(0,25,step=1),np.arange(0,25,step=1),np.arange(0,25,step=1)])
+AttributeError: 'Figure' object has no attribute 'xticks'
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-100_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-200_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 400
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-200_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-400_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 1600
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-800_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 1600
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-800_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-10.00_efermi--1.8_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-400_Nk2-2_T-10.00_efermi--1.8_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-2.50_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-2.50_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (30.000000)[0.005834]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-30.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (30.000000)[0.005834]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-30.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 3200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-1600_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 3200
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (5.000000)[0.000972]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/velocity/Nk1-1600_Nk2-2_T-1.00_efermi--1.0_gamma-10.00_w-25.00_E-5.00_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/zinc-blende/length/Nk1-400_Nk2-2_T-1.00_efermi--1.8_gamma-10.00_w-25.00_E-2.50_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (2.500000)[0.000486]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (1.000000)[0.000194]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (30.000000)[0.005834]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (10.000000)[0.001945]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/misc/data1/psi_devel/anaconda3/lib/python3.7/site-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (30.000000)[0.005834]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+Enter density matrix dynamics.
+path: 1
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%

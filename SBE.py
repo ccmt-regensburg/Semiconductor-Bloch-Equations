@@ -1,3 +1,4 @@
+import params
 import numpy as np
 from numba import njit
 import matplotlib.pyplot as pl
@@ -9,7 +10,6 @@ import os
 
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
-import params
 import systems as sys
 import epsilon
 from efield import driving_field
@@ -251,7 +251,7 @@ def main():
             os.makedirs(gauge)
         os.chdir(gauge)
 
-        directory       = str('Nk1-{}_Nk2-{}_efermi-{:4.2}_T-{:4.2f}_w-{:4.2f}_E-{:4.2f}_a-{:4.2f}_ph-{:3.2f}_T-{:05.2f}').format(Nk1,Nk2,e_fermi/eV_conv,temperature/eV_conv,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+        directory       = str('Nk1-{}_Nk2-{}_T-{:4.2f}_efermi-{:4.2}_gamma-{:4.2f}_w-{:4.2f}_E-{:4.2f}_a-{:4.2f}_ph-{:3.2f}_T-{:05.2f}').format(Nk1,Nk2,temperature/eV_conv,e_fermi/eV_conv,params.gamma,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
 
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -262,6 +262,8 @@ def main():
         np.savetxt("time.txt", np.transpose(data ) )
         data    = [freq/w]
         np.savetxt("frequency.txt", np.transpose(data ) )
+        data    = bandstruct
+        np.savetxt("bandstruct.txt", data)
         png_base = os.getcwd()
 
         os.chdir(old_directory)
@@ -305,6 +307,7 @@ def main():
         ax_I_E_dir.grid(True,axis='x')
         ax_I_E_dir.set_xlim(freq_lims)
         ax_I_E_dir.set_ylim(log_limits)
+        ax_I_E_dir.set_xticks(np.arange(0,25,step=1))
         if do_B_field:
            label_emission = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_E\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
@@ -320,10 +323,11 @@ def main():
               label='$I_{\mathrm{inter} \parallel E}(t) = \sum_{n\\neq n\'}\int d\mathbf{k}\;\hat{e}_E\cdot \mathbf{d}_{nn\'}(\mathbf{k})\dot\\rho_{n\'n(\mathbf{k},t)}$')
         ax_I_E_dir.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_E_dir.set_ylabel(r'Emission $I_{\parallel E}(\omega)$ in E-field direction')
-        ax_I_E_dir.legend(loc='upper right')
+        ax_I_E_dir.legend(loc='upper right')  
         ax_I_ortho.grid(True,axis='x')
         ax_I_ortho.set_xlim(freq_lims)
         ax_I_ortho.set_ylim(log_limits)
+        ax_I_ortho.set_xticks(np.arange(0,25,step=1))
         if do_B_field:
            label_emission = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
@@ -339,9 +343,11 @@ def main():
         ax_I_ortho.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_ortho.set_ylabel(r'Emission $I_{\bot E}(\omega)$ $\bot$ to E-field direction')
         ax_I_ortho.legend(loc='upper right')
+        #pl.xticks(np.arange(0,25,step=1))
         ax_I_total.grid(True,axis='x')
         ax_I_total.set_xlim(freq_lims)
         ax_I_total.set_ylim(log_limits)
+        ax_I_total.set_xticks(np.arange(0,25,step=1))
         ax_I_total.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
            label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
         if not do_B_field:
@@ -350,6 +356,7 @@ def main():
         ax_I_total.set_xlabel(r'Frequency $\omega/\omega_0$')
         ax_I_total.set_ylabel(r'Total emission $I(\omega)$')
         ax_I_total.legend(loc='upper right')
+        #pl.xticks(np.arange(0,25,step=1))
 
         if do_emission_wavep:
 
@@ -434,15 +441,18 @@ def main():
         
         fig6 = pl.figure()
         x_val = [x[0] for x in bandstruct]
-        y_val_m = [x[1] for x in bandstruct]
-        y_val_p = [x[2] for x in bandstruct]
+        y_val_m = [x[1]/eV_conv for x in bandstruct]
+        y_val_p = [x[2]/eV_conv for x in bandstruct]
   
         pl.plot(x_val,y_val_m,label=r'$\epsilon_{minus}$') 
         pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
+        pl.axhline(y=e_fermi/eV_conv)
         pl.xlabel(r'$k_x$ / ($1/a_0$)')
         pl.ylabel(r'$\epsilon$')
         pl.legend()
         pl.title("Bandstructure")
+
+
         if params.save_figures:
             real_fig.savefig(png_base+'/1.png')
             five_fig.savefig(png_base+'/2.png')
@@ -450,7 +460,8 @@ def main():
             fig5.savefig(png_base+'/4.png')
             polar_fig.savefig(png_base+'/5.png')
             fig6.savefig(png_base+'/6.png')
-        pl.show()               
+        if params.show_figures:
+            pl.show() 
                                   
 
     # OUTPUT STANDARD TEST VALUES
