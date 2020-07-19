@@ -91,7 +91,9 @@ def simple_fourier(freqw, data,
     ax.set_xlabel(xlabel)
     ax.semilogy(freqw[0], data.T)
 
-    ax.legend(paramlegend)
+    if (paramlegend is not None):
+        ax.legend(paramlegend)
+
     fig.suptitle(dirname)
     plt.savefig(savename)
 

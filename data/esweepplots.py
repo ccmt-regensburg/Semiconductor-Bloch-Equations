@@ -43,6 +43,7 @@ Int_exact_ortho = Iexactdata[:, 7]
 Int_exact_base_freq = find_base_freq(freqw, Int_exact_E_dir, Int_exact_ortho)
 Int_exact_E_dir = (Int_exact_E_dir.T/Int_exact_base_freq).T
 Int_exact_ortho = (Int_exact_ortho.T/Int_exact_base_freq).T
+print(Int_exact_ortho.shape)
 
 ylabel = r'$[I_\mathrm{exact}](\omega)$ intensity in a.u.'
 dir_ortho_fourier(freqw, Int_exact_E_dir, Int_exact_ortho, ylabel=ylabel,

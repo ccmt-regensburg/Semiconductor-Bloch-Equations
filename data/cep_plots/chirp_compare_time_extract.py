@@ -14,7 +14,7 @@ phases = np.linspace(0, np.pi, 20)
 orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
 
 # Evaluation parameters for fast scanning (phase diagram)
-mlist = np.linspace(0, 0.0275620, 6)
+mlist = np.linspace(0, 0.0165372, 7)
 chirplist = np.linspace(-0.92, 0.92, 11)
 phaselist = np.linspace(0, np.pi, 20)
 
