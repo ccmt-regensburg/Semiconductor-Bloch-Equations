@@ -56,11 +56,6 @@ def main(sys, dipole, params):
     tf = (total_fs/2)*fs_conv
     dt = params.dt*fs_conv
 
-    # t0 = int(params.t0*fs_conv)                 # Initial time condition
-    # tf = int(params.tf*fs_conv)                 # Final time
-    # dt = params.dt*fs_conv                      # Integration time step
-    # dt_out = 1/(2*params.dt)                    # Solution output time step
-
     # Brillouin zone type
     BZ_type = params.BZ_type                    # Type of Brillouin zone
 
@@ -73,9 +68,9 @@ def main(sys, dipole, params):
     elif BZ_type == '2line':
         Nk_in_path = params.Nk_in_path
         Nk = 2*Nk_in_path
-        # rel_dist_to_Gamma = params.rel_dist_to_Gamma
-        # length_path_in_BZ = params.length_path_in_BZ
         angle_inc_E_field = params.angle_inc_E_field
+        Nk1 = Nk_in_path
+        Nk2 = 2
 
     b1 = params.b1                              # Reciprocal lattice vectors
     b2 = params.b2
@@ -119,10 +114,13 @@ def main(sys, dipole, params):
         # BZ_plot(kpnts, a, b1, b2, paths)
 
     t_constructed = False
-
     # Solution containers
-    t = []
-    solution = []
+    t = np.empty(params.Nt)
+
+    # The solution array is structred as: first index is Nk1-index,
+    # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
+    solution = np.empty((Nk1, Nk2, params.Nt, 4), dtype=complex)
+    A_field = np.empty(params.Nt, dtype=complex)
 
     # Initalise electric_field, create fnumba and initalise ode solver
     electric_field = make_electric_field(E0, w, alpha, chirp, phase)
@@ -131,19 +129,11 @@ def main(sys, dipole, params):
         .set_integrator('zvode', method='bdf', max_step=dt)
 
     # Vector field
-    A_field = []
+
     # SOLVING
     ###########################################################################
     # Iterate through each path in the Brillouin zone
-
-    path_num = 1
-    for path in paths:
-        if user_out:
-            print('path: ' + str(path_num))
-
-        # Solution container for the current path
-        path_solution = []
-
+    for Nk2_idx, path in enumerate(paths):
         # Retrieve the set of k-points for the current path
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
@@ -188,7 +178,12 @@ def main(sys, dipole, params):
             .set_f_params(path, dk, ecv_in_path, dipole_in_path, A_in_path, y0)
 
         # Propagate through time
+
+        # Index of current integration time step
         ti = 0
+        # Index of current output time step
+        t_idx = 0
+
         while solver.successful() and ti < Nt:
             # User output of integration progress
             # print(ti)
@@ -201,41 +196,20 @@ def main(sys, dipole, params):
             # Save solution each output step
             if (ti % dt_out == 0):
                 # Do not append the last element (A_field)
-                path_solution.append(solver.y[:-1])
+
+                solution[:, Nk2_idx, t_idx, :] = solver.y[:-1].reshape(Nk1, 4)
                 # Construct time array only once
                 if not t_constructed:
                     # Construct time and A_field only in first round
-                    t.append(solver.t)
-                    A_field.append(solver.y[-1])
+                    t[t_idx] = solver.t
+                    A_field[t_idx] = solver.y[-1]
 
+                t_idx += 1
             # Increment time counter
             ti += 1
 
         # Flag that time array has been built up
         t_constructed = True
-        path_num += 1
-
-        # Append path solutions to the total solution arrays
-        solution.append(path_solution)
-
-    # Convert solution and time array to numpy arrays
-    t = np.array(t)
-    solution = np.array(solution)
-    A_field = np.array(A_field)
-
-    # Slice solution along each path for easier observable calculation
-    # Split the last index into 100 subarrays, corresponding to kx
-    # Consquently the new last axis becomes 4.
-    if BZ_type == 'full':
-        solution = np.array_split(solution, Nk1, axis=2)
-    elif BZ_type == '2line':
-        solution = np.array_split(solution, Nk_in_path, axis=2)
-
-    # Convert lists into numpy arrays
-    solution = np.array(solution)
-
-    # The solution array is structred as: first index is Nk1-index,
-    # second is Nk2-index, third is timestep, fourth is f_h, p_he, p_eh, f_e
 
     # COMPUTE OBSERVABLES
     ###########################################################################
@@ -276,10 +250,6 @@ def main(sys, dipole, params):
     # Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2
 
     # Save observables to file
-    if (BZ_type == '2line'):
-        Nk1 = Nk_in_path
-        Nk2 = 2
-
     tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
         .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
 

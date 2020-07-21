@@ -12,31 +12,30 @@ from SBE import main as solver
 
 def run():
     A = 0.19732     # Fermi velocity
+    # mz_max = 0.027562
 
-    # Gaps used in the dirac system
-    mz_max = 0.0165372
-    mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[3]
+    mz = 0
 
     params.e_fermi = 0.2
     params.rel_dist_to_Gamma = 0.03
 
-    params.E0 = 10.0
+    E_max = 20
+    Elist = np.linspace(2.5, E_max, 8)
+    E = Elist[7]
 
-    # Adjust bandwidth to the gap and dirac bandwidth
-    At = 0.5*(A*3*np.pi/(2*params.a) - mz)
-    # Adjusted gap in the semicondcutor
-    mz_adjust = mz/At
+    params.E0 = E
+    params.e_fermi = 0
 
-    # SOC/Dipole parameter
-    mx = mz_max/10
+    dirname_E = 'E_{:.1f}'.format(params.E0)
 
-    dirname = 'mz_{:.7f}'.format(mz_adjust) + '_A_{:.7f}'.format(At)
-    if (not os.path.exists(dirname)):
-        os.mkdir(dirname)
-    os.chdir(dirname)
+    if (not os.path.exists(dirname_E)):
+        os.mkdir(dirname_E)
+    os.chdir(dirname_E)
 
-    for chirp in np.linspace(-0.920, 0.920, 11):
+
+    chirplist = np.linspace(-0.920, 0.920, 11)
+    # [-0.920, -0.736, -0.552, -0.368, -0.184, 0.000, 0.184, 0.368, 0.552, 0.736, 0.920]
+    for chirp in chirplist[:]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
@@ -52,8 +51,7 @@ def run():
                 os.mkdir(dirname_phase)
             os.chdir(dirname_phase)
 
-            system = hfsbe.example.Semiconductor(A=At, mz=mz_adjust, mx=mx,
-                                                 a=params.a, align=True)
+            system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mz=mz)
             h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
             dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
             solver(system, dipole, params)

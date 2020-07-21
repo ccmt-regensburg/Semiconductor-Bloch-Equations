@@ -3,8 +3,8 @@ import numpy as np
 
 
 class params:
-# System parameters
-#########################################################################
+    # System parameters
+    #########################################################################
     a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
     e_fermi             = 0.2         # Fermi energy in eV
     temperature         = 0.03        # Temperature in eV
@@ -25,16 +25,16 @@ class params:
     Nk2                 = 40          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 800        # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.03       # relative distance (in units of 2pi/a) of both paths to Gamma
-    length_path_in_BZ   = 3*np.pi/a  # Length of path in BZ K-direction
+    Nk_in_path          = 800         # Number of kpoints in each of the two paths
+    rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
+    length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
-    angle_inc_E_field   = 0        # incoming angle of the E-field in degree
+    angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
     # Driving field parameters
     ##########################################################################
     align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
-    E0                  = 4.00        # Pulse amplitude (MV/cm)
+    E0                  = 2.50        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.00        # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
@@ -59,9 +59,9 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
-    dipole_off    = True   # Turn all dipoles to 0
+    dipole_off    = False  # Turn all dipoles to 0
     user_out      = True   # Set to True to get user plotting and progress output
     save_file     = True   # To save exact data
-    save_full     = True   # Save full information
+    save_full     = False  # Save full information
     test          = False  # Test plots of exact data
 

@@ -15,10 +15,12 @@ def run():
     # mz_max = 0.027562
     mz_max = 0.0165372
     mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[6]
+    mz = mzlist[3]
 
     params.e_fermi = 0.2
     params.rel_dist_to_Gamma = 0.03
+
+    params.E0 = 10.0
 
     dirname_mz = 'mz_{:.7f}'.format(mz)
     if (not os.path.exists(dirname_mz)):
@@ -27,7 +29,7 @@ def run():
 
     chirplist = np.linspace(-0.920, 0.920, 11)
     # [-0.920, -0.736, -0.552, -0.368, -0.184, 0.000, 0.184, 0.368, 0.552, 0.736, 0.920]
-    for chirp in chirplist[6:]:
+    for chirp in chirplist[:]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
