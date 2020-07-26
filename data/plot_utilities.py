@@ -158,12 +158,12 @@ def cep_plot_time(time, phases, data, title=None, xlim=(-8000, 8000), max=None,
         plt.show()
 
 
-def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=None, show=True):
+def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=1, min=1e-14,
+             show=True):
     data = np.real(data)
-    if (max is not None):
+    if (max != 1):
         data /= np.real(max)
 
-    min = 1e-14 # np.min(data[:, 2001:3500])
     log_max = np.log(np.max(data))/np.log(10)
     log_min = np.log(np.min(data[data > min]))/np.log(10)
     F, P = np.meshgrid(freqw[0], phases)
@@ -175,9 +175,9 @@ def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=None, show=True)
                        cmap=cm.gist_ncar,
                        norm=colors.LogNorm(vmin=min, vmax=1e-0))
 
-    # tickposition = [1e-6, 1e-4, 1e-2, 1e-0]
-    tickposition = [1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2] 
-    # tickposition = [1e-16, 1e-14, 1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e-0]
+    min_exponent = int(np.log10(min))
+    tickposition = np.logspace(min_exponent, 0, num=np.abs(min_exponent)+1)
+
     cb = plt.colorbar(cont, ticks=tickposition)
     cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
     if (max is not None):

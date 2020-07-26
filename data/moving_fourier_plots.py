@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.fft import fft, fftshift
 from plot_utilities import read_data, simple_fourier
+import seaborn as sns
+sns.set_palette(sns.color_palette("gist_ncar", 11))
 
 
 fs_conv = 41.34137335                  # (1fs    = 41.341473335 a.u.)
@@ -52,7 +54,7 @@ Idata, Iexactdata, Jdata, Pdata = read_data(orderpath, dirpath, parampaths)
 #############################################################################
 def gaussian_envelope(t, t0):
     # alpha = 1033.53 Original 25fs envelope
-    alpha = 1033.53
+    alpha = 700
     return np.exp(-(t-t0)**2.0/(2.0*alpha)**2)
 
 
@@ -63,10 +65,11 @@ freqw = Iexactdata[:, 3]
 
 Int_data = (Int_exact_E_dir + Int_exact_ortho)
 timelist = time[0]
+print(timelist)
 
 # Do a different Fourier transform per Gaussian (Gabor transform)
 test_data = []
-time_shifts = np.linspace(-7000, 5000, 10)
+time_shifts = np.linspace(0, 7000, 11)
 for t0 in time_shifts:
     # Iw_exact_full = fftshift(fft(gaussian_envelope(timelist, t0),
     #                          norm='ortho'))
@@ -82,8 +85,9 @@ test_data = np.array(test_data)
 #############################################################################
 # simple_fourier(freqw[:, 2048:], test_data[5:, 2048:], paramlegend=np.arange(5),
                # ylim=(1e-15, 1e5), xlim=(0, 1000))
-simple_fourier(freqw, test_data, paramlegend=time_shifts, ylim=(1e-15, 1e5),
-               xlim=(0, 30))
+time_shifts_labels = ['{:.2f} fs'.format(ts) for ts in time_shifts/fs_conv]
+simple_fourier(freqw, test_data, paramlegend=time_shifts_labels, ylim=(1e-15, 1e5),
+               xlim=(0, 30), dirname=r'Shifted Gaussian $\mathrm{FWHM}=56 \si{fs}$')
 # mztitle = mzstring.replace('_', '=')
 # chirptitle = chirpstring.replace('_', '=')
 #############################################################################
