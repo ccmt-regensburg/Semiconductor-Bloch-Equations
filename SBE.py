@@ -250,8 +250,12 @@ def main():
         if not os.path.exists(gauge):
             os.makedirs(gauge)
         os.chdir(gauge)
+        
+        if params.structure_type == "wurtzite":
+            directory       = str('Nk1-{}_Nk2-{}_T-{:4.2f}_efermi-{:4.2}_gamma-{:4.2f}_w-{:4.2f}_E-{:4.2f}_alpha-{:4.2f}_a-{:4.2f}_ph-{:3.2f}_T-{:05.2f}').format(Nk1,Nk2,temperature/eV_conv,e_fermi/eV_conv,params.gamma,w/THz_conv,E0/E_conv,params.alpha_wz,alpha/fs_conv,phase,T2/fs_conv)
+        if params.structure_type == "zinc-blende": 
+            directory       = str('Nk1-{}_Nk2-{}_T-{:4.2f}_efermi-{:4.2}_gamma-{:4.2f}_w-{:4.2f}_E-{:4.2f}_a-{:4.2f}_ph-{:3.2f}_T-{:05.2f}').format(Nk1,Nk2,temperature/eV_conv,e_fermi/eV_conv,params.gamma,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
 
-        directory       = str('Nk1-{}_Nk2-{}_T-{:4.2f}_efermi-{:4.2}_gamma-{:4.2f}_w-{:4.2f}_E-{:4.2f}_a-{:4.2f}_ph-{:3.2f}_T-{:05.2f}').format(Nk1,Nk2,temperature/eV_conv,e_fermi/eV_conv,params.gamma,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
 
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -264,10 +268,7 @@ def main():
         np.savetxt("frequency.txt", np.transpose(data ) )
         data    = bandstruct
         np.savetxt("bandstruct.txt", data)
-        png_base = os.getcwd()
-
-        os.chdir(old_directory)
-     
+             
     if (not test and user_out):
         real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
@@ -300,6 +301,15 @@ def main():
         freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
         freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
         Int_tot_base_freq = Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq]
+        
+        
+        ########## Save Data for freqency plots (2.png)
+        data    = np.array([Int_E_dir/Int_tot_base_freq,Int_exact_E_dir/Int_tot_base_freq, Int_ortho/Int_tot_base_freq,Int_exact_ortho/Int_tot_base_freq])
+        np.savetxt("Ivonf.txt", np.transpose(data))
+        png_base = os.getcwd()
+
+        os.chdir(old_directory)
+
 
 ##########################
 
@@ -400,7 +410,7 @@ def main():
            sc_I_total.set_ylabel(r'Total emission $I(\omega)$')
            sc_I_total.legend(loc='lower right')
 
-######################äää
+######################
 
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         # Countour plots of occupations and gradients of occupations

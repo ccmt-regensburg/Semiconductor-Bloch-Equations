@@ -17,12 +17,12 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
         fermi_function_e_v = 1/(np.exp((e_v-e_fermi)/temperature)+1)
         y0.extend([fermi_function_e_v,0.0,0.0,fermi_function_e_c,0.0,0.0,0.0,0.0])
     else:
-        if (e_c>0):
+        if (e_c>e_fermi):
             y0_e_plus = 0
         else:
             y0_e_plus = 1
 
-        if (e_v>0):
+        if (e_v>e_fermi):
             y0_e_minus = 0
         else:
             y0_e_minus = 1
@@ -31,7 +31,7 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
 
 
 def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
-    alpha = 1                                            #strength of H_diag
+    beta = params.beta                                            #strength of H_diag
     gamma = params.gamma*params.angstr_conv**3           #strength of H_SO, units: eV 
     length = -paths[0,0,0]
 
@@ -42,8 +42,14 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     k_y = (paths[0,0,1])
 
     if params.structure_type == "zinc-blende":
-        bandstruct[:,1] = -1*params.eV_conv*(alpha*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) + 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))           # e_minus or e_v
-        bandstruct[:,2] = -1*params.eV_conv*(alpha*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))           # e_plus or e_c
+        bandstruct[:,1] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) + 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))           # e_minus or e_v
+        bandstruct[:,2] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))           # e_plus or e_c
+
+    if params.structure_type == "wurtzite":
+        alpha = params.alpha_wz*params.angstr_conv
+        bandstruct[:,1] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) + 0.5*np.sqrt((alpha-gamma*(k_x**2+k_y**2))**2*(k_x**2+k_y**2)))
+        bandstruct[:,2] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*np.sqrt((alpha-gamma*(k_x**2+k_y**2))**2*(k_x**2+k_y**2)))
+
     return bandstruct
 
 

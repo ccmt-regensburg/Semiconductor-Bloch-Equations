@@ -9,7 +9,7 @@ a                   = 8.308
 # Galium Arsenic   lattice spacing = 5.653 angstrom = 10.683 a.u.
 # Bismuth Teluride lattice spacing = 4.395 angstrom = 8.308
 e_fermi             =   -1.8         # Fermi energy in eV
-temperature         =   0         # Temperature in eV
+temperature         =   1         # Temperature in eV
 
 # Model Hamiltonian parameters
 C0                  = 0          # Dirac point position
@@ -45,8 +45,8 @@ length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # Gauge
-#gauge               = 'length'
-gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+gauge               = 'length'
+#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -95,5 +95,8 @@ store_all_timesteps = True
 print_J_P_I_files   = True  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 save_figures        = True
 show_figures        = False
-structure_type      = 'zinc-blende'
-gamma               = 10    # Coupling intensity used for bandstruct, units: eV*Angström**3
+structure_type      = 'wurtzite'
+#structure_type      = 'zinc-blende'
+gamma               = 20  # Coupling intensity used for bandstruct, units: eV*Angström**3
+beta                = 1
+alpha_wz            = 1 
