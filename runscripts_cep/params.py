@@ -34,7 +34,7 @@ class params:
     # Driving field parameters
     ##########################################################################
     align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
-    E0                  = 2.50        # Pulse amplitude (MV/cm)
+    E0                  = 5.00        # Pulse amplitude (MV/cm)
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.00        # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
@@ -59,9 +59,9 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
-    dipole_off    = False  # Turn all dipoles to 0
+    dipole_off    = True   # Turn all dipoles to 0
     user_out      = True   # Set to True to get user plotting and progress output
     save_file     = True   # To save exact data
-    save_full     = False  # Save full information
+    save_full     = True   # Save full information
     test          = False  # Test plots of exact data
 

@@ -18,9 +18,12 @@ def run():
     # mb                  = 0.000373195 # Splitting of cones.(10 meV)
     # k_cut               = 0.05        # Model hamiltonian cutoff
     # Sweep electric field
+    params.T2 = 10
     for mu_z in [0, 5, 10, 15, 20, 25]:
 
         params.mu_z = mu_z
+        print("Current mu_x: ", params.mu_z)
+        print("Current mu_y: ", params.mu_y)
         print("Current mu_z: ", params.mu_z)
         dirname = 'mu_z_{:d}'.format(params.mu_z)
         if (not os.path.exists(dirname)):

@@ -258,6 +258,10 @@ def main(sys, dipole, params):
         np.save(I_exact_name, [t, I_exact_E_dir, I_exact_ortho, freq/w,
                 Iw_exact_E_dir, Iw_exact_ortho,
                 Int_exact_E_dir, Int_exact_ortho])
+        # Save the parameters of the calculation
+        params_name = 'params.txt'
+        paramsfile = open(params_name, 'w')
+        paramsfile.write(str(params.__dict__))
 
     if (save_full):
         S_name = 'Sol_' + tail
