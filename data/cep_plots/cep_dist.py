@@ -16,27 +16,13 @@ plt.rcParams['font.size'] = 20
 
 # Phase evaluation
 phases = np.linspace(0, np.pi, 20)
-orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
+orderpath = './data-sbe/dirac/cep/chirp_0.00/'
 
-# Evaluation parameters for fast scanning (phase diagram)
-mlist = np.linspace(0, 0.0275620, 6)
-chirplist = np.linspace(0, 0.92, 6)
-chirplist[1:] *= -1
-
-mz = mlist[5]
-chirp = chirplist[5]
-dist = '0.03'
-
-mzstring = 'mz_' + '{:.7f}'.format(mz)
-chirpstring = 'chirp_' + '{:.3f}'.format(chirp) 
-
-dirpath = mzstring + '/'
-dirpath += chirpstring + '/'
-
-# # Evluation parameters for simple plots
-# dist = '0.07'
-# dirpath = dist + '_dist_to_gamma/'
-
+########################################
+# Evluation parameters for simple plots
+########################################
+dist = '0.07'
+dirpath = dist + '_dist_to_gamma/'
 
 parampaths = ['phase_{:1.2f}/'.format(p) for p in phases]
 dirname = dirpath.strip('/').replace('_', '-').replace('/', '-')
@@ -53,9 +39,5 @@ Int_exact_ortho = Iexactdata[:, 7]
 
 Int_max = find_max_intens(freqw, Int_exact_E_dir, Int_exact_ortho)
 
-mztitle = mzstring.replace('_', '=')
-chirptitle = chirpstring.replace('_', '=')
-
 cep_plot(freqw, phases, Int_exact_E_dir + Int_exact_ortho,
-         mztitle + r'H ' + chirptitle + r'$\mathrm{MV}/\mathrm{cm}$',
-         max=Int_max)
+         r'dist $' + dist + r'*2\pi/a$', max=Int_max)

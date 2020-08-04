@@ -23,6 +23,7 @@ orderpath = '../data-sbe/dirac/cep_phase_diagram/' + \
 # Evaluation parameters for fast scanning (phase diagram)
 mlist = np.linspace(0, 0.0165372, 7)
 chirplist = np.linspace(-0.92, 0.92, 11)
+# chirplist = [-0.920, 0.000]
 
 # mz = mlist[1]
 dist = '0.03'

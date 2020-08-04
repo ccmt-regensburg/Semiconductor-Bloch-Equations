@@ -117,8 +117,11 @@ def total_fourier(freqw, data_dir, data_ortho,
     data_total = data_dir + data_ortho
     for freq, data in zip(freqw, data_total):
         ax.semilogy(freq, data)
-    # ax.legend(paramlegend)
+
     fig.suptitle(dirname)
+
+    if (paramlegend is not None):
+        ax.legend(paramlegend)
 
     if (savename is None):
         plt.show()
