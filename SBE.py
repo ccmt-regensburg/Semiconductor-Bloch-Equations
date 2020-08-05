@@ -293,10 +293,14 @@ def main():
         axPdot.set_xlabel(r'$t$ in fs')
         axPdot.set_ylabel(r'$\dot P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
         axJ.set_xlim(t_lims)
-        axJ.plot(t/fs_conv,J_E_dir)
-        axJ.plot(t/fs_conv,J_ortho)
+        axJ.plot(t/fs_conv,I_exact_E_dir)
+        axJ2    = axJ.twinx()
+        axJ2.plot(t/fs_conv,I_exact_ortho, color="orange")
+        align_yaxis(axJ, axJ2)
         axJ.set_xlabel(r'$t$ in fs')
-        axJ.set_ylabel(r'$J$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axJ.set_ylabel(r'$J_{\parallel}$ in atomic units')
+        axJ2.set_ylabel(r'$J_{\perp}$ in atomic units')
+
 
         freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
         freq_index_base_freq = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
@@ -341,7 +345,7 @@ def main():
         if do_B_field:
            label_emission = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle n\overline{\mathbf{k}}_n(t)|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|n\'\overline{\mathbf{k}}_{n\'}(t) \\rangle\\varrho_{nn\'}(\mathbf{k};t)$'
         else:
-           label_emission = '$I_{\parallel E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
+           label_emission = '$I_{\\bot E}(t) = q\sum_{nn\'}\int d\mathbf{k}\;\langle u_{n\mathbf{k}}|\hat{e}_{\\bot E}\cdot \partial h/\partial \mathbf{k}|_{\mathbf{k}-\mathbf{A}(t)}|u_{n\'\mathbf{k}} \\rangle\\rho_{nn\'}(\mathbf{k},t)$'
         ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission)
         if not do_B_field:
            ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
@@ -453,6 +457,7 @@ def main():
         x_val = [x[0] for x in bandstruct]
         y_val_m = [x[1]/eV_conv for x in bandstruct]
         y_val_p = [x[2]/eV_conv for x in bandstruct]
+
   
         pl.plot(x_val,y_val_m,label=r'$\epsilon_{minus}$') 
         pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
@@ -462,7 +467,17 @@ def main():
         pl.legend()
         pl.title("Bandstructure")
 
-
+        """ 
+        fig7, ax = pl.subplots(2)
+        ax.set_xlim(t_lims)
+        ax.plot(t/fs_conv, I_exact_E_dir)
+        ax2    = ax.twinx()
+        ax2.plot(t/fs_conv, I_exact_ortho, color="orange")
+        ax.set_xlabel(r'$t$ in fs')
+        ax2.set_ylabel(r'$I_{\perp}$ in at.u.')
+        ax.set_ylabel(r'$I_{\parallel}$ in at.u.')
+        align_yaxis(ax, ax2)
+        """
         if params.save_figures:
             real_fig.savefig(png_base+'/1.png')
             five_fig.savefig(png_base+'/2.png')
@@ -470,6 +485,7 @@ def main():
             fig5.savefig(png_base+'/4.png')
             polar_fig.savefig(png_base+'/5.png')
             fig6.savefig(png_base+'/6.png')
+            #fig7.savefig(png_base+'/7.png')
         if params.show_figures:
             pl.show() 
                                   
@@ -1441,6 +1457,23 @@ def BZ_plot(kpnts,a,b1,b2,E_dir,paths):
         pl.plot(path[:,0],path[:,1])
 
     return BZ_fig
+
+def align_yaxis(ax1, ax2):
+    """Align zeros of the two axes, zooming them out by same ratio"""
+    axes = (ax1, ax2)
+    extrema = [ax.get_ylim() for ax in axes]
+    tops = [extr[1] / (extr[1] - extr[0]) for extr in extrema]
+    # Ensure that plots (intervals) are ordered bottom to top:
+    if tops[0] > tops[1]:
+        axes, extrema, tops = [list(reversed(l)) for l in (axes, extrema, tops)]
+
+    # How much would the plot overflow if we kept current zoom levels?
+    tot_span = tops[1] + 1 - tops[0]
+
+    b_new_t = extrema[0][0] + tot_span * (extrema[0][1] - extrema[0][0])
+    t_new_b = extrema[1][1] - tot_span * (extrema[1][1] - extrema[1][0])
+    axes[0].set_ylim(extrema[0][0], b_new_t)
+    axes[1].set_ylim(t_new_b, extrema[1][1])
 
 if __name__ == "__main__":
     main()
