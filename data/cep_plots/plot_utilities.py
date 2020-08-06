@@ -161,8 +161,8 @@ def cep_plot_time(time, phases, data, title=None, xlim=(-8000, 8000), max=None,
         plt.show()
 
 
-def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=1, min=1e-14,
-             show=True):
+def cep_plot(freqw, phases, data, suptitle=None, title=None, xlim=(0, 35),
+             max=1, min=1e-14, show=True):
     data = np.real(data)
     if (max != 1):
         data /= np.real(max)
@@ -184,7 +184,8 @@ def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=1, min=1e-14,
     cb = plt.colorbar(cont, ticks=tickposition)
     cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
     if (max is not None):
-        cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
+        cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max)
+                        + r'\si{[a.u.]}$')
 
     ax.set_xticks(np.arange(xlim[1] + 1))
     ax.grid(True, axis='x', ls='--')
@@ -193,6 +194,9 @@ def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=1, min=1e-14,
     ax.set_ylabel(r'phase $\phi$')
     if(title is not None):
         plt.title(title)
+
+    if(suptitle is not None):
+        plt.suptitle(suptitle)
 
     if (show):
         plt.show()
@@ -222,6 +226,6 @@ def find_max_intens(freqw, data_dir, data_ortho):
     # Only take right half of results
     data = data_dir[:, size//2:] + data_ortho[:, size//2:]
     data_max = np.max(data, axis=1)
-    max = np.average(data_max)
+    max_average = np.average(data_max)
 
-    return np.real(max), data_max
+    return np.real(max_average), data_max

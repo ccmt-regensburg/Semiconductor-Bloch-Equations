@@ -184,7 +184,7 @@ def cep_plot(freqw, phases, data, title=None, xlim=(0, 35), max=1, min=1e-14,
     cb = plt.colorbar(cont, ticks=tickposition)
     cb.set_label(r'$I/\bar{I}_{\mathrm{max}}$')
     if (max is not None):
-        cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} =' + '{:.2e}'.format(max) + r'$')
+        cb.ax.set_title(r'$\bar{I}_{\mathrm{max}} [a.u.] =' + '{:.2e}'.format(max) + r'$')
 
     ax.set_xticks(np.arange(xlim[1] + 1))
     ax.grid(True, axis='x', ls='--')

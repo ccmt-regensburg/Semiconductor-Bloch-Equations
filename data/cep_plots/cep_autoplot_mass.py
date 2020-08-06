@@ -16,20 +16,36 @@ plt.rcParams['font.size'] = 20
 
 # Phase evaluation
 phases = np.linspace(0, np.pi, 20)
-# orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
-orderpath = '../data-sbe/dirac/cep_phase_diagram/' + \
-            '0.03_dist_to_gamma/'
+
+########################################
+# Dirac
+########################################
+# orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/' + \
+#             'E_5.0_coarse_time_grid/'
+
+########################################
+# Semiconductor Quadratic
+########################################
+# orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/' + \
+#             '0.03_dist_to_gamma_mx_0.00165372/'
+
+########################################
+# Semiconductor High Dipole
+########################################
+orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/' + \
+            '0.03_dist_to_gamma_high_dipole/'
+ 
 
 # Evaluation parameters for fast scanning (phase diagram)
 mlist = np.linspace(0, 0.0165372, 7)
-chirplist = np.linspace(-0.92, 0.92, 11)
-# chirplist = [-0.920, 0.000]
+# chirplist = np.linspace(-0.92, 0.92, 11)
+chirplist = [-0.920]
 
 # mz = mlist[1]
 dist = '0.03'
 
 k = 0
-for i, mz in enumerate(mlist[0:]):
+for i, mz in enumerate(mlist[0:1]):
 
     mzstring = 'mz_' + '{:.7f}'.format(mz)
 
@@ -66,7 +82,7 @@ for i, mz in enumerate(mlist[0:]):
         Int_data = (Int_exact_E_dir + Int_exact_ortho)
         # freqw *= rescaledata[i]
         cep_plot(freqw, phases, Int_data,
-                 xlim=(0, 30), max=Int_avg_max, show=False)
+                 xlim=(0, 30), max=Int_avg_max, show=False, min=1e-9)
                  # mztitle + r'H ' + chirptitle + r'$\mathrm{THz}$',
 
         numberstring = '{:02d}'.format(k)
