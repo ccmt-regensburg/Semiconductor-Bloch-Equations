@@ -25,7 +25,7 @@ plt.rcParams['font.size'] = 20
 # datapath2 = '/mnt/storage/Storage/dirac/dipole_off/' \
 #     + 'E_10.0/chirp_-0.920/phase_0.00/'
 
-Estring = 'E_10.0'
+Estring = 'E_5.0'
 chirpstring = 'chirp_-0.920'
 
 datapath1 = '/mnt/storage/Storage/dirac/dipole_on/' \
@@ -71,18 +71,23 @@ for i in range(len(Icontainer)):
     kx_first_path = first_path[:, 0]/au_to_as
     ky_first_path = first_path[:, 1]/au_to_as
 
-    f_e_kx_weight = kx_first_path*f_e.T.real
-    f_e_kx_weight_sq = (kx_first_path**2)*f_e.T.real
+    # Occupation probability
+    p_e = f_e.real/f_e_sum
+    p_e_kx_weight = kx_first_path*p_e.T
+    p_e_kx_weight_sq = (kx_first_path**2)*p_e.T
 
-    f_e_variance = np.sum(f_e_kx_weight_sq - f_e_kx_weight**2, axis=1)/f_e_sum
-    f_e_standard_deviation = np.sqrt(f_e_variance)
-    f_e_density_center = np.sum(f_e_kx_weight, axis=1)/f_e_sum
+    p_e_variance = np.sum(p_e_kx_weight_sq, axis=1) - \
+        np.sum(p_e_kx_weight, axis=1)**2
+    # p_e_variance /= f_e_sum
+    p_e_standard_deviation = np.sqrt(p_e_variance)
+    p_e_density_center = np.sum(p_e_kx_weight, axis=1)
 
     Int_data_container.append(Int_data)
-    density_center_container.append(f_e_density_center)
-    standard_deviation_container.append(f_e_standard_deviation)
+    density_center_container.append(p_e_density_center)
+    standard_deviation_container.append(p_e_standard_deviation)
 
-Int_data_container = np.array(Int_data_container)
+dkx = np.abs(kx_first_path[0] - kx_first_path[1])
+Int_data_container = (dkx/(2*np.pi))*np.array(Int_data_container)/2
 density_center_container = np.array(density_center_container)
 standard_deviation_container = np.array(standard_deviation_container)
 
@@ -100,8 +105,23 @@ A_field = -7.80951974*np.cumsum(electric_field)
 
 density_center_container = np.vstack((density_center_container, A_field))
 
-dipole_legend = ['dipole on', 'dipole off']
+dipole_legend = ['sbe full', 'sbe semiclas.', 'analytic semiclas.']
 band_structure = dirac_conduction(kx_first_path, ky_first_path)
+
+
+########################################
+# Exta Analytical Dirac result
+########################################
+# Band Structure
+knum = np.size(kx_first_path)
+band_structure_gamma = dirac_conduction(kx_first_path, np.zeros(knum))
+band_structure = np.vstack((band_structure, band_structure_gamma))
+# Read Current
+analytical_current = np.load('current_analytical.npy')
+# Read Density
+# analytical_density = np.load('density_analytical.npy')
+Int_data_container = np.vstack((Int_data_container, analytical_current))
+
 plot_time_grid(time, kx_first_path, electric_field, Int_data_container,
                band_structure, density_center_container,
                standard_deviation=standard_deviation_container,
@@ -110,9 +130,9 @@ plot_time_grid(time, kx_first_path, electric_field, Int_data_container,
                density_center_legend=dipole_legend + ['A Field'],
                standard_deviation_legend=dipole_legend,
                timelim=(-150, 150),
-               energylim=(0, 3.0),
-               bzboundary=1.07442,
-               savename='full_' + chirpstring + '_' + Estring + '.png')
+               energylim=(0, 1.5),
+               bzboundary=1.07442)
+               # savename='full_' + chirpstring + '_' + Estring + '.png')
 
 # plt.plot(time/fs_to_au, standard_deviation_container.T)
 # plt.xlabel(r'$t \text{ in } \si{fs}$')

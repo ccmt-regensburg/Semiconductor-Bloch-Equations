@@ -144,10 +144,12 @@ def plot_time_grid(time, kpath, electric_field, current, band_structure,
     kpath_min = np.min(density_center)
     kpath_max = np.max(density_center)
     ax3 = plt.subplot2grid((2, 6), (1, 0), colspan=2)
-    ax3.plot(band_structure, kpath)
+    # Number of band structures to plot
+    band_num = np.size(band_structure, axis=0)
+    ax3.plot(band_structure.T, np.tile(kpath, (band_num, 1)).T)
     if (energylim is not None):
         ax3.set_xlim(energylim)
-    # ax3.set_ylim(-kpath_max-0.05, kpath_max+0.05)
+    ax3.set_ylim(-kpath_max-0.05, kpath_max+0.05)
     ax3.set_xlabel(r'$\epsilon \text{ in } \si{eV}$')
     ax3.set_ylabel(r'$k_x \text{ in } \si{1/\angstrom}$')
     ax3.axhline(y=kpath_min, linestyle='--', color='grey')

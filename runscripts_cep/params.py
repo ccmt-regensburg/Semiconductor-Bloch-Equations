@@ -38,7 +38,6 @@ class params:
     w                   = 25.0        # Pulse frequency (THz)
     chirp               = 0.00        # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
-    phase               = (0/1)*np.pi # Carrier envelope phase (edited by cep-scan.py)
 
     # Time scales (all units in femtoseconds)
     ##########################################################################
@@ -59,9 +58,8 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
+    gauge         = 'velocity' # Gauge of the system
     dipole_off    = True   # Turn all dipoles to 0
     user_out      = True   # Set to True to get user plotting and progress output
     save_file     = True   # To save exact data
     save_full     = True   # Save full information
-    test          = False  # Test plots of exact data
-
