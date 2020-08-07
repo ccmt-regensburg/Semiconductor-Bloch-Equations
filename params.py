@@ -9,6 +9,7 @@ a                   = 8.308
 # Galium Arsenic   lattice spacing = 5.653 angstrom = 10.683 a.u.
 # Bismuth Teluride lattice spacing = 4.395 angstrom = 8.308
 e_fermi             = 0.2         # Fermi energy in eV
+#temperature         = 0.0        # Temperature in eV
 temperature         = 0.03        # Temperature in eV
 
 # Model Hamiltonian parameters
@@ -39,18 +40,19 @@ b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3),-1])
 b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0,1])
 
 # full_for_velocity BZ parametes
-Nk1_vel             = 10          # Number of kpoints in b1 direction
-Nk2_vel             = 10          # Number of kpoints in b2 direction
+Nk1_vel             = 600          # Number of kpoints in b1 direction
+Nk2_vel             = 100          # Number of kpoints in b2 direction
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 
 # full BZ parametes
-Nk1                 = 10        # Number of kpoints in b1 direction
-Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
+Nk1                 = 1200        # Number of kpoints in b1 direction
+Nk2                 = 50         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 10000        # Number of kpoints in each of the two paths
+Nk_in_path          = 400        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
+#rel_dist_to_Gamma   = 0.005        # relative distance (in units of 2pi/a) of both paths to Gamma
+length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 num_paths           = 2
 
@@ -70,9 +72,13 @@ chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
 phase               = (0/5)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
 
+transient_number    = 0             # Parameter {0, 1, 2} to distinguish between 3 different transients provided by Josef
+tra_fac             = 1/100
+nir_fac             = 1/100
+
 # Nir Pulse
 ##########################################################################
-nir_mu              = -200
+nir_mu              = 100          # Time delay of the nir-pulse with respect to the transient
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
@@ -103,10 +109,12 @@ matrix_method       = False  # Set to True to use old matrix method for solving
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = False
-fitted_pulse        = True
-substract_offset    = False
-with_transient      = True
-realistic_system    = True
 KK_emission         = False
 normalize_emission  = False         
 normalize_f_valence = True
+fitted_pulse        = True
+
+with_transient      = True
+with_nir            = True
+realistic_system    = True
+semicl_model        = False

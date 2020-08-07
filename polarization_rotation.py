@@ -2,8 +2,12 @@ import numpy as np
 import params
 import os
 import efield
+from efield import simple_transient
 import matplotlib.pyplot as pl
 from matplotlib import patches
+
+import scipy.integrate as integrate
+import data_directory
 
 def main():
     user_out            = params.user_out
@@ -16,7 +20,6 @@ def main():
     Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics 
     store_all_timesteps = params.store_all_timesteps 
     fitted_pulse        = params.fitted_pulse        
-    substract_offset    = params.substract_offset    
     KK_emission         = params.KK_emission         
     normalize_emission  = params.normalize_emission  
     normalize_f_valence = params.normalize_f_valence 
@@ -39,6 +42,8 @@ def main():
     w               = efield.nir_w
     phase           = efield.nir_phi
 
+    transient_number    = params.transient_number
+
     gauge           = params.gauge
     T2              = params.T2*fs_conv
     Nk1             = params.Nk_in_path
@@ -49,52 +54,100 @@ def main():
     ############ load the data from the files in the given path ###########
     old_directory   = os.getcwd()
 
-    data_base       = "/loctmp/nim60855/generated_data/"
-    if not os.path.exists(data_base):
-        data_base   = "/home/maximilian/Documents/studium/generated_data/"
-    os.chdir(data_base)
 
-    if params.realistic_system:
-        directory      = "realistic_ham/"
-    else:
-        directory      = "sym_ham/"
+    minTime         = 0
+    maxTime         = minTime+1
+    delayTimes      = np.arange(minTime, maxTime, 900)
 
-    if params.with_transient:
-        directory      += "with_transient/"
-    else:
-        directory      += "without_transient/"
-
-    directory           += gauge + "/"
-
-    directory           += str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
-    print("Loading data out of " + directory)
-
-    if not os.path.exists(directory):
-        print("Failing to load: ", directory)
+    result          = []
+    params.with_nir = False
+    folder  = data_directory.change_to_data_directory(nir_t0 = nir_t0*fs_conv)
+    params.with_nir = True
+     
+    if not os.path.exists(folder):
+        print("Failing to load: ", folder)
         print("This parameter configuration has not yet been calculated")
         print()
-        return 0
     else:
-        os.chdir(directory)
+        os.chdir(folder)
+        t_ref, A_field, I_exact_E_dir_ref, I_exact_ortho_ref, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
 
 
-    t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
-    freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho  = np.transpose(np.loadtxt('frequency.txt') )
+    for nir_t0 in delayTimes:
+        folder  = data_directory.change_to_data_directory(nir_t0 = nir_t0*fs_conv)
+        print("Loading data out of " + folder)
+    
+        if not os.path.exists(folder):
+            print("Failing to load: ", folder)
+            print("This parameter configuration has not yet been calculated")
+            print()
+            continue
+        else:
+            os.chdir(folder)
+    
+        t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
 
-    Int_exact_E_dir = np.around(Int_exact_E_dir, decimals=12)
-    Int_exact_ortho = np.around(Int_exact_ortho, decimals=12)
-    t       *= fs_conv
-    freq    *= w
-    w_min       = np.argmin(np.abs(freq/w - 0.5 ) )
-    integrated_super    = 4*np.trapz(np.sqrt(Int_exact_E_dir[w_min:]*Int_exact_ortho[w_min:]), dx = freq[1]-freq[0])
-    integrated_E_dir    = 2*np.trapz(Int_exact_E_dir[w_min:], dx = freq[1]-freq[0])
-    print("Power of the parallel component:", integrated_E_dir)
+        #pl.plot(t, I_exact_E_dir)
+        #pl.plot(t, I_exact_ortho)
 
-    integrated_ortho    = 2*np.trapz(Int_exact_ortho[w_min:], dx = freq[1]-freq[0])
-    print("Power of the orthogonal component:", integrated_ortho)
-    print("Resulting angle in mrad:", integrated_super/(integrated_ortho+integrated_E_dir)*1e3 )
-    print()
+        time_window     = 9*alpha/fs_conv
+    
+        ref_indices     = np.where(np.abs(np.array(t_ref)-nir_t0) < time_window)[0]
+        time_indices    = np.where(np.abs(np.array(t)-nir_t0) < time_window)[0]
+        I_exact_E_dir   = 1*I_exact_E_dir[time_indices] - 0*I_exact_E_dir_ref[ref_indices]
+        I_exact_ortho   = 1*I_exact_ortho[time_indices] - 0*I_exact_ortho_ref[ref_indices]
+        t               = t[time_indices]
+    
+        angles          = np.arctan((I_exact_ortho)/(((I_exact_E_dir)+0e-10j ) ) )
+        pl.plot(t[0:], np.real(angles) )
+        pl.show()
 
+        I_exact_x       = (I_exact_E_dir - I_exact_ortho)/np.sqrt(2)
+        I_exact_y       = (I_exact_E_dir + I_exact_ortho)/np.sqrt(2)
+        
+        t       *= fs_conv
+        dx = t[1]-t[0]
+    
+        integrated_x    = np.trapz((np.diff(I_exact_x)/dx)**2, dx = t[1]-t[0])
+        integrated_y    = np.trapz((np.diff(I_exact_y)/dx)**2, dx = t[1]-t[0])
+        result.append(np.array([nir_t0, (integrated_x-integrated_y)/(integrated_x+integrated_y)*1e3 ] ))
+        os.chdir("..")
+
+    result      = np.array(result)
+    folder      = "polarization_rotation_" + str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,T2/fs_conv)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    os.chdir(folder)
+    np.savetxt("polarization_rotation_" + str(transient_number) + ".txt", result)
+    t       = np.linspace(minTime, maxTime, 1000)*fs_conv
+    fig, ax = pl.subplots()
+
+    ax.plot(result[:,0], -result[:,1], marker="x", linestyle="", label="Polarization rotation", color="k")
+
+    ax2     = ax.twinx()
+    ax2.plot(t/fs_conv, efield.simple_A_field(t), label="A(t)", color="b")
+
+    if params.transient_number < 0:
+        ax.plot(t/fs_conv, efield.simple_transient(t), label="Transient")
+
+    pl.legend()
+    ax.grid(True)
+    ax.set_xlabel("Delay time in fs")
+    ax.set_ylabel("polarization of the nir-pulse in mrad")
+    ax2.set_ylabel("Gauge field A(t)", color="b")
+    pl.savefig("polarization_rotation_" + str(transient_number) + ".pdf")
+    #pl.show()
+
+    return 0
+
+    
+
+def Gaussian_envelope(t, alpha, mu):
+    '''
+    Function to multiply a Function f(t) before Fourier transform
+    to ensure no step in time between t_final and t_final + delta
+    '''
+    return np.exp(-(t-mu)**2.0/(2.0*alpha)**2)
 
 if __name__ == "__main__":
     main()

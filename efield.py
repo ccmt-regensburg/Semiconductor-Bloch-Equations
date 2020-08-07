@@ -2,6 +2,9 @@ from numba import njit
 import numpy as np
 import params 
 
+import scipy.integrate as integrate
+from scipy.special import erf
+
 # Driving field parameters
 
 w     = params.w*params.THz_conv                         # Driving pulse frequency
@@ -9,11 +12,16 @@ chirp = params.chirp*params.THz_conv                     # Pulse chirp frequency
 alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
 phase = params.phase                              # Carrier-envelope phase
 
-fitted_pulse    = params.fitted_pulse
-tOpt, nOpt      = np.transpose(np.loadtxt("driving_field_parameters.txt") ) 
-nOpt[2]         = params.nir_mu*params.fs_conv
+fitted_pulse        = params.fitted_pulse
+transient_number    = params.transient_number
+tOpt                = np.loadtxt("fitting_data/transient_" + str(transient_number) + "_parameters.txt") 
+nOpt                = np.loadtxt("fitting_data/nir_parameters.txt")
+nOpt[2]             = params.nir_mu*params.fs_conv
+
 
 #nOpt            = tOpt
+nOpt[0]         *= params.nir_fac
+tOpt[0]         *= params.tra_fac
 #nOpt[4]         = 0
 #nOpt[3]         *= 4
 
@@ -29,7 +37,8 @@ nir_mu      = nOpt[2]
 nir_w       = nOpt[3]
 nir_phi     = nOpt[4]
 
-with_transient  = True
+with_transient  = params.with_transient
+with_nir        = params.with_nir
 
 #if fitted_pulse:
 #    parameters = nir.opt_pulses()
@@ -50,15 +59,17 @@ def driving_field(Amplitude, t):
     # return E0*np.sin(2.0*np.pi*w*t)
     # Chirped Gaussian pulse
     if fitted_pulse:
-        if with_transient:
+        if with_transient and with_nir:
             return transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir(t, a, b, c, d, e)
-
+        elif with_transient:
+            return transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4])
+        elif with_nir:
+            return nir(t, a, b, c, d, e)
         else:
-            return nir.nir(t, a, b, c, d, e)
+            return 0
 
     else:
         return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
-
 
 @njit
 def transient(x, aT, sigmaT, muT, freqT, chirpT):
@@ -67,4 +78,13 @@ def transient(x, aT, sigmaT, muT, freqT, chirpT):
 @njit
 def nir(x, aN, sigmaN, muN, freqN, phiN):
     return aN*np.exp(-(x-muN)**2/sigmaN**2/2)*np.cos(2*np.pi*freqN*(x-muN)+phiN )
+
+def simple_transient(x):
+    return 100*np.exp(-((x-tOpt[2])/tOpt[1])**2/2)*np.cos(2*np.pi*(1+tOpt[4]*x)*tOpt[3]*x)
+
+def simple_A_field(t):
+    return tOpt[0]/(2*np.pi*tOpt[3])*np.exp(-((t-tOpt[2])/tOpt[1])**2/2)*np.sin(2*np.pi*(1+tOpt[4]*t)*tOpt[3]*t)
+
+    return np.real(2*(2+erf((t-1j*tOpt[1]**2*tOpt[3]*2*np.pi)/(np.sqrt(2)*tOpt[1]))+erf((t+1j*tOpt[1]**2*tOpt[3]*2*np.pi)/(np.sqrt(2)*tOpt[1])) ) )
+
 

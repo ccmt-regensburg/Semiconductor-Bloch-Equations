@@ -3,6 +3,7 @@ from numba import njit
 from scipy import optimize
 
 import params
+import matplotlib.pyplot as pl
 
 def opt_pulses():
     #Prepare pyplot axes
@@ -10,16 +11,26 @@ def opt_pulses():
     E_conv          = params.E_conv
     THz_conv        = params.THz_conv
     vel_light       = params.c
+    transient_number    = params.transient_number
 
     #Load THz Pulse data
-    thzPulse        = np.loadtxt("Transient.dat")
-    thzPulse[:,0]   *= 1e15*fs_conv                             #Recalculation of s into a.u.
-    thzPulse[:,1]   *= 1e-8*E_conv                                     #Recalculation of V/m into MV/cm
-    initThz         = [1, 1000*fs_conv, 0, 1*THz_conv, 0]
+    thzPulse        = np.loadtxt("fitting_data/Transient_" + str(transient_number) + ".dat")
+    if transient_number == 0:
+        factor_field = 1e-8
+        factor_time  = 1e15
+    else:
+        factor_field = 1e-3
+        factor_time  = 1
+
+    thzPulse[:,0]   *= factor_time*fs_conv                             #Recalculation of s into a.u.
+    thzPulse[:,1]   *= factor_field*E_conv                                     #Recalculation of V/m into MV/cm
+    initThz         = [1e-4, 1000*fs_conv, 0, 1*THz_conv, 0]
     tOpt, tCov      = optimize.curve_fit(transient, thzPulse[:,0], thzPulse[:,1], p0=initThz)
+    print(tOpt[0]/E_conv)
+    print(tOpt[-2]/THz_conv)
 
     #Load experimental frequency spectrum
-    pulseFreq       = np.loadtxt("NIR_spectrum.dat")
+    pulseFreq       = np.loadtxt("fitting_data/NIR_spectrum.dat")
     pulseFreq[:,0]  = vel_light/(pulseFreq[:,0]*1e-9)*1e-12*THz_conv
     pulseFreq[:,1]  *= E_conv
     peak            = pulseFreq[np.argmax(pulseFreq[:,1] ) ]
@@ -31,8 +42,17 @@ def opt_pulses():
     nOpt[1]         = 1/nOpt[1]
     nOpt.append(nOpt[2])
     nOpt[2]         = 0
+    print(nOpt[3]/THz_conv)
     nOpt.append(0)
-    np.savetxt("driving_field_parameters.txt", np.transpose([tOpt, nOpt]), header="Transient, NIR" )
+    np.savetxt("fitting_data/transient_" + str(transient_number) + "_parameters.txt", tOpt, header="amplitude, sigma, mu, frequency, chirp" )
+    np.savetxt("fitting_data/nir_parameters.txt", nOpt, header="amplitude, sigma, mu, frequency, phi" )
+    pl.plot(thzPulse[:,0], thzPulse[:,1], linestyle="dashed", label="Data of the Transient " + str(transient_number))
+    pl.plot(thzPulse[:,0], transient(thzPulse[:,0], *tOpt), label="Fit of the data")
+    pl.legend()
+    pl.xlabel("Time in at.u.")
+    pl.ylabel("Electrical field in at.u.")
+    pl.grid(True)
+    pl.show()
 
     return [tOpt, nOpt]
 

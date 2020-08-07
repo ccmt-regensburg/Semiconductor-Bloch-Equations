@@ -6,6 +6,8 @@ from efield import driving_field
 import matplotlib.pyplot as pl
 from matplotlib import patches
 
+import data_directory
+
 def main():
 #    directory	= "../generated_data/" + params.gauge + "_" + str(params.Nk_in_path) + "/"
 #    emis	= np.loadtxt(directory + "emission.txt")
@@ -27,10 +29,11 @@ def construct_plots():
     Bcurv_in_B_dynamics = params.Bcurv_in_B_dynamics 
     store_all_timesteps = params.store_all_timesteps 
     fitted_pulse        = params.fitted_pulse        
-    substract_offset    = params.substract_offset    
     KK_emission         = params.KK_emission         
     normalize_emission  = params.normalize_emission  
     normalize_f_valence = params.normalize_f_valence 
+
+    gauge               = params.gauge
 
     a = params.a                                      # Lattice spacing
     b1 = params.b1                                        # Reciprocal lattice vectors
@@ -46,39 +49,64 @@ def construct_plots():
 
     E0              = efield.nir_E0
     alpha           = efield.nir_sigma
-    nir_t0          = efield.nir_mu
     w               = efield.nir_w
     phase           = efield.nir_phi
+    
+    with_nir        = params.with_nir
+    nir_t0          = params.nir_mu
 
-    gauge           = params.gauge
+    if BZ_type == 'full':
+        Nk1   = params.Nk1                                # Number of kpoints in b1 direction
+        Nk2   = params.Nk2                                # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                   # Total number of kpoints
+        align = params.align                              # E-field alignment
+        Nk_in_path  = Nk1
+    elif BZ_type == 'full_for_velocity':
+        Nk1   = params.Nk1_vel                            # Number of kpoints in b1 direction
+        Nk2   = params.Nk2_vel                            # Number of kpoints in b2 direction
+        Nk    = Nk1*Nk2                                   # Total number of kpoints
+        Nk_in_path  = Nk1
+        angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
+    elif BZ_type == '2line':
+        Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
+        rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
+        length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
+        angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
+        Nk1   = params.Nk_in_path                         # for printing file names, we use Nk1 and ...
+        Nk2   = params.num_paths                          # ... and Nk2 = 2
+        Nk    = Nk1*Nk2                                   # Total number of k points, we have 2 paths
+
     T2              = params.T2*fs_conv
-    Nk1             = params.Nk_in_path
-    Nk2             = params.num_paths
-    length_path_in_BZ = params.length_path_in_BZ      #
-
 
     ############ load the data from the files in the given path ###########
     old_directory   = os.getcwd()
 
-    data_base       = "/loctmp/nim60855/generated_data/"
-    if not os.path.exists(data_base):
-        data_base   = "/home/maximilian/Documents/studium/generated_data/"
-    os.chdir(data_base)
-
-    if params.realistic_system:
-        directory      = "realistic_ham/"
+    params.with_nir         = False
+    params.nir_mu           = 0
+    folder  = data_directory.change_to_data_directory()
+    params.with_nir         = with_nir
+    params.nir_mu           = nir_t0
+    nir_t0                  *= fs_conv
+     
+    if not os.path.exists(folder):
+        ref_data    = False
+        print("Failing to load: ", folder)
+        print("For this parameter setting is no reference data available yet.")
+        print()
     else:
-        directory      = "sym_ham/"
+        ref_data    = True
+        os.chdir(folder)
+        t_ref, A_field, I_exact_E_dir_ref, I_exact_ortho_ref, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
 
-    if params.with_transient:
-        directory      += "with_transient/"
-    else:
-        directory      += "without_transient/"
-
-    directory           += gauge + "/"
-
-    directory           += str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
-    print("Loading data out of " + directory)
+        time_window     = 9*alpha
+        t_ref           *= fs_conv
+    
+        ref_indices     = np.where(np.abs(t_ref-nir_t0) < time_window)[0]
+        I_exact_E_dir_ref   = I_exact_E_dir_ref[ref_indices]
+        I_exact_ortho_ref   = I_exact_ortho_ref[ref_indices]
+        t_ref               = t_ref[ref_indices]
+    
+    directory           = data_directory.change_to_data_directory()
 
     if not os.path.exists(directory):
         print("Failing to load: ", directory)
@@ -88,6 +116,8 @@ def construct_plots():
     else:
         os.chdir(directory)
 
+    print("Loading data out of " + directory)
+    print()
 
     t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
     freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho  = np.transpose(np.loadtxt('frequency.txt') )
@@ -96,22 +126,37 @@ def construct_plots():
     t       *= fs_conv
     freq    *= w
     w_min       = np.argmin(np.abs(freq/w - 0.5 ) )
-    integrated_super    = 4*np.trapz(np.sqrt(Int_exact_E_dir[w_min:]*Int_exact_ortho[w_min:]), dx = freq[1]-freq[0])
-    integrated_E_dir    = 2*np.trapz(Int_exact_E_dir[w_min:], dx = freq[1]-freq[0])
-    print("Power of the parallel component:", integrated_E_dir)
 
-    integrated_ortho    = 2*np.trapz(Int_exact_ortho[w_min:], dx = freq[1]-freq[0])
-    print("Power of the orthogonal component:", integrated_ortho)
-    print("Resulting angle in mrad:", integrated_super/(integrated_ortho+integrated_E_dir)*1e3 )
+    time_indices     = np.where(np.abs(np.array(t)-nir_t0) < time_window)[0]
+    cut_time        = t[time_indices]
 
-    print()
+    I_nir_E_dir     = I_exact_E_dir[time_indices] - 1*I_exact_E_dir_ref
+    I_nir_ortho     = I_exact_ortho[time_indices] - 1*I_exact_ortho_ref
+
+    E_nir_E_dir     = np.diff(I_nir_E_dir)
+    E_nir_ortho     = np.diff(I_nir_ortho)
+
+    print(np.sign(E_nir_E_dir)*np.sign(E_nir_ortho) )
 
     valence_calculated  = os.path.exists("valence_occupation.txt")
     if valence_calculated:
         f_v         = np.transpose(np.loadtxt("valence_occupation.txt") )
 
     #os.chdir(old_directory)
-
+    if BZ_type == 'full':
+        kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
+        dk = 1/Nk1
+        if align == 'K':
+            E_dir = np.array([1, 0])
+        elif align == 'M':
+            E_dir = np.array([np.cos(np.radians(-30)),
+                             np.sin(np.radians(-30))])
+    elif BZ_type == 'full_for_velocity':
+        E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
+                         np.sin(np.radians(angle_inc_E_field))])
+        kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, 'M')
+        # dummy
+        dk = 1
     if BZ_type == '2line':
         E_dir = np.array([np.cos(np.radians(angle_inc_E_field)),
                          np.sin(np.radians(angle_inc_E_field))])
@@ -144,12 +189,12 @@ def construct_plots():
         I_min = (Int_exact_E_dir[freq_index_base_freq] + Int_exact_ortho[freq_index_base_freq] ) / Int_tot_base_freq
 
         log_limits = ( 10**(np.ceil(np.log10(I_min))-2) , 10**(np.ceil(np.log10(I_max)) + 1) )
-        log_limits = ( 1e-22, 1e-7 )
 
     ############ generate plots ###########
     if (not test and user_out):
         real_fig, (axE,axA,axI,axJ,axP) = pl.subplots(5,1,figsize=(10,10))
-        t_lims = (t[0]/fs_conv, t[-1]/fs_conv)
+        factor  = 4
+        t_lims = ((-factor*alpha+nir_t0)/fs_conv, (factor*alpha+nir_t0)/fs_conv)
         freq_lims = (0,25)
 
         axE.set_xlim(t_lims)
@@ -164,23 +209,43 @@ def construct_plots():
 
         axI.set_xlim(t_lims)
         axI.plot(t/fs_conv,I_exact_E_dir)
-        axI.plot(t/fs_conv,I_exact_ortho)
+        axI2     = axI.twinx()
+        axI2.plot(t/fs_conv,I_exact_ortho, color="orange")
         axI.set_xlabel(r'$t$ in fs')
-        axI.set_ylabel(r'$J$ in at.u.')
+        axI2.set_ylabel(r'$J_{\perp}$ in at.u.')
+        axI.set_ylabel(r'$J_{\parallel}$ in at.u.')
 
         axJ.set_xlim(t_lims)
-        axJ.plot(t/fs_conv,I_exact_diag_E_dir)
-        axJ.plot(t/fs_conv,I_exact_diag_ortho)
+        axJ.plot(cut_time/fs_conv, I_nir_E_dir)
+        axJ2     = axJ.twinx()                
+        axJ2.plot(cut_time/fs_conv,I_nir_ortho, color="orange")
         axJ.set_xlabel(r'$t$ in fs')
-        axJ.set_ylabel(r'$J_{diag}$ in at.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        axJ2.set_ylabel(r'$J_{\perp}^{NIR}$ in at.u.')
+        axJ.set_ylabel(r'$J_{\parallel}^{NIR}$ in at.u.')
 
-        axP.set_xlim(t_lims)
-        axP.plot(t/fs_conv,I_exact_offd_E_dir)
-        axP.plot(t/fs_conv,I_exact_offd_ortho)
+        axP.set_xlim((-.1*alpha+nir_t0)/fs_conv, (.1*alpha+nir_t0)/fs_conv)
+        axP.plot(cut_time[1:]/fs_conv,np.sign(E_nir_E_dir*E_nir_ortho))
+        axP2     = axP.twinx()                    
+        #axP2.plot(cut_time[1:]/fs_conv,E_nir_ortho, color="orange")
         axP.set_xlabel(r'$t$ in fs')
-        axP.set_ylabel(r'$J_{offdiag}$ in at.u.')
+        axP2.set_ylabel(r'$E_{\perp}^{NIR}$ in at.u.')
+        axP.set_ylabel(r'$E_{\parallel}^{NIR}$ in at.u.')
+
+        #axJ.set_xlim(t_lims)
+        #axJ.plot(t/fs_conv,I_exact_diag_E_dir)
+        #axJ.plot(t/fs_conv,I_exact_diag_ortho)
+        #axJ.set_xlabel(r'$t$ in fs')
+        #axJ.set_ylabel(r'$J_{diag}$ in at.u. $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+
+        #axP.set_xlim(t_lims)
+        #axP.plot(t/fs_conv,I_exact_offd_E_dir)
+        #axP.plot(t/fs_conv,I_exact_offd_ortho)
+        #axP.set_xlabel(r'$t$ in fs')
+        #axP.set_ylabel(r'$J_{offdiag}$ in at.u.')
 
         pl.savefig("EAJ.pdf", dpi=300)
+        pl.show()
+        return 0
 
 ##########################
 
@@ -285,38 +350,39 @@ def construct_plots():
         # Plot Brilluoin zone with paths
         BZ_plot(kpnts,a,b1,b2,E_dir,paths)
 
-        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
-        # Countour plots of occupations and gradients of occupations
-        fig5    = pl.figure()
-        if f_c[:,0].size != kp_array.size:
-            factor = int(kp_array.size/f_c[:,0].size )
-            kp_array    = kp_array[::factor]
+        if BZ_type == "2line":
+            kp_array = length_path_in_BZ/(np.pi/a)*np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num = Nk1)
+            # Countour plots of occupations and gradients of occupations
+            fig5    = pl.figure()
+            if f_c[:,0].size != kp_array.size:
+                factor = int(kp_array.size/f_c[:,0].size )
+                kp_array    = kp_array[::factor]
 
-        X, Y = np.meshgrid(t/fs_conv,kp_array)
-        if gauge == "velocity":
-            Y += A_field
-        pl.contourf(X, Y, np.real(f_c), 100)
-        pl.colorbar().set_label(r'$f_c(k)$ in path 0')
-        pl.xlim([t[0]/fs_conv,t[-1]/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
-        pl.tight_layout()
-        pl.savefig("conduction.pdf", dpi=300)
-
-        if valence_calculated:
-            fig6    = pl.figure()
             X, Y = np.meshgrid(t/fs_conv,kp_array)
             if gauge == "velocity":
                 Y += A_field
-            pl.contourf(X, Y, np.real(f_v), 100)
-            pl.colorbar().set_label(r'$f_v(k)$ in path 0')
+            pl.contourf(X, Y, np.real(f_c), 100)
+            pl.colorbar().set_label(r'$f_c(k)$ in path 0')
             pl.xlim([t[0]/fs_conv,t[-1]/fs_conv])
-            pl.xlabel(r'$t\;(fs)$')
-            pl.ylabel(r'$k$')
+            pl.xlabel(r'$t\;[fs]$')
+            pl.ylabel(r'$k \; [\frac{\pi}{a}]$')
             pl.tight_layout()
-            pl.savefig("valence.pdf", dpi=300)
+            pl.savefig("conduction.pdf", dpi=300)
 
-        #pl.show()
+            if valence_calculated:
+                fig6    = pl.figure()
+                X, Y = np.meshgrid(t/fs_conv,kp_array)
+                if gauge == "velocity":
+                    Y += A_field
+                pl.contourf(X, Y, np.real(f_v), 100)
+                pl.colorbar().set_label(r'$f_v(k)$ in path 0')
+                pl.xlim([t[0]/fs_conv,t[-1]/fs_conv])
+                pl.xlabel(r'$t\;(fs)$')
+                pl.ylabel(r'$k$')
+                pl.tight_layout()
+                pl.savefig("valence.pdf", dpi=300)
+
+        pl.show()
 
    # OUTPUT STANDARD TEST VALUES
     ##############################################################################################
@@ -419,6 +485,82 @@ def mesh(params, E_dir):
     dk = 1.0/Nk_in_path*length_path_in_BZ
 
     return dk, np.array(mesh), np.array(paths)
+
+def hex_mesh(Nk1, Nk2, a, b1, b2, align):
+    alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 0.5 - (1/(2*Nk1)), num=Nk1)
+    alpha2 = np.linspace(-0.5 + (1/(2*Nk2)), 0.5 - (1/(2*Nk2)), num=Nk2)
+
+    def is_in_hex(p, a):
+        # Returns true if the point is in the hexagonal BZ.
+        # Checks if the absolute values of x and y components of p are within the first quadrant of the hexagon.
+        x = np.abs(p[0])
+        y = np.abs(p[1])
+        return ((y <= 2.0*np.pi/(np.sqrt(3)*a)) and (np.sqrt(3.0)*x + y <= 4*np.pi/(np.sqrt(3)*a)))
+
+    def reflect_point(p, a, b1, b2):
+        x = p[0]
+        y = p[1]
+        if (y > 2*np.pi/(np.sqrt(3)*a)):                     # Crosses top
+            p -= b2
+        elif (y < -2*np.pi/(np.sqrt(3)*a)):                  # Crosses bottom
+            p += b2
+        elif (np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)):    # Crosses top-right
+            p -= b1 + b2
+        elif (-np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)):  # Crosses bot-right
+            p -= b1
+        elif (np.sqrt(3)*x + y < -4*np.pi/(np.sqrt(3)*a)):   # Crosses bot-left
+            p += b1 + b2
+        elif (-np.sqrt(3)*x + y > 4*np.pi/(np.sqrt(3)*a)):   # Crosses top-left
+            p += b1
+        return p
+
+    # Containers for the mesh, and BZ directional paths
+    mesh = []
+    paths = []
+
+    # Create the Monkhorst-Pack mesh
+    if align == 'M':
+        for a2 in alpha2:
+            # Container for a single gamma-M path
+            path_M = []
+            for a1 in alpha1:
+                # Create a k-point
+                kpoint = a1*b1 + a2*b2
+                # If the current point is in the BZ, append it to the mesh and path_M
+                if (is_in_hex(kpoint,a)):
+                    mesh.append(kpoint)
+                    path_M.append(kpoint)
+                # If the current point is NOT in the BZ, reflect is along the appropriate axis to get it in the BZ, then append.
+                else:
+                    while (is_in_hex(kpoint,a) != True):
+                        kpoint = reflect_point(kpoint,a,b1,b2)
+                    mesh.append(kpoint)
+                    path_M.append(kpoint)
+            # Append the a1'th path to the paths array
+            paths.append(path_M)
+
+    elif align == 'K':
+        b_a1 = 8*np.pi/(a*3)*np.array([1,0])
+        b_a2 = 4*np.pi/(a*3)*np.array([1,np.sqrt(3)])
+        # Extend over half of the b2 direction and 1.5x the b1 direction (extending into the 2nd BZ to get correct boundary conditions)
+        alpha1 = np.linspace(-0.5 + (1/(2*Nk1)), 1.0 - (1/(2*Nk1)), num = Nk1)
+        alpha2 = np.linspace(0, 0.5 - (1/(2*Nk2)), num = Nk2)
+        for a2 in alpha2:
+            path_K = []
+            for a1 in alpha1:
+                kpoint = a1*b_a1 + a2*b_a2
+                if is_in_hex(kpoint,a):
+                    mesh.append(kpoint)
+                    path_K.append(kpoint)
+                else:
+                    kpoint -= 2*np.pi/(a)*np.array([1,1/np.sqrt(3)])
+                    mesh.append(kpoint)
+                    path_K.append(kpoint)
+            paths.append(path_K)
+
+    return np.array(mesh), np.array(paths)
+
+
 
 if __name__ == "__main__":
     main()

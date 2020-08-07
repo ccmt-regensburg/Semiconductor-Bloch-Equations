@@ -1,4 +1,7 @@
 import params
+import efield
+from efield import driving_field
+
 import numpy as np
 import os
 from numba import njit
@@ -11,9 +14,8 @@ from sys import exit
 from hfsbe.utility import evaluate_njit_matrix as ev_mat
 
 import systems as sys
-import efield
-from efield import driving_field
 import os
+import data_directory
 '''
 TO DO:
 UPDATE MATRIX METHOD. NOT COMPATIBLE WITH CODE AS OF NOW. MAGNETIC FIELD.
@@ -51,12 +53,14 @@ def main():
     ####### changes on the fitted parameters
     w     = params.w*params.THz_conv                         # Driving pulse frequency
     alpha = params.alpha*params.fs_conv                      # Gaussian pulse width
+    with_transient  = params.with_transient
     if params.fitted_pulse:
         E0      = efield.nir_E0
         alpha   = efield.nir_sigma
         nir_t0  = efield.nir_mu
         w       = efield.nir_w
         phase   = efield.nir_phi
+
 
     # Time scales
     T1 = params.T1*fs_conv                            # Occupation damping time
@@ -67,6 +71,9 @@ def main():
     tf = int(params.tf*fs_conv)                       # Final time
     #dt = params.dt*fs_conv                            # Integration time step
     dt = 1/(21*2*w)/3
+    if not with_transient:
+        t0  = -20*alpha
+        tf  = 20*alpha
 
     dt_out = 3                                      # Solution output time step
 
@@ -79,10 +86,12 @@ def main():
         Nk2   = params.Nk2                                # Number of kpoints in b2 direction
         Nk    = Nk1*Nk2                                   # Total number of kpoints
         align = params.align                              # E-field alignment
+        Nk_in_path  = Nk1
     elif BZ_type == 'full_for_velocity':
         Nk1   = params.Nk1_vel                            # Number of kpoints in b1 direction
         Nk2   = params.Nk2_vel                            # Number of kpoints in b2 direction
         Nk    = Nk1*Nk2                                   # Total number of kpoints
+        Nk_in_path  = Nk1
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
     elif BZ_type == '2line':
         Nk_in_path = params.Nk_in_path                    # Number of kpoints in each of the two paths
@@ -172,39 +181,28 @@ def main():
 
     ############### This is the part where the biggest changes are done #################
     # In this part the solver runs twice and the results are substracted from one another
-    substract_offset    = params.substract_offset
-    if substract_offset:
-        wahrheitswerte = [True, False]
-    else:
-        wahrheitswerte = [True]
         
-    for wahrheitswert in wahrheitswerte:
-        # Decide in this step if the nir-pulse is included or not
-        efield.with_transient   = params.with_transient
-        efield.with_nir         = wahrheitswert
-        driving_field.recompile()
-
-        print ("do_B_field", do_B_field)
+    # Decide in this step if the nir-pulse is included or not
+    print ("do_B_field", do_B_field)
     
-        # Current definitions
-        P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, \
-                I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho = \
-        [], [], [], [], [], [], [], [], [], [], [], [], [], []
+    # Current definitions
+    P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, \
+            I_wavep_E_dir, I_wavep_ortho, I_wavep_check_E_dir, I_wavep_check_ortho = \
+    [], [], [], [], [], [], [], [], [], [], [], [], [], []
 
-        # here,the time evolution of the density matrix is done
-        t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c, f_v = \
-                    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
-                                   gamma1, gamma2, E0, B0, w, chirp, alpha, phase, nir_t0, do_B_field, gauge, normalize_f_valence, dt_out, BZ_type, Nk1, Nk_in_path, 
-                                   Bcurv_in_B_dynamics, 'density_matrix_dynamics',
-                                   P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, KK_emission)
+    # here,the time evolution of the density matrix is done
+    t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, f_c, f_v = \
+                time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+                               gamma1, gamma2, E0, B0, w, chirp, alpha, phase, nir_t0, do_B_field, gauge, normalize_f_valence, dt_out, BZ_type, Nk1, Nk_in_path, 
+                               Bcurv_in_B_dynamics, 'density_matrix_dynamics',
+                               P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, KK_emission)
 
 
-        # COMPUTE OBSERVABLES
-        ###########################################################################
-        if wahrheitswert:
-            # Approximate emission in time
-            I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha,nir_t0) + J_E_dir*Gaussian_envelope(t,alpha,nir_t0), \
-                           diff(t,P_ortho)*Gaussian_envelope(t,alpha,nir_t0) + J_ortho*Gaussian_envelope(t,alpha,nir_t0)
+    # COMPUTE OBSERVABLES
+    ###########################################################################
+    # Approximate emission in time
+    I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha,nir_t0) + J_E_dir*Gaussian_envelope(t,alpha,nir_t0), \
+                   diff(t,P_ortho)*Gaussian_envelope(t,alpha,nir_t0) + J_ortho*Gaussian_envelope(t,alpha,nir_t0)
 
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
@@ -284,36 +282,8 @@ def main():
 
     if print_J_P_I_files:  
         old_directory   = os.getcwd()
-        print("Beginning to construct directory.")
 
-        data_base       = "/loctmp/nim60855/generated_data/"
-        if not os.path.exists(data_base):
-            data_base   = "/home/maximilian/Documents/studium/generated_data/"
-        os.chdir(data_base)
-
-        if params.realistic_system:
-            next_step      = "realistic_ham/"
-        else:
-            next_step      = "sym_ham/"
-        
-        if not os.path.exists(next_step):
-            os.makedirs(next_step)
-        os.chdir(next_step)
-
-        if params.with_transient:
-            next_step      = "with_transient/"
-        else:
-            next_step      = "without_transient/"
-
-        if not os.path.exists(next_step):
-            os.makedirs(next_step)
-        os.chdir(next_step)
-
-        if not os.path.exists(gauge):
-            os.makedirs(gauge)
-        os.chdir(gauge)
-
-        directory       = str('Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_t0-{:4.2f}_T2-{:05.2f}').format(Nk1,Nk2,w/THz_conv,E0/E_conv,alpha/fs_conv,phase,nir_t0/fs_conv,T2/fs_conv)
+        directory       = data_directory.change_to_data_directory()
 
         print("Check if directory already exists.")
         if not os.path.exists(directory):
@@ -358,6 +328,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
     Nt = int((tf-t0)/dt)
     t_suggested = np.arange(t0, tf, dt)
     time_window     = 10*alpha
+    if not params.with_nir:
+        time_window = 900*params.fs_conv+10*alpha
     time_indices    = np.where(np.abs(np.array(t_suggested)-nir_t0) < time_window)[0]
     min_ti          = time_indices[0]
     max_ti          = time_indices[-1]
@@ -384,7 +356,11 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         ky_in_path = path[:, 1]
 
         # Calculate the dipole components along the path
-        di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+        if params.semicl_model:
+            di_x    = np.zeros((2, 2, Nk_in_path)) + 0j
+            di_y    = di_x
+        else:
+            di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
 
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
@@ -477,8 +453,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         # COMPUTE OBSERVABLES
         ###########################################################################
         factor  = 1
-        if Nk_in_path > 1000:
-            factor  = int(Nk_in_path/1000)
+        if Nk_in_path > 100:
+            factor  = int(Nk_in_path/100)
 
         f_v     = solution[::factor,0,:,0]
         f_c     = solution[::factor,0,:,3]         #Occupation of the conduction band
@@ -1007,12 +983,22 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
         ev_in_path = sys.evjit(kx=kx_shift_path, ky=ky_shift_path)    
         ec_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path)    
 
-        di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_00y = sys.di_00yjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
-        di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
+        if params.semicl_model:
+            di_00x = np.zeros(kx_in_path.size) + 0j
+            di_01x = np.zeros(kx_in_path.size) + 0j
+            di_11x = np.zeros(kx_in_path.size) + 0j
+            di_00y = np.zeros(kx_in_path.size) + 0j
+            di_01y = np.zeros(kx_in_path.size) + 0j
+            di_11y = np.zeros(kx_in_path.size) + 0j
+        else:
+            di_00x = sys.di_00xjit(kx=kx_shift_path, ky=ky_shift_path)
+            di_01x = sys.di_01xjit(kx=kx_shift_path, ky=ky_shift_path)
+            di_11x = sys.di_11xjit(kx=kx_shift_path, ky=ky_shift_path)
+            di_00y = sys.di_00yjit(kx=kx_shift_path, ky=ky_shift_path)
+            di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
+            di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
+
+
         # found that the dipole needs a complex conjugate
         dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y
         A_in_path = E_dir[0]*di_00x + E_dir[1]*di_00y \
@@ -1284,7 +1270,10 @@ def initial_condition(y0,e_fermi,temperature,e_c,i_k,dynamics_type):
             fermi_function = 1/(np.exp((e_c[i_k]-e_fermi)/temperature)+1)
             y0.extend([1.0,0.0,0.0,fermi_function,0.0,0.0,0.0,0.0])
         else:
-            y0.extend([1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0])
+            if e_c[i_k] > e_fermi:
+                y0.extend([1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0])
+            else:
+                y0.extend([1.0,0.0,0.0, 1.0 ,0.0,0.0,0.0,0.0])
     elif dynamics_type == 'wavefunction_dynamics':
         y0.extend([1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0])
 

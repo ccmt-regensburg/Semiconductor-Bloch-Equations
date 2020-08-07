@@ -17,7 +17,6 @@ k_cut = params.k_cut                       # Model hamiltonian cutoff parameter
 if params.realistic_system:
     system = hfsbe.example.BiTeResummed(C0=params.C0_n, c2=params.c2_n, A=params.A_n, r=params.r_n, ksym=params.ksym_n, kasym=params.kasym_n)
 else:
-    print("Du Idiot!")
     system = hfsbe.example.BiTe(C0=C0, C2=C2, A=A, R=R, kcut=k_cut)
 # ## Trivial Bismuth Teluride call
 # system = hfsbe.example.BiTeTrivial(C0=C0,C2=C2,R=R,vf=A,kcut=k_cut)
@@ -52,17 +51,17 @@ wf = system.Uf
 wf_h = system.Uf_h
 
 # Get symbolic dipoles
-dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym, offdiagonal_k=True)
+dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
 
 # Assign all dipole moment functions
 di_00xjit      = dipole.Axfjit[0][0]
 di_01xjit      = dipole.Axfjit[0][1]
-di_01xjit_offk = dipole.Axfjit_offk[0][1]
+#di_01xjit_offk = dipole.Axfjit_offk[0][1]
 di_11xjit      = dipole.Axfjit[1][1]
 
 di_00yjit      = dipole.Ayfjit[0][0]
 di_01yjit      = dipole.Ayfjit[0][1]
-di_01yjit_offk = dipole.Ayfjit_offk[0][1]
+#di_01yjit_offk = dipole.Ayfjit_offk[0][1]
 di_11yjit      = dipole.Ayfjit[1][1]
 
 curv = hfsbe.dipole.SymbolicCurvature(h_sym, dipole.Ax, dipole.Ay)
