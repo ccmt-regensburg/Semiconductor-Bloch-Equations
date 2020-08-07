@@ -18,7 +18,7 @@ def run():
     mzlist = np.linspace(0, mz_max, 7)
     mz = mzlist[6]
 
-    params.e_fermi = 0.5
+    params.e_fermi = 0.46
     params.rel_dist_to_Gamma = 0.03
 
     # Adjust bandwidth to the gap and dirac bandwidth

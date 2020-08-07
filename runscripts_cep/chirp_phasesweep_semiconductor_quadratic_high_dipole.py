@@ -22,7 +22,7 @@ def run():
     params.e_fermi = 0.2
     params.rel_dist_to_Gamma = 0.03
 
-    params.E0 = 10.0
+    params.E0 = 5.0
 
     # Adjust bandwidth to the gap and dirac bandwidth
     At = 0.5*(A*3*np.pi/(2*params.a) - mz)
@@ -38,7 +38,9 @@ def run():
         os.mkdir(dirname)
     os.chdir(dirname)
 
-    for chirp in np.linspace(-0.920, 0.920, 11):
+    # chirplist = np.linspace(-0.920, 0.920, 11)
+    chirplist = [-0.920, 0.000]
+    for chirp in chirplist:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)

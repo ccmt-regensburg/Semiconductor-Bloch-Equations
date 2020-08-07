@@ -41,4 +41,4 @@ Int_exact_output = np.real(Int_exact_E_dir + Int_exact_ortho).T
 Output = np.hstack((np.real(time[0])[:, np.newaxis], Int_exact_output))
 
 chirpname = '_chirp_{:.3f}'.format(chirp)
-np.savetxt("intensity_time" + chirpname + ".dat", Output)
+np.savetxt("dirac_time_intensity" + chirpname + ".dat", Output)
