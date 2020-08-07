@@ -21,7 +21,7 @@ def run():
 
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
-    E = Elist[1]
+    E = Elist[0]
 
     params.E0 = E
 
@@ -32,7 +32,7 @@ def run():
     # os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    chirplist = np.array([-0.920])
+    chirplist = np.array([-0.920, 0.000])
     # [-0.920, -0.736, -0.552, -0.368, -0.184, 0.000, 0.184, 0.368, 0.552, 0.736, 0.920]
     for chirp in chirplist[:]:
         params.chirp = chirp

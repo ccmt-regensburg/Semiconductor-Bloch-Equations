@@ -1,7 +1,7 @@
 #!/bin/python
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
-from numba import njit
+from numba import jit, njit
 from math import ceil
 import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
@@ -233,8 +233,9 @@ def main(sys, dipole, params):
     # Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
     # Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
 
-    I_exact_E_dir, I_exact_ortho = emission_exact(sys, paths, solution,
-                                                  E_dir, A_field, gauge)
+    emission_exact = make_emission_exact(sys, paths, solution,
+                                         E_dir, A_field, gauge)
+    I_exact_E_dir, I_exact_ortho = emission_exact()
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
     Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t, alpha),
@@ -509,65 +510,120 @@ def current(sys, paths, fv, fc, t, alpha, E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
+def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
+    hderivx = sys.hderivfjit[0]
+    hdx_00 = hderivx[0][0]
+    hdx_01 = hderivx[0][1]
+    hdx_10 = hderivx[1][0]
+    hdx_11 = hderivx[1][1]
 
-def emission_exact(sys, paths, solution, E_dir, A_field, gauge):
+    hderivy = sys.hderivfjit[1]
+    hdy_00 = hderivy[0][0]
+    hdy_01 = hderivy[0][1]
+    hdy_10 = hderivy[1][0]
+    hdy_11 = hderivy[1][1]
 
-    E_ort = np.array([E_dir[1], -E_dir[0]])
+    Ujit = sys.Ujit
+    U_00 = Ujit[0][0]
+    U_01 = Ujit[0][1]
+    U_10 = Ujit[1][0]
+    U_11 = Ujit[1][1]
 
-    n_time_steps = np.size(solution[0, 0, :, 0])
+    Ujit_h = sys.Ujit_h
+    U_h_00 = Ujit_h[0][0]
+    U_h_01 = Ujit_h[0][1]
+    U_h_10 = Ujit_h[1][0]
+    U_h_11 = Ujit_h[1][1]
 
-    # I_E_dir is of size (number of time steps)
-    I_E_dir = np.zeros(n_time_steps)
-    I_ortho = np.zeros(n_time_steps)
+    n_time_steps = np.size(solution, axis=2)
+    pathlen = np.size(solution, axis=0)
 
-    for i_time in range(n_time_steps):
-        if (gauge == 'length'):
-            kx_shift = 0
-            ky_shift = 0
-        if (gauge == 'velocity'):
-            kx_shift = A_field[i_time]*E_dir[0]
-            ky_shift = A_field[i_time]*E_dir[1]
+    @njit
+    def emission_exact():
 
-        for i_path, path in enumerate(paths):
-            path = np.array(path)
-            kx_in_path = path[:, 0] + kx_shift
-            ky_in_path = path[:, 1] + ky_shift
+        E_ort = np.array([E_dir[1], -E_dir[0]])
+        ##########################################################
+        # H derivative container
+        ##########################################################
+        h_deriv_x = np.zeros((pathlen, 2, 2), dtype=np.complex128)
+        h_deriv_y = np.zeros((pathlen, 2, 2), dtype=np.complex128)
+        h_deriv_E_dir = np.zeros((pathlen, 2, 2), dtype=np.complex128)
+        h_deriv_ortho = np.zeros((pathlen, 2, 2), dtype=np.complex128)
 
-            h_deriv_x = ev_mat(sys.hderivfjit[0], kx=kx_in_path,
-                               ky=ky_in_path)
-            h_deriv_y = ev_mat(sys.hderivfjit[1], kx=kx_in_path,
-                               ky=ky_in_path)
+        ##########################################################
+        # Wave function container
+        ##########################################################
+        U = np.zeros((pathlen, 2, 2), dtype=np.complex128)
+        U_h = np.zeros((pathlen, 2, 2), dtype=np.complex128)
 
-            h_deriv_E_dir = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
-            h_deriv_ortho = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
+        ##########################################################
+        # Solution container
+        ##########################################################
+        I_E_dir = np.zeros(n_time_steps, dtype=np.float64)
+        I_ortho = np.zeros(n_time_steps, dtype=np.float64)
 
-            U = sys.Uf(kx=kx_in_path, ky=ky_in_path)
-            U_h = sys.Uf_h(kx=kx_in_path, ky=ky_in_path)
+        # I_E_dir is of size (number of time steps)
+        for i_time in range(n_time_steps):
+            if (gauge == 'length'):
+                kx_shift = 0
+                ky_shift = 0
+            if (gauge == 'velocity'):
+                kx_shift = A_field[i_time]*E_dir[0]
+                ky_shift = A_field[i_time]*E_dir[1]
 
-            for i_k in range(np.size(kx_in_path)):
+            for i_path, path in enumerate(paths):
+                kx_in_path = path[:, 0] + kx_shift
+                ky_in_path = path[:, 1] + ky_shift
 
-                dH_U_E_dir = np.matmul(h_deriv_E_dir[:, :, i_k], U[:, :, i_k])
-                U_h_H_U_E_dir = np.matmul(U_h[:, :, i_k], dH_U_E_dir)
+                h_deriv_x[:, 0, 0] = hdx_00(kx=kx_in_path, ky=ky_in_path)
+                h_deriv_x[:, 0, 1] = hdx_01(kx=kx_in_path, ky=ky_in_path)
+                h_deriv_x[:, 1, 0] = hdx_10(kx=kx_in_path, ky=ky_in_path)
+                h_deriv_x[:, 1, 1] = hdx_11(kx=kx_in_path, ky=ky_in_path)
 
-                dH_U_ortho = np.matmul(h_deriv_ortho[:, :, i_k], U[:, :, i_k])
-                U_h_H_U_ortho = np.matmul(U_h[:, :, i_k], dH_U_ortho)
 
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])\
-                    * np.real(solution[i_k, i_path, i_time, 0])
-                I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])\
-                    * np.real(solution[i_k, i_path, i_time, 3])
-                I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]
-                                             * solution[i_k, i_path, i_time, 2])
+                h_deriv_y[:, 0, 0] = hdy_00(kx=kx_in_path, ky=ky_in_path)
+                h_deriv_y[:, 0, 1] = hdy_01(kx=kx_in_path, ky=ky_in_path)
+                h_deriv_y[:, 1, 0] = hdy_10(kx=kx_in_path, ky=ky_in_path)
+                h_deriv_y[:, 1, 1] = hdy_11(kx=kx_in_path, ky=ky_in_path)
 
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])\
-                    * np.real(solution[i_k, i_path, i_time, 0])
-                I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])\
-                    * np.real(solution[i_k, i_path, i_time, 3])
-                I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]
-                                             * solution[i_k, i_path, i_time, 2])
+                h_deriv_E_dir[:, :, :] = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
+                h_deriv_ortho[:, :, :] = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
 
-    return I_E_dir, I_ortho
+                U[:, 0, 0] = U_00(kx=kx_in_path, ky=ky_in_path)
+                U[:, 0, 1] = U_01(kx=kx_in_path, ky=ky_in_path)
+                U[:, 1, 0] = U_10(kx=kx_in_path, ky=ky_in_path)
+                U[:, 1, 1] = U_11(kx=kx_in_path, ky=ky_in_path)
 
+                U_h[:, 0, 0] = U_h_00(kx=kx_in_path, ky=ky_in_path)
+                U_h[:, 0, 1] = U_h_01(kx=kx_in_path, ky=ky_in_path) 
+                U_h[:, 1, 0] = U_h_10(kx=kx_in_path, ky=ky_in_path) 
+                U_h[:, 1, 1] = U_h_11(kx=kx_in_path, ky=ky_in_path) 
+
+                for i_k in range(pathlen):
+
+                    dH_U_E_dir = h_deriv_E_dir[i_k] @ U[i_k]
+                    U_h_H_U_E_dir = U_h[i_k] @ dH_U_E_dir
+
+                    dH_U_ortho = h_deriv_ortho[i_k] @ U[i_k]
+                    U_h_H_U_ortho = U_h[i_k] @ dH_U_ortho
+
+                    I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])\
+                        * np.real(solution[i_k, i_path, i_time, 0])
+                    I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])\
+                        * np.real(solution[i_k, i_path, i_time, 3])
+                    I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]
+                                                 * solution[i_k, i_path, i_time, 2])
+
+                    I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])\
+                        * np.real(solution[i_k, i_path, i_time, 0])
+                    I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])\
+                        * np.real(solution[i_k, i_path, i_time, 3])
+                    I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]
+                                                 * solution[i_k, i_path, i_time, 2])
+
+        return I_E_dir, I_ortho
+
+    return emission_exact
 
 def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
                 dipole_off):
@@ -663,7 +719,7 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
         ecv_in_path = ec - ev
 
         if (dipole_off):
-            zeros = np.zeros(np.size(kx), dtype=np.complex)
+            zeros = np.zeros(kx.size, dtype=np.dtype('complex'))
             dipole_in_path = zeros
             A_in_path = zeros
         else:
@@ -719,7 +775,7 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
     if (gauge == 'length'):
         print("Using length gauge")
         freturn = flength
-    if (gauge == 'velocity'):
+    elif (gauge == 'velocity'):
         print("Using velocity gauge")
         freturn = fvelocity
     else:
