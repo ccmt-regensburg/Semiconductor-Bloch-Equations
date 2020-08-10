@@ -26,7 +26,7 @@ class params:
 
     # 2line BZ parameters
     Nk_in_path          = 800         # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0.001        # relative distance (in units of 2pi/a) of both paths to Gamma
+    rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -48,18 +48,10 @@ class params:
     dt    = 0.01   # Time step
     Nt    = 4096   # Length of result time array
 
-    # Unit conversion factors
-    ##########################################################################
-    fs_conv = 41.34137335                  #(1fs    = 41.341473335 a.u.)
-    E_conv = 0.0001944690381               #(1MV/cm = 1.944690381*10^-4 a.u.)
-    THz_conv = 0.000024188843266           #(1THz   = 2.4188843266*10^-5 a.u.)
-    amp_conv = 150.97488474                #(1A     = 150.97488474)
-    eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
-
     # Flags for testing and features
     ##########################################################################
     gauge         = 'velocity' # Gauge of the system
-    dipole_off    = True   # Turn all dipoles to 0
+    dipole_off    = True  # Turn all dipoles to 0
     user_out      = True   # Set to True to get user plotting and progress output
     save_file     = True   # To save exact data
     save_full     = True   # Save full information
