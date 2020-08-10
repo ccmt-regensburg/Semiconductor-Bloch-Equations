@@ -51,7 +51,6 @@ def main():
     tf = int(params.tf*fs_conv)                       # Final time
     phi = np.pi*0.5
     
-    number  = 1000
     ky      = .0*kF
 
     nir_values  = False
@@ -65,8 +64,7 @@ def main():
     w       *= 1
     E0      *= 1
     kF      *= 1
-    c       = 1.0e-9*w
-    c       = -0.920*THz_conv
+    c       = 1.0e-1*w
 
    
     real_fig, (axB,axA,axC,axI) = pl.subplots(4,1,figsize=(10,10))
@@ -77,39 +75,35 @@ def main():
     kx_array = np.linspace(-kF, kF, 1000)
     axB.plot(kx_array, np.ones(kx_array.size)*e_fermi)
 
-    dt = 1/(60*2*w)
+    dt = 1/(30*2*w)
 
-    number  = 40
-    t_num   = 4096
-    k_num   = 800
-    
-    t       = np.arange(-number*alpha, number*alpha, dt)
-    t       = np.linspace(-200*fs_conv, 200*fs_conv, t_num)
-    int_current = integrated_current(t, ky, A, kF, E0, w, alpha, phi, c)
+    number      = 10
+    t           = np.arange(-number*alpha, number*alpha, dt)
+    int_current = integrated_current(t, A, kF, E0, w, alpha, phi, c)
 
-    A_t     = A_field(t, E0, w, alpha, phi, c)
-    kMax    = 3/2*np.pi/a
-    kPoints = np.linspace(-kMax, kMax, k_num)
-    
-    density = np.zeros((t_num, k_num) )
+#    t_num   = 4096
+#    k_num   = 800
+#    A_t     = A_field(t, E0, w, alpha, phi, c)
+#    kMax    = 3/2*np.pi/a
+#    kPoints = np.linspace(-kMax, kMax, k_num)
+#    
+#    density = np.zeros((t_num, k_num) )
+#
+#    for t_k in range(t_num):
+#        ind_t   = np.where( np.abs(kPoints + A_field(t[t_k], E0, w, alpha, phi, c) ) < 0.991446*kF)
+#        density[t_k, ind_t ]  = 1
+#    print(np.sum(density, axis=1) )
+#    print(max(np.sum(density, axis=1) ) )
+#    print(min(np.sum(density, axis=1) ) )
+#
+#    print(current(t, ky, A, kF, E0, w, alpha, phi, c).shape)
+#    print(density.shape)
+#    np.save("current_analytical.npy", current(t, ky, A, kF, E0, w, alpha, phi, c) )
+#    np.save("density_analytical.npy", density )
 
-    for t_k in range(t_num):
-        ind_t   = np.where( np.abs(kPoints + A_field(t[t_k], E0, w, alpha, phi, c) ) < 0.991446*kF)
-        density[t_k, ind_t ]  = 1
-    print(np.sum(density, axis=1) )
-    print(max(np.sum(density, axis=1) ) )
-    print(min(np.sum(density, axis=1) ) )
-
-    print(current(t, ky, A, kF, E0, w, alpha, phi, c).shape)
-    print(density.shape)
-    np.save("current_analytical.npy", current(t, ky, A, kF, E0, w, alpha, phi, c) )
-    np.save("density_analytical.npy", density )
-
-
-    
- 
     axA.plot(t, A_field(t, E0, w, alpha, phi, c) )
-    axC.plot(t/fs_conv, current(t, ky, A, kF, E0, w, alpha, phi, c))
+    axC.plot(t/fs_conv, int_current)
+    axC.plot(t/fs_conv, appr_int_current(t, A, kF, E0, w, alpha, phi, c))
     #axC.plot(t, signum_steps(t, E0, w, alpha, ky, kF, A, phi, c) )
 
     dt_out      = t[1]-t[0]
@@ -151,16 +145,14 @@ def main():
     pl.xlim((.1, 25) )
     #pl.ylim((1e-12, 1e-6) )
     pl.yscale("log")
-    pl.show()
+    #pl.show()
     pl.clf()
     pl.close()
-    return
 
-    angles  = np.linspace(0, np.pi, 10)
+    angles  = np.linspace(0, np.pi, t.size)
     emission_cep_a    = np.array([np.abs(freq*analytical_fourier(freq, E0, w, alpha, ky, kF, A, phi, c) )**2 for phi in angles])
-    emission_cep_n    = np.array([np.abs(freq*np.fft.fftshift(np.fft.fft(integrated_current(t, ky, A, kF, E0, w, alpha, phi, c) ) )[len(freq)+1:] )**2 for phi in angles])
-
-    trace_cep(freq, emission_cep_n)
+    emission_cep_n    = np.array([np.abs(freq*np.fft.fftshift(np.fft.fft(integrated_current(t, A, kF, E0, w, alpha, phi, c) ) )[len(freq)+1:] )**2 for phi in angles])
+    paths   = trace_cep(freq, emission_cep_n, angles, w)
 
     freq_indices    = np.where(np.abs(freq/w - 30) < 30)[0]
     freq                = freq[freq_indices]
@@ -171,10 +163,8 @@ def main():
     fig, ((axA,axN), (ax2A,ax2N)) = pl.subplots(2,2,figsize=(10,10))
     imA = axA.contourf(X, Y, np.log10(emission_cep_a), levels=50)
 
-    for l in range(1, 0, 1):
-        omegas   = (1*l+0) * np.array([1-1*phi*c/(2*np.pi*w) for phi in angles])
-        axA.plot(omegas, angles)
-        ax2A.plot(omegas, angles)
+    for path in paths:
+        axN.plot(path, angles, color="r")
 
     imA = axA.contourf(X, Y, np.log10(emission_cep_a), levels=50)
     imN = axN.contourf(X, Y, np.log10(emission_cep_n))
@@ -200,8 +190,8 @@ def main():
     ax2A.set_xticks(np.arange(1, freq[-1]/w, 1))
     ax2N.set_xticks(np.arange(1, freq[-1]/w, 1))
 
-    axA.set_xlim(1, 16)
-    axN.set_xlim(1, 16)
+    axA.set_xlim(.1, 26)
+    axN.set_xlim(.1, 26)
     ax2A.set_xlim(16, 28)
     ax2N.set_xlim(16, 28)
     axA.grid(True)
@@ -211,21 +201,88 @@ def main():
     pl.tight_layout()
     pl.show()
  
-def trace_cep(freq, Int):
-    i_0         = 10
-    w_t         
-    print(freq.shape)
-    print(Int.shape)
-    return
+def trace_max(freq, Int, angles, w):
+    dx          = (freq[1]-freq[0])/w
+    epsilon     = dx/2
+    lattice     = freq/w
+    neighbors       = np.array([-1, 0, 1])                     # Take the three neigbors which are the nearest do the previous point
+
+    paths       = []
+    for k in range(1, Int[0].size-1, 1):
+        print(k)
+        if np.argmax(Int[0, k+neighbors] ) != 1:
+            continue
+        
+        path        = [lattice[k] ]
+        for i, phi in enumerate(angles):
+            if i == len(angles)-1:
+                paths.append(np.array(path) )
+                continue
+            
+            print(k, Int[i+1, k+neighbors] )
+            k               += np.argmax(Int[i+1, k+neighbors] )-1
+            if (k < 0) or (k > lattice.size-2):
+                break
+            path.append(lattice[k] )
+
+    paths       = np.array(paths)
+    print(paths.shape)
+    return paths
+
+def trace_cep(freq, Int, angles, w):
+    dx          = (freq[1]-freq[0])/w
+    epsilon     = dx/2
+    lattice     = freq/w
+
+    paths       = []
+
+    for k0 in range(1, Int[0].size):
+        print(k0)
+        x           = freq[k0]/w
+        path        = [x]
+        emis_x      = Int[0, k0]
+        for i, phi in enumerate(angles):
+            if i == len(angles)-1:
+                paths.append(np.array(path) )
+                continue
+            
+            neighbors       = np.where(np.abs(lattice -x) < 1.5*dx)[0]          # Take the three neigbors which are the nearest do the previous point
+            print(i)
+            nearest         = neighbors[1]
+
+            to_close        = np.abs(lattice[nearest] - x) < epsilon            # Check if the middle one is to close to the previos point
+            if to_close:
+                neighbors   = [neighbors[0], neighbors[-1]]                     # If he is to close discard it
+            else:
+                neighbors  = np.where(np.abs(lattice -x) < dx)[0]               # If not, discard the point, which is the farest of the three neigbors
+
+            if np.all(Int[i+1, neighbors] < emis_x) or np.all(Int[i+1, neighbors] > emis_x):
+                print("Path is not continued")
+                break                                                               #If this is true then the path is broken
+
+            m       = (Int[i+1, neighbors[0] ] - Int[i+1, neighbors[1] ])/(lattice[neighbors[0] ] - lattice[neighbors[1] ] )
+            x       = (emis_x - Int[i+1, neighbors[0] ] )/m + lattice[neighbors[0] ]
+            path.append(x)
+
+    paths       = np.array(paths)
+    print(paths.shape)
+    return paths
 
 def current(t, ky, A, kF, E0, w, alpha, phi, c):
     return -A/(2*np.pi) * (np.sqrt(ky**2 + (kxMax(ky, kF) - A_field(t, E0, w, alpha, phi, c))**2 ) - np.sqrt(ky**2 + (kxMax(ky, kF) + A_field(t, E0, w, alpha, phi, c))**2 ) )
 
-def integrated_current(t, ky, A, kF, E0, w, alpha, phi, c):
+def appr_int_current(t, A, kF, E0, w, alpha, phi, c):
+    paths               = np.linspace(-kF, kF, 100)
+    dky                 = paths[1] - paths[0]
+    integrated_current  = np.array([current(t, 0, A, np.sqrt(kF**2 - ky**2), E0, w, alpha, phi, c) for ky in paths] )
+    integrated_current  = np.sum(integrated_current, axis=0)*dky/(2*np.pi)
+    return integrated_current
+
+def integrated_current(t, A, kF, E0, w, alpha, phi, c):
     paths               = np.linspace(-kF, kF, 100)
     dky                 = paths[1] - paths[0]
     integrated_current  = np.array([current(t, ky, A, kF, E0, w, alpha, phi, c) for ky in paths] )
-    integrated_current  = np.sum(integrated_current, axis=0)*dky
+    integrated_current  = np.sum(integrated_current, axis=0)*dky/(2*np.pi)
     return integrated_current
 
 def A_field(t, E0, w, alpha, phi, c):

@@ -984,7 +984,7 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
         ec_in_path = sys.ecjit(kx=kx_shift_path, ky=ky_shift_path)    
 
         if params.semicl_model:
-            di_00x = np.zeros(kx_in_path.size) + 0j
+            di_00x = np.zeros(kx_in_path.size, dtype=np.complex128) + 0j
             di_01x = np.zeros(kx_in_path.size) + 0j
             di_11x = np.zeros(kx_in_path.size) + 0j
             di_00y = np.zeros(kx_in_path.size) + 0j
