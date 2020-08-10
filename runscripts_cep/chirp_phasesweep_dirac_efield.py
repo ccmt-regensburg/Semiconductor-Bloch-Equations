@@ -44,7 +44,7 @@ def run():
 
         phaselist = np.linspace(0, np.pi, 21)
         # phaselist = [phaselist[0], phaselist[10]]
-        for phase in phaselist[:-1]:
+        for phase in phaselist:
             params.phase = phase
             print("Current phase: ", params.phase)
             dirname_phase = 'phase_{:1.2f}'.format(params.phase)

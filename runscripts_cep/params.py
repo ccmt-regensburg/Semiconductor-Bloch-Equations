@@ -7,7 +7,7 @@ class params:
     #########################################################################
     a                   = 8.28834     # Lattice spacing in atomic units (4.395 A)
     e_fermi             = 0.2         # Fermi energy in eV
-    temperature         = 0.00        # Temperature in eV
+    temperature         = 0.03        # Temperature in eV
 
     # Model Hamiltonian parameters
     # Brillouin zone parameters
@@ -26,7 +26,7 @@ class params:
 
     # 2line BZ parameters
     Nk_in_path          = 1000        # Number of kpoints in each of the two paths
-    rel_dist_to_Gamma   = 0           # relative distance (in units of 2pi/a) of both paths to Gamma
+    rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
     angle_inc_E_field   = 0           # incoming angle of the E-field in degree
