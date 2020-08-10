@@ -3,7 +3,7 @@ import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import jit, njit
 from math import ceil
-import matplotlib.pyplot as pl
+import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon
 from scipy.integrate import ode
 
@@ -145,7 +145,7 @@ def main(sys, dipole, params):
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are
         # provided and a cutoff radius
-        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)  
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)
         ecv_in_path = ec - sys.efjit[0](kx=kx_in_path, ky=ky_in_path)
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
@@ -247,7 +247,7 @@ def main(sys, dipole, params):
     if (save_full):
         S_name = 'Sol_' + tail
         np.savez(S_name, t=t, solution=solution, paths=paths,
-                 electric_field=electric_field(t))
+                 electric_field=electric_field(t), A_field=A_field)
 
     # J_name = 'J_' + tail
     # np.save(J_name, [t, J_E_dir, J_ortho, freq/w, Jw_E_dir, Jw_ortho])
@@ -772,14 +772,15 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
 
 def initial_condition(e_fermi, temperature, e_c):
     knum = e_c.size
-    ones = np.ones(knum)
-    zeros = np.zeros(knum)
+    ones = np.ones(knum, dtype=np.float64)
+    zeros = np.zeros(knum, dtype=np.float64)
+    distrib = np.zeros(knum, dtype=np.float64)
     if (temperature > 1e-5):
-        distrib = 1/(np.exp((e_c-e_fermi)/temperature) + 1)
+        distrib += 1/(np.exp((e_c-e_fermi)/temperature) + 1)
         return np.array([ones, zeros, zeros, distrib]).flatten('F')
     else:
-        smaller_e_fermi = (e_fermi - e_c) < 0
-        distrib = ones[smaller_e_fermi]
+        smaller_e_fermi = (e_fermi - e_c) > 0
+        distrib[smaller_e_fermi] += 1
         return np.array([ones, zeros, zeros, distrib]).flatten('F')
 
 
@@ -797,7 +798,7 @@ def BZ_plot(kpnts, a, b1, b2, paths, si_units=True):
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
 
-    BZ_fig = pl.figure(figsize=(10, 10))
+    BZ_fig = plt.figure(figsize=(10, 10))
     ax = BZ_fig.add_subplot(111, aspect='equal')
 
     for b in ((0, 0), b1, -b1, b2, -b2, b1+b2, -b1-b2):
@@ -807,28 +808,28 @@ def BZ_plot(kpnts, a, b1, b2, paths, si_units=True):
 #    ax.arrow(-0.5*E_dir[0], -0.5*E_dir[1], E_dir[0], E_dir[1],
 #             width=0.005, alpha=0.5, label='E-field')
 
-    pl.scatter(0, 0, s=15, c='black')
-    pl.text(0.01, 0.01, r'$\Gamma$')
-    pl.scatter(r*np.cos(-np.pi/6), r*np.sin(-np.pi/6), s=15, c='black')
-    pl.text(r*np.cos(-np.pi/6)+0.01, r*np.sin(-np.pi/6)-0.05, r'$M$')
-    pl.scatter(R, 0, s=15, c='black')
-    pl.text(R, 0.02, r'$K$')
-    pl.scatter(kpnts[:, 0], kpnts[:, 1], s=10)
-    pl.xlim(-7.0/a, 7.0/a)
-    pl.ylim(-7.0/a, 7.0/a)
+    plt.scatter(0, 0, s=15, c='black')
+    plt.text(0.01, 0.01, r'$\Gamma$')
+    plt.scatter(r*np.cos(-np.pi/6), r*np.sin(-np.pi/6), s=15, c='black')
+    plt.text(r*np.cos(-np.pi/6)+0.01, r*np.sin(-np.pi/6)-0.05, r'$M$')
+    plt.scatter(R, 0, s=15, c='black')
+    plt.text(R, 0.02, r'$K$')
+    plt.scatter(kpnts[:, 0], kpnts[:, 1], s=10)
+    plt.xlim(-7.0/a, 7.0/a)
+    plt.ylim(-7.0/a, 7.0/a)
 
     if (si_units):
-        pl.xlabel(r'$k_x \text{ in } 1/\si{\angstrom}$')
-        pl.ylabel(r'$k_y \text{ in } 1/\si{\angstrom}$')
+        plt.xlabel(r'$k_x \text{ in } 1/\si{\angstrom}$')
+        plt.ylabel(r'$k_y \text{ in } 1/\si{\angstrom}$')
     else:
-        pl.xlabel(r'$k_x \text{ in } 1/a_0$')
-        pl.ylabel(r'$k_y \text{ in } 1/a_0$')
+        plt.xlabel(r'$k_x \text{ in } 1/a_0$')
+        plt.ylabel(r'$k_y \text{ in } 1/a_0$')
 
     for path in paths:
         path = np.array(path)
-        pl.plot(path[:, 0], path[:, 1])
+        plt.plot(path[:, 0], path[:, 1])
 
-    pl.show()
+    plt.show()
 
 
 def print_user_info(BZ_type, Nk, align, angle_inc_E_field, E0, w, alpha, chirp,

@@ -17,7 +17,7 @@ def run():
     mz = 0
 
     params.e_fermi = 0.2
-    params.rel_dist_to_Gamma = 0.03
+    # params.rel_dist_to_Gamma = 0.03
 
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
