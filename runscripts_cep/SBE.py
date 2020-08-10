@@ -122,6 +122,7 @@ def main(sys, dipole, params):
         # Retrieve the set of k-points for the current path
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
+        breakpoint()
 
         if (dipole_off):
             zeros = np.zeros(np.size(kx_in_path), dtype=np.complex)
@@ -218,6 +219,10 @@ def main(sys, dipole, params):
     emission_exact = make_emission_exact(sys, paths, solution,
                                          E_dir, A_field, gauge)
     I_exact_E_dir, I_exact_ortho = emission_exact()
+    if (BZ_type == '2line'):
+        I_exact_E_dir *= (dk/(4*np.pi))
+        I_exact_ortho *= (dk/(4*np.pi))
+
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
     Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t, alpha),
@@ -297,7 +302,7 @@ def mesh(params, E_dir):
         # Append the a1'th path to the paths array
         paths.append(path)
 
-    dk = length_path_in_BZ/(Nk_in_path-1)
+    dk = length_path_in_BZ/(Nk_in_path)
 
     return dk, np.array(mesh), np.array(paths)
 

@@ -25,10 +25,10 @@ plt.rcParams['font.size'] = 20
 # datapath2 = '/mnt/storage/Storage/dirac/dipole_off/' \
 #     + 'E_10.0/chirp_-0.920/phase_0.00/'
 
-Estring = 'E_5.0_new_emission'
+Estring = 'E_5.0_gamma_point'
 chirpstring = 'chirp_-0.920'
 
-datapath1 = '/mnt/storage/Storage/dirac/dipole_off/velocity_gauge/dipole_off/' \
+datapath1 = '/mnt/storage/Storage/dirac/velocity_gauge/dipole_off/' \
      + Estring + '/' + chirpstring + '/' + 'phase_0.00/'
 # datapath2 = '/mnt/storage/Storage/dirac/dipole_off/velocity_gauge/dipole_off/' \
 #     + Estring + '/' + chirpstring + '/' + 'phase_1.49/'
@@ -38,8 +38,8 @@ datapath1 = '/mnt/storage/Storage/dirac/dipole_off/velocity_gauge/dipole_off/' \
 ########################################
 # Extra path for comparisons
 ########################################
-datapath2 = '/mnt/storage/Storage/dirac/dipole_off/' \
-    + 'E_5.0_new' + '/' + chirpstring + '/' + 'phase_0.00/'
+datapath2 = '/mnt/storage/Storage/dirac/length_gauge/dipole_off/' \
+    + Estring + '/' + chirpstring + '/' + 'phase_0.00/'
 
 Iexact1, Solution1 = read_specific(datapath1)
 Iexact2, Solution2 = read_specific(datapath2)
@@ -91,7 +91,7 @@ for i in range(len(Icontainer)):
     standard_deviation_container.append(p_e_standard_deviation)
 
 dkx = np.abs(kx_first_path[0] - kx_first_path[1])
-Int_data_container = (dkx/(2*np.pi))*np.array(Int_data_container)/2
+Int_data_container = (au_to_as*dkx/(2*np.pi))*np.array(Int_data_container)/2
 density_center_container = np.array(density_center_container)
 standard_deviation_container = np.array(standard_deviation_container)
 
@@ -109,7 +109,8 @@ A_field = -7.80951974*np.cumsum(electric_field)
 
 density_center_container = np.vstack((density_center_container, A_field))
 
-dipole_legend = ['sbe full', 'sbe semiclas.', 'analytic semiclas.']
+# dipole_legend = ['sbe full', 'sbe semiclas.', 'analytic semiclas.']
+dipole_legend = ['velocity gauge', 'length gauge', 'analytic']
 band_structure = dirac_conduction(kx_first_path, ky_first_path)
 
 

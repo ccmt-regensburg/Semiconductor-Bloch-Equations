@@ -25,7 +25,7 @@ class params:
     Nk2                 = 40          # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 800         # Number of kpoints in each of the two paths
+    Nk_in_path          = 1000        # Number of kpoints in each of the two paths
     rel_dist_to_Gamma   = 0           # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
@@ -50,8 +50,8 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
-    gauge         = 'length' # Gauge of the system
-    dipole_off    = True  # Turn all dipoles to 0
-    user_out      = True   # Set to True to get user plotting and progress output
-    save_file     = True   # To save exact data
-    save_full     = True   # Save full information
+    gauge         = 'velocity' # Gauge of the system
+    dipole_off    = True       # Turn all dipoles to 0
+    user_out      = True       # Set to True to get user plotting and progress output
+    save_file     = True       # To save exact data
+    save_full     = True       # Save full information
