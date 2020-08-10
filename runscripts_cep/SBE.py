@@ -161,10 +161,8 @@ def main(sys, dipole, params):
 
         # in bite.evaluate, there is also an interpolation done if b1, b2 are
         # provided and a cutoff radius
-        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)
-        ev = sys.efjit[0](kx=kx_in_path, ky=ky_in_path)
-        ecv_in_path = ec - ev
-
+        ec = sys.efjit[1](kx=kx_in_path, ky=ky_in_path)  
+        ecv_in_path = ec - sys.efjit[0](kx=kx_in_path, ky=ky_in_path)
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
         y0 = initial_condition(e_fermi, temperature, ec)
@@ -236,6 +234,7 @@ def main(sys, dipole, params):
     emission_exact = make_emission_exact(sys, paths, solution,
                                          E_dir, A_field, gauge)
     I_exact_E_dir, I_exact_ortho = emission_exact()
+    breakpoint()
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
     Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t, alpha),
@@ -537,11 +536,10 @@ def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
 
     n_time_steps = np.size(solution, axis=2)
     pathlen = np.size(solution, axis=0)
+    E_ort = np.array([E_dir[1], -E_dir[0]])
 
     @njit
     def emission_exact():
-
-        E_ort = np.array([E_dir[1], -E_dir[0]])
         ##########################################################
         # H derivative container
         ##########################################################
@@ -572,8 +570,8 @@ def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
                 ky_shift = A_field[i_time]*E_dir[1]
 
             for i_path, path in enumerate(paths):
-                kx_in_path = path[:, 0] + kx_shift
-                ky_in_path = path[:, 1] + ky_shift
+                kx_in_path = path[:, 0] - kx_shift
+                ky_in_path = path[:, 1] - ky_shift
 
                 h_deriv_x[:, 0, 0] = hdx_00(kx=kx_in_path, ky=ky_in_path)
                 h_deriv_x[:, 0, 1] = hdx_01(kx=kx_in_path, ky=ky_in_path)
@@ -654,7 +652,7 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
         The length gauge is evaluated on a constant pre-defined k-grid.
         """
         # x != y(t+dt)
-        x = np.empty(np.shape(y), dtype=np.dtype('complex'))
+        x = np.empty(np.shape(y), dtype=np.complex128)
 
         # Gradient term coefficient
         electric_f = electric_field(t)
@@ -714,12 +712,10 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
         kx = kpath[:, 0] + E_dir[0]*k_shift
         ky = kpath[:, 1] + E_dir[1]*k_shift
 
-        ev = evf(kx=kx, ky=ky)
-        ec = ecf(kx=kx, ky=ky)
-        ecv_in_path = ec - ev
+        ecv_in_path = ecf(kx=kx, ky=ky) - evf(kx=kx, ky=ky)
 
         if (dipole_off):
-            zeros = np.zeros(kx.size, dtype=np.dtype('complex'))
+            zeros = np.zeros(kx.size, dtype=np.complex128)
             dipole_in_path = zeros
             A_in_path = zeros
         else:
@@ -735,7 +731,7 @@ def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
                 - (E_dir[0]*di_11x + E_dir[1]*di_11y)
 
         # x != y(t+dt)
-        x = np.empty(np.shape(y), dtype=np.dtype('complex'))
+        x = np.empty(np.shape(y), dtype=np.complex128)
 
         # Gradient term coefficient
         electric_f = electric_field(t)

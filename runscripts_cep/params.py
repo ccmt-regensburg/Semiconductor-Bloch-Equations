@@ -58,7 +58,7 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
-    gauge         = 'length' # Gauge of the system
+    gauge         = 'velocity' # Gauge of the system
     dipole_off    = True   # Turn all dipoles to 0
     user_out      = True   # Set to True to get user plotting and progress output
     save_file     = True   # To save exact data
