@@ -7,7 +7,11 @@ import matplotlib.pyplot as pl
 from matplotlib.patches import RegularPolygon
 from scipy.integrate import ode
 
-from hfsbe.utility import evaluate_njit_matrix as ev_mat
+fs_to_au = 41.34137335                   # (1fs = 41.341473335 a.u.)
+MVpcm_to_au = 0.0001944690381            # (1MV/cm = 1.944690381*10^-4 a.u.)
+THz_to_au = 0.000024188843266            # (1THz   = 2.4188843266*10^-5 a.u.)
+A_to_au = 150.97488474                   # (1A     = 150.97488474)
+eV_to_au = 0.03674932176                 # (1eV    = 0.036749322176 a.u.)
 
 
 def main(sys, dipole, params):
@@ -20,28 +24,21 @@ def main(sys, dipole, params):
     dipole_off = params.dipole_off
     gauge = params.gauge
 
-    # Unit converstion factors
-    fs_conv = params.fs_conv
-    E_conv = params.E_conv
-    THz_conv = params.THz_conv
-    # amp_conv = params.amp_conv
-    eV_conv = params.eV_conv
-
     # System parameters
     a = params.a                                # Lattice spacing
-    e_fermi = params.e_fermi*eV_conv            # Fermi energy
-    temperature = params.temperature*eV_conv    # Temperature
+    e_fermi = params.e_fermi*eV_to_au           # Fermi energy
+    temperature = params.temperature*eV_to_au   # Temperature
 
     # Driving field parameters
-    E0 = params.E0*E_conv                       # Driving pulse field amplitude
-    w = params.w*THz_conv                       # Driving pulse frequency
-    chirp = params.chirp*THz_conv               # Pulse chirp frequency
-    alpha = params.alpha*fs_conv                # Gaussian pulse width
+    E0 = params.E0*MVpcm_to_au                  # Driving pulse field amplitude
+    w = params.w*THz_to_au                      # Driving pulse frequency
+    chirp = params.chirp*THz_to_au              # Pulse chirp frequency
+    alpha = params.alpha*fs_to_au               # Gaussian pulse width
     phase = params.phase                        # Carrier-envelope phase
 
     # Time scales
-    T1 = params.T1*fs_conv                      # Occupation damping time
-    T2 = params.T2*fs_conv                      # Polarization damping time
+    T1 = params.T1*fs_to_au                     # Occupation damping time
+    T2 = params.T2*fs_to_au                     # Polarization damping time
     gamma1 = 1/T1                               # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
 
@@ -52,9 +49,9 @@ def main(sys, dipole, params):
     # Expand time window to fit Nf output steps
     Nt = dt_out*params.Nt
     total_fs = Nt*params.dt
-    t0 = (-total_fs/2)*fs_conv
-    tf = (total_fs/2)*fs_conv
-    dt = params.dt*fs_conv
+    t0 = (-total_fs/2)*fs_to_au
+    tf = (total_fs/2)*fs_to_au
+    dt = params.dt*fs_to_au
 
     # Brillouin zone type
     BZ_type = params.BZ_type                    # Type of Brillouin zone
@@ -65,9 +62,11 @@ def main(sys, dipole, params):
         Nk2 = params.Nk2                        # kpoints in b2 direction
         Nk = Nk1*Nk2                            # Total number of kpoints
         align = params.align                    # E-field alignment
+        angle_inc_E_field = None
     elif BZ_type == '2line':
         Nk_in_path = params.Nk_in_path
         Nk = 2*Nk_in_path
+        align = None
         angle_inc_E_field = params.angle_inc_E_field
         Nk1 = Nk_in_path
         Nk2 = 2
@@ -78,21 +77,8 @@ def main(sys, dipole, params):
     # USER OUTPUT
     ###########################################################################
     if user_out:
-        print("Solving for...")
-        print("Brillouin zone: " + BZ_type)
-        print("Number of k-points              = " + str(Nk))
-        if BZ_type == 'full':
-            print("Driving field alignment         = " + align)
-        elif BZ_type == '2line':
-            print("Driving field direction         = " + str(angle_inc_E_field))
-        print("Driving amplitude (MV/cm)[a.u.] = " + "(" + '%.6f'%(E0/E_conv) + ")" + "[" + '%.6f'%(E0) + "]")
-        print("Pulse Frequency (THz)[a.u.]     = " + "(" + '%.6f'%(w/THz_conv) + ")" + "[" + '%.6f'%(w) + "]")
-        print("Pulse Width (fs)[a.u.]          = " + "(" + '%.6f'%(alpha/fs_conv) + ")" + "[" + '%.6f'%(alpha) + "]")
-        print("Chirp rate (THz)[a.u.]          = " + "(" + '%.6f'%(chirp/THz_conv) + ")" + "[" + '%.6f'%(chirp) + "]")
-        print("Damping time (fs)[a.u.]         = " + "(" + '%.6f'%(T2/fs_conv) + ")" + "[" + '%.6f'%(T2) + "]")
-        print("Total time (fs)[a.u.]           = " + "(" + '%.6f'%((tf-t0)/fs_conv) + ")" + "[" + '%.5i'%(tf-t0) + "]")
-        print("Time step (fs)[a.u.]            = " + "(" + '%.6f'%(dt/fs_conv) + ")" + "[" + '%.6f'%(dt) + "]")
-
+        print_user_info(BZ_type, Nk, align, angle_inc_E_field, E0, w, alpha,
+                        chirp, T2, tf-t0, dt)
     # INITIALIZATIONS
     ###########################################################################
     # Form the E-field direction
@@ -128,8 +114,6 @@ def main(sys, dipole, params):
                          gauge=gauge, dipole_off=dipole_off)
     solver = ode(fnumba, jac=None)\
         .set_integrator('zvode', method='bdf', max_step=dt)
-
-    # Vector field
 
     # SOLVING
     ###########################################################################
@@ -234,7 +218,6 @@ def main(sys, dipole, params):
     emission_exact = make_emission_exact(sys, paths, solution,
                                          E_dir, A_field, gauge)
     I_exact_E_dir, I_exact_ortho = emission_exact()
-    breakpoint()
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
     Iw_exact_ortho = fftshift(fft(I_exact_ortho*gaussian_envelope(t, alpha),
@@ -248,7 +231,8 @@ def main(sys, dipole, params):
 
     # Save observables to file
     tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
-        .format(Nk1, Nk2, w/THz_conv, E0/E_conv, alpha/fs_conv, phase, T2/fs_conv)
+        .format(Nk1, Nk2, w/THz_to_au, E0/MVpcm_to_au, alpha/fs_to_au, phase,
+                T2/fs_to_au)
 
     if (save_file):
         I_exact_name = 'Iexact_' + tail
@@ -509,6 +493,7 @@ def current(sys, paths, fv, fc, t, alpha, E_dir):
     # Return the real part of each component
     return np.real(J_E_dir), np.real(J_ortho)
 
+
 def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
     hderivx = sys.hderivfjit[0]
     hdx_00 = hderivx[0][0]
@@ -565,19 +550,20 @@ def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
             if (gauge == 'length'):
                 kx_shift = 0
                 ky_shift = 0
+                fv_subs = 0
             if (gauge == 'velocity'):
                 kx_shift = A_field[i_time]*E_dir[0]
                 ky_shift = A_field[i_time]*E_dir[1]
+                fv_subs = 1
 
             for i_path, path in enumerate(paths):
-                kx_in_path = path[:, 0] - kx_shift
-                ky_in_path = path[:, 1] - ky_shift
+                kx_in_path = path[:, 0] + kx_shift
+                ky_in_path = path[:, 1] + ky_shift
 
                 h_deriv_x[:, 0, 0] = hdx_00(kx=kx_in_path, ky=ky_in_path)
                 h_deriv_x[:, 0, 1] = hdx_01(kx=kx_in_path, ky=ky_in_path)
                 h_deriv_x[:, 1, 0] = hdx_10(kx=kx_in_path, ky=ky_in_path)
                 h_deriv_x[:, 1, 1] = hdx_11(kx=kx_in_path, ky=ky_in_path)
-
 
                 h_deriv_y[:, 0, 0] = hdy_00(kx=kx_in_path, ky=ky_in_path)
                 h_deriv_y[:, 0, 1] = hdy_01(kx=kx_in_path, ky=ky_in_path)
@@ -605,23 +591,24 @@ def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
                     dH_U_ortho = h_deriv_ortho[i_k] @ U[i_k]
                     U_h_H_U_ortho = U_h[i_k] @ dH_U_ortho
 
-                    I_E_dir[i_time] += np.real(U_h_H_U_E_dir[0, 0])\
-                        * np.real(solution[i_k, i_path, i_time, 0])
-                    I_E_dir[i_time] += np.real(U_h_H_U_E_dir[1, 1])\
-                        * np.real(solution[i_k, i_path, i_time, 3])
+                    I_E_dir[i_time] += U_h_H_U_E_dir[0, 0].real\
+                        * (solution[i_k, i_path, i_time, 0].real - fv_subs)
+                    I_E_dir[i_time] += U_h_H_U_E_dir[1, 1].real\
+                        * solution[i_k, i_path, i_time, 3].real
                     I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]
                                                  * solution[i_k, i_path, i_time, 2])
 
-                    I_ortho[i_time] += np.real(U_h_H_U_ortho[0, 0])\
-                        * np.real(solution[i_k, i_path, i_time, 0])
-                    I_ortho[i_time] += np.real(U_h_H_U_ortho[1, 1])\
-                        * np.real(solution[i_k, i_path, i_time, 3])
+                    I_ortho[i_time] += U_h_H_U_ortho[0, 0].real\
+                        * (solution[i_k, i_path, i_time, 0].real - fv_subs)
+                    I_ortho[i_time] += U_h_H_U_ortho[1, 1].real\
+                        * solution[i_k, i_path, i_time, 3].real
                     I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]
                                                  * solution[i_k, i_path, i_time, 2])
 
         return I_E_dir, I_ortho
 
     return emission_exact
+
 
 def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
                 dipole_off):
@@ -842,3 +829,36 @@ def BZ_plot(kpnts, a, b1, b2, paths, si_units=True):
         pl.plot(path[:, 0], path[:, 1])
 
     pl.show()
+
+
+def print_user_info(BZ_type, Nk, align, angle_inc_E_field, E0, w, alpha, chirp,
+                    T2, tfmt0, dt):
+
+    print("Solving for...")
+    print("Brillouin zone: " + BZ_type)
+    print("Number of k-points              = " + str(Nk))
+    if BZ_type == 'full':
+        print("Driving field alignment         = " + align)
+    elif BZ_type == '2line':
+        print("Driving field direction         = " + str(angle_inc_E_field))
+    print("Driving amplitude (MV/cm)[a.u.] = " + "("
+          + '{:.6f}'.format(E0/MVpcm_to_au) + ")"
+          + "[" + '{:.6f}'.format(E0) + "]")
+    print("Pulse Frequency (THz)[a.u.]     = " + "("
+          + '{:.6f}'.format(w/THz_to_au) + ")"
+          + "[" + '{:.6f}'.format(w) + "]")
+    print("Pulse Width (fs)[a.u.]          = " + "("
+          + '{:.6f}'.format(alpha/fs_to_au) + ")"
+          + "[" + '{:.6f}'.format(alpha) + "]")
+    print("Chirp rate (THz)[a.u.]          = " + "("
+          + '{:.6f}'.format(chirp/THz_to_au) + ")"
+          + "[" + '{:.6f}'.format(chirp) + "]")
+    print("Damping time (fs)[a.u.]         = " + "("
+          + '{:.6f}'.format(T2/fs_to_au) + ")"
+          + "[" + '{:.6f}'.format(T2) + "]")
+    print("Total time (fs)[a.u.]           = " + "("
+          + '{:.6f}'.format((tfmt0)/fs_to_au) + ")"
+          + "[" + '{:.5f}'.format(tfmt0) + "]")
+    print("Time step (fs)[a.u.]            = " + "("
+          + '{:.6f}'.format(dt/fs_to_au) + ")"
+          + "[" + '{:.6f}'.format(dt) + "]")
