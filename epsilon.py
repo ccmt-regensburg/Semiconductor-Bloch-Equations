@@ -53,10 +53,12 @@ def epsilon(Nk_in_Path, angle_inc_E_field, paths, dk, E_dir):
     return bandstruct
 
 
-def dipole():
+def dipole(kx, ky):
     Nk_in_Path  =   params.Nk_in_path
-    part1 = np.ones(Nk_in_Path, dtype=np.complex128)
-    part0 = np.zeros(Nk_in_Path, dtype=np.complex128)
-    di_x = np.concatenate((part0,part1,part1,part0)).reshape(2,2,Nk_in_Path)
-    di_y = np.zeros((2,2,Nk_in_Path), dtype=np.complex128)
+    d       = 0.5*ky/(kx**2+ky**2)
+    #part1   = np.ones(Nk_in_Path, dtype=np.complex128)
+    #part0   = np.zeros(Nk_in_Path, dtype=np.complex128)
+    #di_x    = np.concatenate((part0,part1,part1,part0)).reshape(2,2,Nk_in_Path)
+    di_x    = np.concatenate((-d,d,d,-d)).reshape(2,2,Nk_in_Path)
+    di_y    = np.zeros((2,2,Nk_in_Path), dtype=np.complex128)
     return di_x, di_y

@@ -238,7 +238,7 @@ def main():
         """
 
         old_directory   = os.getcwd() 
-        data_base       = "/home/evb28117/Bachelorarbeit/generated_data"
+        data_base       = "/home/evb28117/Bachelorarbeit/generated_data/dipole-exact"
         if not os.path.exists(data_base):
             data_base   = "/home/evb28117/Documents/"
         os.chdir(data_base)
@@ -548,7 +548,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, scale_dipole_eq_mot, e_fe
 
         # Calculate the dipole components along the path
         #di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
-        di_x, di_y = epsilon.dipole() 
+        di_x, di_y = epsilon.dipole(kx_in_path, ky_in_path)
+        
 
 
 
@@ -826,7 +827,7 @@ def polarization(paths, pcv, E_dir, scale_dipole_emiss):
 
         # Evaluate the dipole moments in path
         #di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
-        di_x, di_y = epsilon.dipole()
+        di_x, di_y = epsilon.dipole(kx_in_path, ky_in_path)
         
         # Append the dot product d.E
         d_E_dir.append(di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1])
