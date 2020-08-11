@@ -74,7 +74,7 @@ def read_specific(path):
 def total_fourier(freqw, data_dir, data_ortho,
                   xlim=(0, 30), ylim=(10e-15, 1),
                   xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
-                  paramlegend=None, dirname='dir', savename=None):
+                  paramlegend=None, suptitle=None, savename=None):
     """
     Plots parallel and orthogonal data
     """
@@ -91,10 +91,43 @@ def total_fourier(freqw, data_dir, data_ortho,
     for freq, data in zip(freqw, data_total):
         ax.semilogy(freq, data/np.max(data))
 
-    # fig.suptitle(dirname)
+    if (suptitle is not None):
+        fig.suptitle(suptitle)
 
     if (paramlegend is not None):
         ax.legend(paramlegend)
+
+    if (savename is None):
+        plt.show()
+    else:
+        plt.savefig(savename)
+
+
+def dir_ortho_fourier(freqw, data_dir, data_ortho,
+                      xlim=(0.2, 30), ylim=(10e-15, 1),
+                      xlabel=r'Frequency $\omega/\omega_0$', ylabel=r'a.u.',
+                      paramlegend=None, suptitle=None, savename=None):
+
+    fig, ax = plt.subplots(2)
+    for a in ax:
+        a.set_xlim(xlim)
+        a.set_ylim(ylim)
+        a.set_xticks(np.arange(31))
+        a.grid(True, axis='x', ls='--')
+        a.set_ylabel(ylabel)
+    ax[0].set_title(r'$\mathbf{E}$ parallel')
+    ax[1].set_title(r'$\mathbf{E}$ orthogonal')
+    ax[1].set_xlabel(xlabel)
+    for freq, data_d, data_o in zip(freqw, data_dir, data_ortho):
+        ax[0].semilogy(freq, data_d)
+        ax[1].semilogy(freq, data_o)
+
+    if (suptitle is not None):
+        fig.suptitle(suptitle)
+
+    if (paramlegend is not None):
+        ax[0].legend(paramlegend)
+        # ax[1].legend(paramlegend)
 
     if (savename is None):
         plt.show()

@@ -28,6 +28,8 @@ phases = np.linspace(0, np.pi, 20)
 # Positive Phase
 # orderpath = '../data-sbe/dirac/cep_phase_diagram/0.03_dist_to_gamma/'
 # dirpath = 'E_field_sweep/mz_0.0000000/E_5.0/'
+# orderpath = '/mnt/storage/Storage/cep_data_huber/dirac/0.03_dist_to_gamma_full_Nk1_1000/velocity_gauge/'
+# dirpath = 'dipole_on/'
 # suptitle = 'Dirac'
 # title = r'$E=5 \si{MV/cm}$ ' + \
 #         r'$\omega_\mathrm{carrier} = 25 \si{THz} $ ' + \
@@ -37,9 +39,9 @@ phases = np.linspace(0, np.pi, 20)
 ########################################
 # Semiconductor Quadratic
 ########################################
-# orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/' + \
-#             '0.03_dist_to_gamma_quadratic/'
-# dirpath = 'mz_0.0110248/'
+# orderpath = '/mnt/storage/Storage/cep_data_huber/semiconductor_quadratic/0.03_dist_to_gamma_quadratic_Nk1_1000/' + \
+#             'velocity_gauge/dipole_on/'
+# dirpath = 'mz_0.2179616_A_0.0505814/E_5.0/'
 # suptitle = 'Semiconductor, Low Dipole'
 # title = r'$E=5 \si{MV/cm}$ ' + \
 #         r'$\omega_\mathrm{carrier} = 25 \si{THz}$ ' + \
@@ -50,9 +52,9 @@ phases = np.linspace(0, np.pi, 20)
 ########################################
 # Semiconductor High Dipole
 ########################################
-orderpath = '../data-sbe/semiconductor_hamiltonian/cep_phase_diagram/' + \
-            '0.03_dist_to_gamma_high_dipole/'
-dirpath = 'mz_0.0452219_A_0.0548535/'
+orderpath = '/mnt/storage/Storage/cep_data_huber/semiconductor_high_dipole/0.03_dist_to_gamma_high_dipole_Nk1_1000/' + \
+            'velocity_gauge/dipole_on/'
+dirpath = 'mz_0.0607538_A_0.0544401/'
 suptitle = 'Semiconductor, High Dipole'
 title = r'$E=5 \si{MV/cm}$ ' + \
         r'$\omega_\mathrm{carrier} = 25 \si{THz}$ ' + \
@@ -95,6 +97,6 @@ Int_avg, Int_max = find_max_intens(freqw, Int_exact_E_dir, Int_exact_ortho)
 
 Int_data = Int_exact_E_dir + Int_exact_ortho
 cep_plot(freqw, phases, Int_data, xlim=(0, 30), max=Int_avg, show=False,
-         min=1e-17, suptitle=suptitle, title=title)
+         min=1e-19, suptitle=suptitle, title=title)
 
 plt.savefig('unnamed.png')
