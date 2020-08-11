@@ -16,7 +16,7 @@ def run():
     # Gaps used in the dirac system
     mz_max = 0.0165372
     mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[3]
+    mz = mzlist[4]
     mz *= 0.3
 
     params.e_fermi = 0.2
@@ -39,7 +39,7 @@ def run():
     os.chdir(dirname)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    chirplist = [-0.920, 0.000]
+    chirplist = [-0.920]
     for chirp in chirplist:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)

@@ -27,9 +27,9 @@ def run():
 
     dirname_E = 'E_{:.1f}'.format(params.E0)
 
-    # if (not os.path.exists(dirname_E)):
-        # os.mkdir(dirname_E)
-    # os.chdir(dirname_E)
+    if (not os.path.exists(dirname_E)):
+        os.mkdir(dirname_E)
+    os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
     chirplist = np.array([-0.920])
@@ -42,7 +42,7 @@ def run():
             os.mkdir(dirname_chirp)
         os.chdir(dirname_chirp)
 
-        phaselist = np.linspace(0, np.pi, 21)
+        phaselist = np.linspace(0, np.pi, 20)
         # phaselist = [phaselist[0], phaselist[10]]
         for phase in phaselist:
             params.phase = phase

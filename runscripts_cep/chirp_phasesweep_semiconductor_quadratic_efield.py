@@ -16,9 +16,9 @@ def run():
     # Gaps used in the dirac system
     mz_max = 0.0165372
     mzlist = np.linspace(0, mz_max, 7)
-    mz = mzlist[6]
+    mz = mzlist[4]
 
-    params.e_fermi = 0.46
+    # params.e_fermi = 0.46
     params.rel_dist_to_Gamma = 0.03
 
     # Adjust bandwidth to the gap and dirac bandwidth
@@ -36,7 +36,7 @@ def run():
 
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
-    E = Elist[3]
+    E = Elist[1]
 
     params.E0 = E
 
@@ -46,7 +46,7 @@ def run():
     os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    chirplist = np.array([-0.920, 0.000])
+    chirplist = np.array([-0.920])
     for chirp in chirplist:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
@@ -56,7 +56,7 @@ def run():
         os.chdir(dirname_chirp)
 
         phaselist = np.linspace(0, np.pi, 20)
-        phaselist = [phaselist[0], phaselist[9]]
+        # phaselist = [phaselist[0], phaselist[9]]
         for phase in phaselist:
             params.phase = phase
             print("Current phase: ", params.phase)

@@ -19,9 +19,9 @@ def run():
     ksym = 0.0635012                  # k^2 coefficent dampening
     kasym = 0.113773                  # k^3 coeffcient dampening
 
-    E_max = 20
-    Elist = np.linspace(2.5, E_max, 8)
-    E = Elist[3]
+    E_max = 10
+    Elist = np.linspace(2.5, E_max, 4)
+    E = Elist[1]
 
     params.E0 = E
     params.e_fermi = 0
@@ -42,7 +42,6 @@ def run():
         os.chdir(dirname_chirp)
 
         phaselist = np.linspace(0, np.pi, 20)
-        phaselist = [phaselist[0], phaselist[9]]
         for phase in phaselist:
             params.phase = phase
             print("Current phase: ", params.phase)

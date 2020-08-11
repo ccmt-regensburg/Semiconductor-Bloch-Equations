@@ -17,11 +17,12 @@ def run():
     mz_max = 0.0165372
     mzlist = np.linspace(0, mz_max, 7)
     mz = mzlist[3]
+    breakpoint()
 
     params.e_fermi = 0.2
     params.rel_dist_to_Gamma = 0.03
 
-    params.E0 = 10.0
+    params.E0 = 5.0
 
     # Adjust bandwidth to the gap and dirac bandwidth
     At = 0.5*(A*3*np.pi/(2*params.a) - mz)

@@ -122,7 +122,6 @@ def main(sys, dipole, params):
         # Retrieve the set of k-points for the current path
         kx_in_path = path[:, 0]
         ky_in_path = path[:, 1]
-        breakpoint()
 
         if (dipole_off):
             zeros = np.zeros(np.size(kx_in_path), dtype=np.complex)
