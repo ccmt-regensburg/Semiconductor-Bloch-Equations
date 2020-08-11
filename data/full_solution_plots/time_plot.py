@@ -25,7 +25,7 @@ plt.rcParams['font.size'] = 20
 # datapath2 = '/mnt/storage/Storage/dirac/dipole_off/' \
 #     + 'E_10.0/chirp_-0.920/phase_0.00/'
 
-Estring = 'E_5.0_gamma_point'
+Estring = 'E_5.0'
 chirpstring = 'chirp_-0.920'
 
 datapath1 = '/mnt/storage/Storage/dirac/velocity_gauge/dipole_off/' \
