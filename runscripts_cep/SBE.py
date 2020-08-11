@@ -86,6 +86,8 @@ def main(sys, dipole, params):
     # Form the Brillouin zone in consideration
     if BZ_type == 'full':
         kpnts, paths = hex_mesh(Nk1, Nk2, a, b1, b2, align)
+        dkx = np.abs(paths[0, 0] - paths[0, 1])[0]
+        dky = np.abs(paths[0, 0] - paths[1, 0])[1]
         dk = 1/Nk1
         if align == 'K':
             E_dir = np.array([1, 0])
@@ -192,35 +194,62 @@ def main(sys, dipole, params):
 
     # COMPUTE OBSERVABLES
     ###########################################################################
-    # Calculate parallel and orthogonal components of observables
-    # Polarization (interband)
-    # P_E_dir, P_ortho = polarization(dipole, paths, solution[:, :, :, 1], E_dir)
-    # Current (intraband)
-    # J_E_dir, J_ortho = current(sys, paths, solution[:, :, :, 0],
-    #                            solution[:, :, :, 3], t, alpha, E_dir)
-    # Emission in time
-    # I_E_dir = diff(t, P_E_dir)*gaussian_envelope(t, alpha) \
-    #     + J_E_dir*gaussian_envelope(t, alpha)
-    # I_ortho = diff(t, P_ortho)*gaussian_envelope(t, alpha) \
-    #     + J_ortho*gaussian_envelope(t, alpha)
+    # Filename tail
+    tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
+        .format(Nk1, Nk2, w/THz_to_au, E0/MVpcm_to_au, alpha/fs_to_au, phase,
+                T2/fs_to_au)
 
-    # Fourier transforms
-    dt_out = t[1] - t[0]
-    freq = fftshift(fftfreq(np.size(t), d=dt_out))
-    # Iw_E_dir = fftshift(fft(I_E_dir, norm='ortho'))
-    # Iw_ortho = fftshift(fft(I_ortho, norm='ortho'))
-    # # Iw_r = fftshift(fft(Ir, norm='ortho'))
-    # Pw_E_dir = fftshift(fft(diff(t, P_E_dir), norm='ortho'))
-    # Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
-    # Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
-    # Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
+    if (gauge == 'length'):
+        # Only calculate kira & koch emission if we are in length gauge
+        # Calculate parallel and orthogonal components of observables
+        # Polarization (interband)
+        P_E_dir, P_ortho = polarization(dipole, paths, solution[:, :, :, 1], E_dir)
+        # Current (intraband)
+        J_E_dir, J_ortho = current(sys, paths, solution[:, :, :, 0],
+                                   solution[:, :, :, 3], t, alpha, E_dir)
+        # Approximate emission in time
+        I_E_dir = diff(t, P_E_dir)*gaussian_envelope(t, alpha) \
+            + J_E_dir*gaussian_envelope(t, alpha)
+        I_ortho = diff(t, P_ortho)*gaussian_envelope(t, alpha) \
+            + J_ortho*gaussian_envelope(t, alpha)
+        if (BZ_type == '2line'):
+            I_E_dir *= (dk/(4*np.pi))
+            I_ortho *= (dk/(4*np.pi))
+        if (BZ_type == 'full'):
+            I_E_dir *= (dkx*dky/(2*np.pi)**2)
+            I_ortho *= (dkx*dky/(2*np.pi)**2)
 
+        # Fourier transforms
+        dt_out = t[1] - t[0]
+        freq = fftshift(fftfreq(np.size(t), d=dt_out))
+        Iw_E_dir = fftshift(fft(I_E_dir, norm='ortho'))
+        Iw_ortho = fftshift(fft(I_ortho, norm='ortho'))
+        # Pw_E_dir = fftshift(fft(diff(t, P_E_dir), norm='ortho'))
+        # Pw_ortho = fftshift(fft(diff(t, P_ortho), norm='ortho'))
+        # # Jw_E_dir = fftshift(fft(J_E_dir*gaussian_envelope(t, alpha), norm='ortho'))
+        # Jw_ortho = fftshift(fft(J_ortho*gaussian_envelope(t, alpha), norm='ortho'))
+
+        # Approximate Emission intensity
+        Int_E_dir = (freq**2)*np.abs(Iw_E_dir)**2
+        Int_ortho = (freq**2)*np.abs(Iw_ortho)**2
+
+        if (save_file):
+            I_approx_name = 'Iapprox_' + tail
+            np.save(I_approx_name, [t, I_E_dir, I_ortho,
+                    freq/w, Iw_E_dir, Iw_ortho, Int_E_dir, Int_ortho])
+
+    ##############################################################
+    # Always calculate exact emission formula
+    ##############################################################
     emission_exact = make_emission_exact(sys, paths, solution,
                                          E_dir, A_field, gauge)
     I_exact_E_dir, I_exact_ortho = emission_exact()
     if (BZ_type == '2line'):
         I_exact_E_dir *= (dk/(4*np.pi))
         I_exact_ortho *= (dk/(4*np.pi))
+    if (BZ_type == 'full'):
+        I_exact_E_dir *= (dkx*dky/(2*np.pi)**2)
+        I_exact_ortho *= (dkx*dky/(2*np.pi)**2)
 
     Iw_exact_E_dir = fftshift(fft(I_exact_E_dir*gaussian_envelope(t, alpha),
                                   norm='ortho'))
@@ -229,15 +258,7 @@ def main(sys, dipole, params):
     Int_exact_E_dir = (freq**2)*np.abs(Iw_exact_E_dir)**2
     Int_exact_ortho = (freq**2)*np.abs(Iw_exact_ortho)**2
 
-    # Emission intensity
-    # Int_E_dir = (freq**2)*np.abs(Pw_E_dir + Jw_E_dir)**2
-    # Int_ortho = (freq**2)*np.abs(Pw_ortho + Jw_ortho)**2
-
     # Save observables to file
-    tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
-        .format(Nk1, Nk2, w/THz_to_au, E0/MVpcm_to_au, alpha/fs_to_au, phase,
-                T2/fs_to_au)
-
     if (save_file):
         I_exact_name = 'Iexact_' + tail
         np.save(I_exact_name, [t, I_exact_E_dir, I_exact_ortho, freq/w,

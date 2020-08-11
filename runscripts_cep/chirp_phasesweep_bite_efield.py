@@ -11,30 +11,30 @@ from SBE import main as solver
 
 
 def run():
+    C2 = 5.39018
+    A = 0.19732     # Fermi velocity
+    R = 5.52658
+    k_cut = 0.05
 
-    C0 = -0.00647156                  # C0
-    c2 = 0.0117598                    # k^2 coefficient
-    A = 0.0422927                     # Fermi velocity
-    r = 0.109031                      # k^3 coefficient
-    ksym = 0.0635012                  # k^2 coefficent dampening
-    kasym = 0.113773                  # k^3 coeffcient dampening
+    params.e_fermi = 0.2
+    params.rel_dist_to_Gamma = 0.05
 
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
     E = Elist[1]
 
     params.E0 = E
-    params.e_fermi = 0
-    params.rel_dist_to_gamma = 0.05
 
     dirname_E = 'E_{:.1f}'.format(params.E0)
+
     if (not os.path.exists(dirname_E)):
         os.mkdir(dirname_E)
     os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    chirplist = [-0.920, 0.00]
-    for chirp in chirplist:
+    chirplist = np.array([-0.920, 0.000])
+    # [-0.920, -0.736, -0.552, -0.368, -0.184, 0.000, 0.184, 0.368, 0.552, 0.736, 0.920]
+    for chirp in chirplist[:]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
@@ -52,7 +52,7 @@ def run():
                 os.mkdir(dirname_phase)
             os.chdir(dirname_phase)
 
-            system = hfsbe.example.BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym)
+            system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, kcut=k_cut, mz=0)
             h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
             dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
             solver(system, dipole, params)

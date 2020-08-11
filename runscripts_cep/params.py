@@ -14,18 +14,18 @@ class params:
     ##########################################################################
     # Type of Brillouin zone
     # 'full' for full hexagonal BZ, '2line' for two lines with adjustable size
-    BZ_type = '2line'
+    BZ_type = 'full'
 
     # Reciprocal lattice vectors
     b1 = (2*np.pi/(a*np.sqrt(3)))*np.array([np.sqrt(3), -1])
     b2 = (4*np.pi/(a*np.sqrt(3)))*np.array([0, 1])
 
     # full BZ parametes
-    Nk1                 = 800         # Number of kpoints in b1 direction
-    Nk2                 = 40          # Number of kpoints in b2 direction (number of paths)
+    Nk1                 = 1200         # Number of kpoints in b1 direction
+    Nk2                 = 80           # Number of kpoints in b2 direction (number of paths)
 
     # 2line BZ parameters
-    Nk_in_path          = 1000        # Number of kpoints in each of the two paths
+    Nk_in_path          = 1200        # Number of kpoints in each of the two paths
     rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
     length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ K-direction
     # length_path_in_BZ   = 4*np.pi/(np.sqrt(3)*a) # Length of path in BZ M-direction
@@ -50,8 +50,8 @@ class params:
 
     # Flags for testing and features
     ##########################################################################
-    gauge         = 'velocity' # Gauge of the system
-    dipole_off    = True       # Turn all dipoles to 0
+    gauge         = 'length'   # Gauge of the system
+    dipole_off    = False      # Turn all dipoles to 0
     user_out      = True       # Set to True to get user plotting and progress output
     save_file     = True       # To save exact data
     save_full     = False      # Save full information
