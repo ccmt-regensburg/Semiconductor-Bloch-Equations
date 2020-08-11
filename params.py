@@ -92,6 +92,7 @@ matrix_method       = False  # Set to True to use old matrix method for solving
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = True
+fitted_pulse        = False
 print_J_P_I_files   = True  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 save_figures        = True
 show_figures        = False
