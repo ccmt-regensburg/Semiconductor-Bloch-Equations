@@ -199,6 +199,9 @@ def main(sys, dipole, params):
         .format(Nk1, Nk2, w/THz_to_au, E0/MVpcm_to_au, alpha/fs_to_au, phase,
                 T2/fs_to_au)
 
+    # Fourier transforms
+    dt_out = t[1] - t[0]
+    freq = fftshift(fftfreq(np.size(t), d=dt_out))
     if (gauge == 'length'):
         # Only calculate kira & koch emission if we are in length gauge
         # Calculate parallel and orthogonal components of observables
@@ -219,9 +222,7 @@ def main(sys, dipole, params):
             I_E_dir *= (dkx*dky/(2*np.pi)**2)
             I_ortho *= (dkx*dky/(2*np.pi)**2)
 
-        # Fourier transforms
-        dt_out = t[1] - t[0]
-        freq = fftshift(fftfreq(np.size(t), d=dt_out))
+
         Iw_E_dir = fftshift(fft(I_E_dir, norm='ortho'))
         Iw_ortho = fftshift(fft(I_ortho, norm='ortho'))
         # Pw_E_dir = fftshift(fft(diff(t, P_E_dir), norm='ortho'))
