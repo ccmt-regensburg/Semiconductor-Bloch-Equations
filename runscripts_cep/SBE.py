@@ -8,7 +8,8 @@ from matplotlib.patches import RegularPolygon
 from scipy.integrate import ode
 
 from hfsbe.utility import conversion_factors as co
-from hfsbe.observables import polarization, current, make_emission_exact
+from hfsbe.solver import polarization, current, make_emission_exact
+from hfsbe.solver import make_electric_field
 
 
 def main(sys, dipole, params):
@@ -407,21 +408,6 @@ def hex_mesh(Nk1, Nk2, a, b1, b2, align):
             paths.append(path_K)
 
     return np.array(mesh), np.array(paths)
-
-
-def make_electric_field(E0, w, alpha, chirp, phase):
-    @njit
-    def electric_field(t):
-        '''
-        Returns the instantaneous driving pulse field
-        '''
-        # Non-pulse
-        # return E0*np.sin(2.0*np.pi*w*t)
-        # Chirped Gaussian pulse
-        return E0*np.exp(-t**2/(2*alpha)**2) \
-            * np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
-
-    return electric_field
 
 
 def diff(x, y):

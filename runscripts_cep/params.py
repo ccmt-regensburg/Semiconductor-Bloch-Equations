@@ -35,7 +35,7 @@ class params:
     ##########################################################################
     align               = 'K'         # E-field direction (gamma-'K' or gamma-'M')
     E0                  = 5.00        # Pulse amplitude (MV/cm)
-    w                   = 25.0        # Pulse frequency (THz)
+    w                   = 30.0        # Pulse frequency (THz)
     chirp               = 0.00        # Pulse chirp ratio (chirp = c/w) (THz)
     alpha               = 25.0        # Gaussian pulse width (femtoseconds)
 
@@ -45,12 +45,12 @@ class params:
     T2    = 1      # Phenomenological polarization damping time
     t0    = -200   # Start time *pulse centered @ t=0, use t0 << 0
     # tf    = 200    # End time
-    dt    = 0.01   # Time step
-    Nt    = 4096   # Length of result time array
+    dt    = 0.001   # Time step
+    Nt    = 8192   # Length of result time array
 
     # Flags for testing and features
     ##########################################################################
-    gauge         = 'velocity'   # Gauge of the system
+    gauge         = 'length'   # Gauge of the system
     dipole_off    = False      # Turn all dipoles to 0
     user_out      = True       # Set to True to get user plotting and progress output
     save_file     = True       # To save exact data
