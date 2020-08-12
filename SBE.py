@@ -80,7 +80,7 @@ def main():
         length_path_in_BZ = params.length_path_in_BZ      # Length of a single path in the BZ
         angle_inc_E_field = params.angle_inc_E_field      # Angle of driving electric field
         Nk1   = params.Nk_in_path                         # for printing file names, we use Nk1 and ...
-        Nk2   = params.num_paths                          # ... and Nk2 = 2
+        Nk2   = params.Nk2                                # ... and Nk2 = 2
 
     # Gauge: length versus velocity gauge
     gauge = params.gauge
@@ -161,7 +161,7 @@ def main():
     [], [], [], [], [], [], [], [], [], []
 
     # here,the time evolution of the density matrix is done
-    t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, bandstruct = \
+    solution, t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, bandstruct = \
                 time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
                                gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, gauge, dt_out, BZ_type, Nk1, Nk_in_path, 
                                Bcurv_in_B_dynamics, 'density_matrix_dynamics', 
@@ -343,6 +343,7 @@ def main():
            ax_I_E_dir.grid(True,axis='x')
            ax_I_E_dir.set_xlim(freq_lims)
            ax_I_E_dir.set_ylim(log_limits)
+           ax_I_E_dir.set_xticks(np.arange(0,25, step=1))
            ax_I_E_dir.semilogy(freq/w,Int_exact_E_dir / Int_tot_base_freq, label=label_emission_E_dir)
            if not do_B_field:
               ax_I_E_dir.semilogy(freq/w, Int_E_dir / Int_tot_base_freq, 
@@ -357,6 +358,7 @@ def main():
            ax_I_ortho.grid(True,axis='x')
            ax_I_ortho.set_xlim(freq_lims)
            ax_I_ortho.set_ylim(log_limits)
+           ax_I_ortho.set_xticks(np.arange(0,25,step=1))
            ax_I_ortho.semilogy(freq/w,Int_exact_ortho / Int_tot_base_freq, label=label_emission_ortho)
            if not do_B_field:
               ax_I_ortho.semilogy(freq/w,Int_ortho / Int_tot_base_freq, 
@@ -371,6 +373,7 @@ def main():
            ax_I_total.grid(True,axis='x')
            ax_I_total.set_xlim(freq_lims)
            ax_I_total.set_ylim(log_limits)
+           ax_I_total.set_xticks(np.arange(0,25, step=1))
            ax_I_total.semilogy(freq/w,(Int_exact_E_dir + Int_exact_ortho) / Int_tot_base_freq, 
               label='$I(\omega) = I_{\parallel E}(\omega) + I_{\\bot E}(\omega)$')
            if not do_B_field:
@@ -441,16 +444,16 @@ def main():
 
 ######################
 
-#        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
-#        # Countour plots of occupations and gradients of occupations
-#        fig5 = pl.figure()
-#        X, Y = np.meshgrid(t/fs_conv,kp_array)
-#        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-#        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
-#        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-#        pl.xlabel(r'$t\;(fs)$')
-#        pl.ylabel(r'$k$')
-#        pl.tight_layout()
+        kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
+        # Countour plots of occupations and gradients of occupations
+        fig5 = pl.figure()
+        X, Y = np.meshgrid(t/fs_conv,kp_array)
+        pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
+        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
+        pl.xlabel(r'$t\;(fs)$')
+        pl.ylabel(r'$k$')
+        pl.tight_layout()
 
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
@@ -594,7 +597,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         '''
         bandstruct = sys.system.evaluate_energy(kx_in_path, ky_in_path)
         '''
-        bandstruct = epsilon.epsilon(Nk_in_path, angle_inc_E_field, paths, dk, E_dir)
+        bandstruct = epsilon.epsilon(Nk_in_path, paths, dk, E_dir)
         ecv_in_path = bandstruct[:,2] - bandstruct[:,1]
         ev_in_path = -ecv_in_path/2
         ec_in_path = ecv_in_path/2
@@ -684,7 +687,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
 #            if do_emission_wavep:
 #               I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
 #               I_wavep_check_E_dir, I_wavep_check_ortho = check_emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
-    
+            
+            re_solution = solution
             solution = []
 
         # Flag that time array has been built up
@@ -700,7 +704,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
     # Now the solution array is structred as:
     # first index is kx-index, second is ky-index,
     # third is timestep, fourth is f_h, p_he, p_eh, f_e
-
     if dynamics_type == 'wavefunction_dynamics':
         fermi_function = np.array(fermi_function)
 
@@ -709,8 +712,8 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
     if gauge == 'velocity' and do_B_field == False and dynamics_type == 'wavefunction_dynamics':
         solution = shift_solution(solution, A_field, dk, dynamics_type)
         fermi_function = shift_solution(fermi_function, A_field, dk, dynamics_type)
-
-    return t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, bandstruct
+    
+    return re_solution, t, A_field, P_E_dir, P_ortho, J_E_dir, J_ortho, I_exact_E_dir, I_exact_ortho, bandstruct
 
 #################################################################################################
 # FUNCTIONS
@@ -720,7 +723,7 @@ def mesh(params, E_dir):
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a                 = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      #
-    num_paths         = params.num_paths
+    num_paths         = params.Nk2
 
     alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ

@@ -39,7 +39,7 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 200         # Number of kpoints in each of the two paths
+Nk_in_path          = 100         # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
@@ -96,8 +96,8 @@ fitted_pulse        = False
 print_J_P_I_files   = True  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 save_figures        = True
 show_figures        = False
-structure_type      = 'wurtzite'
-#structure_type      = 'zinc-blende'
+#structure_type      = 'wurtzite'
+structure_type      = 'zinc-blende'
 gamma               = 10  # Coupling intensity used for bandstruct, units: eV*Angström**3
 beta                = 1
 alpha_wz            = 1 
