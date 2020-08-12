@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from plot_utilities import read_specific, plot_time_grid
-import seaborn as sns
-sns.set_palette(sns.color_palette("gist_ncar", 11))
+from hfsbe.plotting import read_dataset, time_grid
+# import seaborn as sns
+# sns.set_palette(sns.color_palette("gist_ncar", 11))
 
 
 fs_to_au = 41.34137335                  # (1fs    = 41.341473335 a.u.)
@@ -41,8 +41,8 @@ datapath1 = '/mnt/storage/Storage/dirac/velocity_gauge/dipole_off/' \
 datapath2 = '/mnt/storage/Storage/dirac/length_gauge/dipole_off/' \
     + Estring + '/' + chirpstring + '/' + 'phase_0.00/'
 
-Iexact1, Solution1 = read_specific(datapath1)
-Iexact2, Solution2 = read_specific(datapath2)
+Iexact1, Solution1 = read_dataset(datapath1)
+Iexact2, Solution2 = read_dataset(datapath2)
 # Iexact3, Solution3 = read_specific(datapath3)
 # Iexact4, Solution4 = read_specific(datapath4)
 
@@ -62,8 +62,8 @@ for i in range(len(Icontainer)):
     Int_data = (Int_exact_E_dir + Int_exact_ortho)
 
     Solution = Solcontainer[i][1]
-    electric_field = Solcontainer[i][2]
-    path = Solcontainer[i][3]
+    path = Solcontainer[i][2]
+    electric_field = Solcontainer[i][3]
 
     first_path = path[0]
 
@@ -127,21 +127,14 @@ analytical_current = np.load('current_analytical.npy')
 # analytical_density = np.load('density_analytical.npy')
 Int_data_container = np.vstack((Int_data_container, analytical_current))
 
-plot_time_grid(time, kx_first_path, electric_field, Int_data_container,
-               band_structure, density_center_container,
-               standard_deviation=standard_deviation_container,
-               electric_field_legend=[r'$\omega_\mathrm{chirp} = -0.920\si{THz}$'],
-               current_legend=dipole_legend,
-               density_center_legend=dipole_legend + ['A Field'],
-               standard_deviation_legend=dipole_legend,
-               timelim=(-150, 150),
-               energylim=(0, 1.5),
-               bzboundary=1.07442)
+time_grid(time, kx_first_path, electric_field, Int_data_container,
+          band_structure, density_center_container,
+          standard_deviation=standard_deviation_container,
+          electric_field_legend=[r'$\omega_\mathrm{chirp} = -0.920\si{THz}$'],
+          current_legend=dipole_legend,
+          density_center_legend=dipole_legend + ['A Field'],
+          standard_deviation_legend=dipole_legend,
+          timelim=(-150, 150),
+          energylim=(0, 1.5),
+          bzboundary=1.07442)
                # savename='full_' + chirpstring + '_' + Estring + '.png')
-
-# plt.plot(time/fs_to_au, standard_deviation_container.T)
-# plt.xlabel(r'$t \text{ in } \si{fs}$')
-# plt.ylabel(r'$k_x \text{ in } \si{1/\angstrom}$')
-# plt.legend(dipole_legend)
-# plt.title('Standard Deviation')
-# plt.show()
