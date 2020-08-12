@@ -1,17 +1,14 @@
 #!/bin/python
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
-from numba import jit, njit
+from numba import njit
 from math import ceil
 import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon
 from scipy.integrate import ode
 
-fs_to_au = 41.34137335                   # (1fs = 41.341473335 a.u.)
-MVpcm_to_au = 0.0001944690381            # (1MV/cm = 1.944690381*10^-4 a.u.)
-THz_to_au = 0.000024188843266            # (1THz   = 2.4188843266*10^-5 a.u.)
-A_to_au = 150.97488474                   # (1A     = 150.97488474)
-eV_to_au = 0.03674932176                 # (1eV    = 0.036749322176 a.u.)
+from hfsbe.utility import conversion_factors as co
+from hfsbe.observables import polarization, current, make_emission_exact
 
 
 def main(sys, dipole, params):
@@ -26,19 +23,19 @@ def main(sys, dipole, params):
 
     # System parameters
     a = params.a                                # Lattice spacing
-    e_fermi = params.e_fermi*eV_to_au           # Fermi energy
-    temperature = params.temperature*eV_to_au   # Temperature
+    e_fermi = params.e_fermi*co.eV_to_au           # Fermi energy
+    temperature = params.temperature*co.eV_to_au   # Temperature
 
     # Driving field parameters
-    E0 = params.E0*MVpcm_to_au                  # Driving pulse field amplitude
-    w = params.w*THz_to_au                      # Driving pulse frequency
-    chirp = params.chirp*THz_to_au              # Pulse chirp frequency
-    alpha = params.alpha*fs_to_au               # Gaussian pulse width
+    E0 = params.E0*co.MVpcm_to_au               # Driving pulse field amplitude
+    w = params.w*co.THz_to_au                   # Driving pulse frequency
+    chirp = params.chirp*co.THz_to_au              # Pulse chirp frequency
+    alpha = params.alpha*co.fs_to_au               # Gaussian pulse width
     phase = params.phase                        # Carrier-envelope phase
 
     # Time scales
-    T1 = params.T1*fs_to_au                     # Occupation damping time
-    T2 = params.T2*fs_to_au                     # Polarization damping time
+    T1 = params.T1*co.fs_to_au                     # Occupation damping time
+    T2 = params.T2*co.fs_to_au                     # Polarization damping time
     gamma1 = 1/T1                               # Occupation damping parameter
     gamma2 = 1/T2                               # Polarization damping param
 
@@ -49,9 +46,9 @@ def main(sys, dipole, params):
     # Expand time window to fit Nf output steps
     Nt = dt_out*params.Nt
     total_fs = Nt*params.dt
-    t0 = (-total_fs/2)*fs_to_au
-    tf = (total_fs/2)*fs_to_au
-    dt = params.dt*fs_to_au
+    t0 = (-total_fs/2)*co.fs_to_au
+    tf = (total_fs/2)*co.fs_to_au
+    dt = params.dt*co.fs_to_au
 
     # Brillouin zone type
     BZ_type = params.BZ_type                    # Type of Brillouin zone
@@ -196,8 +193,8 @@ def main(sys, dipole, params):
     ###########################################################################
     # Filename tail
     tail = 'Nk1-{}_Nk2-{}_w{:4.2f}_E{:4.2f}_a{:4.2f}_ph{:3.2f}_T2-{:05.2f}'\
-        .format(Nk1, Nk2, w/THz_to_au, E0/MVpcm_to_au, alpha/fs_to_au, phase,
-                T2/fs_to_au)
+        .format(Nk1, Nk2, w*co.au_to_THz, E0*co.au_to_MVpcm, alpha*co.au_to_fs,
+                phase, T2*co.au_to_fs)
 
     if (gauge == 'length'):
         # Only calculate kira & koch emission if we are in length gauge
@@ -450,191 +447,6 @@ def gaussian_envelope(t, alpha):
     return np.exp(-t**2/(2*alpha)**2) 
 
 
-def polarization(dip, paths, pcv, E_dir):
-    '''
-    Calculates the polarization as: P(t) = sum_n sum_m sum_k [d_nm(k)p_nm(k)]
-    Dipole term currently a crude model to get a vector polarization
-    '''
-    E_ort = np.array([E_dir[1], -E_dir[0]])
-
-    d_E_dir, d_ortho = [], []
-    for path in paths:
-
-        kx_in_path = path[:, 0]
-        ky_in_path = path[:, 1]
-
-        # Evaluate the dipole moments in path
-        di_01x = dip.Axfjit[0][1](kx=kx_in_path, ky=ky_in_path)
-        di_01y = dip.Ayfjit[0][1](kx=kx_in_path, ky=ky_in_path)
-
-        # Append the dot product d.E
-        d_E_dir.append(di_01x*E_dir[0] + di_01y*E_dir[1])
-        d_ortho.append(di_01x*E_ort[0] + di_01y*E_ort[1])
-
-    d_E_dir_swapped = np.swapaxes(d_E_dir, 0, 1)
-    d_ortho_swapped = np.swapaxes(d_ortho, 0, 1)
-
-    P_E_dir = 2*np.real(np.tensordot(d_E_dir_swapped, pcv, 2))
-    P_ortho = 2*np.real(np.tensordot(d_ortho_swapped, pcv, 2))
-
-    return P_E_dir, P_ortho
-
-
-def current(sys, paths, fv, fc, t, alpha, E_dir):
-    '''
-    Calculates the current as: J(t) = sum_k sum_n [j_n(k)f_n(k,t)]
-    where j_n(k) != (d/dk) E_n(k)
-    '''
-    E_ort = np.array([E_dir[1], -E_dir[0]])
-
-    # Calculate the gradient analytically at each k-point
-    J_E_dir, J_ortho = [], []
-    jc_E_dir, jc_ortho, jv_E_dir, jv_ortho = [], [], [], []
-    for path in paths:
-        path = np.array(path)
-        kx_in_path = path[:, 0]
-        ky_in_path = path[:, 1]
-
-        evdx = sys.ederivfjit[0](kx=kx_in_path, ky=ky_in_path)
-        evdy = sys.ederivfjit[1](kx=kx_in_path, ky=ky_in_path)
-        ecdx = sys.ederivfjit[2](kx=kx_in_path, ky=ky_in_path)
-        ecdy = sys.ederivfjit[3](kx=kx_in_path, ky=ky_in_path)
-
-        # 0: v, x   1: v,y   2: c, x  3: c, y
-        jc_E_dir.append(ecdx*E_dir[0] + ecdy*E_dir[1])
-        jc_ortho.append(ecdx*E_ort[0] + ecdy*E_ort[1])
-        jv_E_dir.append(evdx*E_dir[0] + evdy*E_dir[1])
-        jv_ortho.append(evdx*E_ort[0] + evdy*E_ort[1])
-
-    jc_E_dir = np.swapaxes(jc_E_dir, 0, 1)
-    jc_ortho = np.swapaxes(jc_ortho, 0, 1)
-    jv_E_dir = np.swapaxes(jv_E_dir, 0, 1)
-    jv_ortho = np.swapaxes(jv_ortho, 0, 1)
-
-    # tensordot for contracting the first two indices (2 kpoint directions)
-    J_E_dir = np.tensordot(jc_E_dir, fc, 2) + np.tensordot(jv_E_dir, fv, 2)
-    J_ortho = np.tensordot(jc_ortho, fc, 2) + np.tensordot(jv_ortho, fv, 2)
-
-    # Return the real part of each component
-    return np.real(J_E_dir), np.real(J_ortho)
-
-
-def make_emission_exact(sys, paths, solution, E_dir, A_field, gauge):
-    hderivx = sys.hderivfjit[0]
-    hdx_00 = hderivx[0][0]
-    hdx_01 = hderivx[0][1]
-    hdx_10 = hderivx[1][0]
-    hdx_11 = hderivx[1][1]
-
-    hderivy = sys.hderivfjit[1]
-    hdy_00 = hderivy[0][0]
-    hdy_01 = hderivy[0][1]
-    hdy_10 = hderivy[1][0]
-    hdy_11 = hderivy[1][1]
-
-    Ujit = sys.Ujit
-    U_00 = Ujit[0][0]
-    U_01 = Ujit[0][1]
-    U_10 = Ujit[1][0]
-    U_11 = Ujit[1][1]
-
-    Ujit_h = sys.Ujit_h
-    U_h_00 = Ujit_h[0][0]
-    U_h_01 = Ujit_h[0][1]
-    U_h_10 = Ujit_h[1][0]
-    U_h_11 = Ujit_h[1][1]
-
-    n_time_steps = np.size(solution, axis=2)
-    pathlen = np.size(solution, axis=0)
-    E_ort = np.array([E_dir[1], -E_dir[0]])
-
-    @njit
-    def emission_exact():
-        ##########################################################
-        # H derivative container
-        ##########################################################
-        h_deriv_x = np.zeros((pathlen, 2, 2), dtype=np.complex128)
-        h_deriv_y = np.zeros((pathlen, 2, 2), dtype=np.complex128)
-        h_deriv_E_dir = np.zeros((pathlen, 2, 2), dtype=np.complex128)
-        h_deriv_ortho = np.zeros((pathlen, 2, 2), dtype=np.complex128)
-
-        ##########################################################
-        # Wave function container
-        ##########################################################
-        U = np.zeros((pathlen, 2, 2), dtype=np.complex128)
-        U_h = np.zeros((pathlen, 2, 2), dtype=np.complex128)
-
-        ##########################################################
-        # Solution container
-        ##########################################################
-        I_E_dir = np.zeros(n_time_steps, dtype=np.float64)
-        I_ortho = np.zeros(n_time_steps, dtype=np.float64)
-
-        # I_E_dir is of size (number of time steps)
-        for i_time in range(n_time_steps):
-            if (gauge == 'length'):
-                kx_shift = 0
-                ky_shift = 0
-                fv_subs = 0
-            if (gauge == 'velocity'):
-                kx_shift = A_field[i_time]*E_dir[0]
-                ky_shift = A_field[i_time]*E_dir[1]
-                fv_subs = 1
-
-            for i_path, path in enumerate(paths):
-                kx_in_path = path[:, 0] + kx_shift
-                ky_in_path = path[:, 1] + ky_shift
-
-                h_deriv_x[:, 0, 0] = hdx_00(kx=kx_in_path, ky=ky_in_path)
-                h_deriv_x[:, 0, 1] = hdx_01(kx=kx_in_path, ky=ky_in_path)
-                h_deriv_x[:, 1, 0] = hdx_10(kx=kx_in_path, ky=ky_in_path)
-                h_deriv_x[:, 1, 1] = hdx_11(kx=kx_in_path, ky=ky_in_path)
-
-                h_deriv_y[:, 0, 0] = hdy_00(kx=kx_in_path, ky=ky_in_path)
-                h_deriv_y[:, 0, 1] = hdy_01(kx=kx_in_path, ky=ky_in_path)
-                h_deriv_y[:, 1, 0] = hdy_10(kx=kx_in_path, ky=ky_in_path)
-                h_deriv_y[:, 1, 1] = hdy_11(kx=kx_in_path, ky=ky_in_path)
-
-                h_deriv_E_dir[:, :, :] = h_deriv_x*E_dir[0] + h_deriv_y*E_dir[1]
-                h_deriv_ortho[:, :, :] = h_deriv_x*E_ort[0] + h_deriv_y*E_ort[1]
-
-                U[:, 0, 0] = U_00(kx=kx_in_path, ky=ky_in_path)
-                U[:, 0, 1] = U_01(kx=kx_in_path, ky=ky_in_path)
-                U[:, 1, 0] = U_10(kx=kx_in_path, ky=ky_in_path)
-                U[:, 1, 1] = U_11(kx=kx_in_path, ky=ky_in_path)
-
-                U_h[:, 0, 0] = U_h_00(kx=kx_in_path, ky=ky_in_path)
-                U_h[:, 0, 1] = U_h_01(kx=kx_in_path, ky=ky_in_path) 
-                U_h[:, 1, 0] = U_h_10(kx=kx_in_path, ky=ky_in_path) 
-                U_h[:, 1, 1] = U_h_11(kx=kx_in_path, ky=ky_in_path) 
-
-                for i_k in range(pathlen):
-
-                    dH_U_E_dir = h_deriv_E_dir[i_k] @ U[i_k]
-                    U_h_H_U_E_dir = U_h[i_k] @ dH_U_E_dir
-
-                    dH_U_ortho = h_deriv_ortho[i_k] @ U[i_k]
-                    U_h_H_U_ortho = U_h[i_k] @ dH_U_ortho
-
-                    I_E_dir[i_time] += U_h_H_U_E_dir[0, 0].real\
-                        * (solution[i_k, i_path, i_time, 0].real - fv_subs)
-                    I_E_dir[i_time] += U_h_H_U_E_dir[1, 1].real\
-                        * solution[i_k, i_path, i_time, 3].real
-                    I_E_dir[i_time] += 2*np.real(U_h_H_U_E_dir[0, 1]
-                                                 * solution[i_k, i_path, i_time, 2])
-
-                    I_ortho[i_time] += U_h_H_U_ortho[0, 0].real\
-                        * (solution[i_k, i_path, i_time, 0].real - fv_subs)
-                    I_ortho[i_time] += U_h_H_U_ortho[1, 1].real\
-                        * solution[i_k, i_path, i_time, 3].real
-                    I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0, 1]
-                                                 * solution[i_k, i_path, i_time, 2])
-
-        return I_E_dir, I_ortho
-
-    return emission_exact
-
-
 def make_fnumba(sys, dipole, E_dir, gamma1, gamma2, electric_field, gauge,
                 dipole_off):
 
@@ -811,14 +623,11 @@ def initial_condition(e_fermi, temperature, e_c):
 
 def BZ_plot(kpnts, a, b1, b2, paths, si_units=True):
 
-    as_to_au = 1.88973
-    au_to_as = 0.529177
-
     if (si_units):
-        a *= au_to_as
-        kpnts *= as_to_au
-        b1 *= as_to_au
-        b2 *= as_to_au
+        a *= co.au_to_as
+        kpnts *= co.as_to_au
+        b1 *= co.as_to_au
+        b2 *= co.as_to_au
 
     R = 4.0*np.pi/(3*a)
     r = 2.0*np.pi/(np.sqrt(3)*a)
@@ -868,23 +677,23 @@ def print_user_info(BZ_type, Nk, align, angle_inc_E_field, E0, w, alpha, chirp,
     elif BZ_type == '2line':
         print("Driving field direction         = " + str(angle_inc_E_field))
     print("Driving amplitude (MV/cm)[a.u.] = " + "("
-          + '{:.6f}'.format(E0/MVpcm_to_au) + ")"
+          + '{:.6f}'.format(E0*co.au_to_MVpcm) + ")"
           + "[" + '{:.6f}'.format(E0) + "]")
     print("Pulse Frequency (THz)[a.u.]     = " + "("
-          + '{:.6f}'.format(w/THz_to_au) + ")"
+          + '{:.6f}'.format(w*co.au_to_THz) + ")"
           + "[" + '{:.6f}'.format(w) + "]")
     print("Pulse Width (fs)[a.u.]          = " + "("
-          + '{:.6f}'.format(alpha/fs_to_au) + ")"
+          + '{:.6f}'.format(alpha*co.au_to_fs) + ")"
           + "[" + '{:.6f}'.format(alpha) + "]")
     print("Chirp rate (THz)[a.u.]          = " + "("
-          + '{:.6f}'.format(chirp/THz_to_au) + ")"
+          + '{:.6f}'.format(chirp*co.au_to_THz) + ")"
           + "[" + '{:.6f}'.format(chirp) + "]")
     print("Damping time (fs)[a.u.]         = " + "("
-          + '{:.6f}'.format(T2/fs_to_au) + ")"
+          + '{:.6f}'.format(T2*co.au_to_fs) + ")"
           + "[" + '{:.6f}'.format(T2) + "]")
     print("Total time (fs)[a.u.]           = " + "("
-          + '{:.6f}'.format((tfmt0)/fs_to_au) + ")"
+          + '{:.6f}'.format(tfmt0*co.au_to_fs) + ")"
           + "[" + '{:.5f}'.format(tfmt0) + "]")
     print("Time step (fs)[a.u.]            = " + "("
-          + '{:.6f}'.format(dt/fs_to_au) + ")"
+          + '{:.6f}'.format(dt*co.au_to_fs) + ")"
           + "[" + '{:.6f}'.format(dt) + "]")
