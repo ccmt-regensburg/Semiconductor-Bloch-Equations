@@ -52,8 +52,11 @@ def epsilon(Nk_in_Path, paths, dk, E_dir):
 
     if params.structure_type == "wurtzite":
         alpha = params.alpha_wz*params.angstr_conv
-        bandstruct[:,1] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) + 0.5*np.sqrt((alpha-gamma*(k_x**2+k_y**2))**2*(k_x**2+k_y**2)))
-        bandstruct[:,2] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*np.sqrt((alpha-gamma*(k_x**2+k_y**2))**2*(k_x**2+k_y**2)))
+        bandstruct[:int(Nk_in_Path*0.5),1] = -1*params.eV_conv*(beta*(np.cos(k_x_sw/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*np.sqrt((alpha-gamma*(k_x_sw**2+k_y**2))**2*(k_x_sw**2+k_y**2)))
+        bandstruct[:int(Nk_in_Path*0.5),2] = -1*params.eV_conv*(beta*(np.cos(k_x_sw/length*np.pi)+np.cos(k_y/length*np.pi)) + 0.5*np.sqrt((alpha-gamma*(k_x_sw**2+k_y**2))**2*(k_x_sw**2+k_y**2)))
+        
+        bandstruct[int(Nk_in_Path*0.5):,1] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) + 0.5*np.sqrt((alpha-gamma*(k_x**2+k_y**2))**2*(k_x**2+k_y**2)))
+        bandstruct[int(Nk_in_Path*0.5):,2] = -1*params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*np.sqrt((alpha-gamma*(k_x**2+k_y**2))**2*(k_x**2+k_y**2)))
 
     return bandstruct
 

@@ -284,7 +284,7 @@ def main():
         axJ.plot(t/fs_conv,I_exact_E_dir)
         axJ2    = axJ.twinx()
         axJ2.plot(t/fs_conv,I_exact_ortho, color="orange")
-        align_yaxis(axJ, axJ2)
+        #align_yaxis(axJ, axJ2)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J_{\parallel}$ in atomic units')
         axJ2.set_ylabel(r'$J_{\perp}$ in atomic units')
