@@ -545,11 +545,11 @@ def main():
 
         if print_J_P_I_files:
 
-           if i_loop < 10:
-              polar_filename = 'polar_0'+str(i_loop)
-           else:
-              polar_filename = 'polar_'+str(i_loop)
-           np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,freq_index])/np.amax(np.abs(Iw_r[:,freq_index])) ]  )
+          # if i_loop < 10:
+          #    polar_filename = 'polar_0'+str(i_loop)
+          # else:
+          #    polar_filename = 'polar_'+str(i_loop)
+          # np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,freq_index])/np.amax(np.abs(Iw_r[:,freq_index])) ]  )
 
         i_loop += 1
 
