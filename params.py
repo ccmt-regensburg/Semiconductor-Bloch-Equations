@@ -39,10 +39,11 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 400         # Number of kpoints in each of the two paths
+Nk_in_path          = 10        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
+length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
+num_paths           = 2
 
 # Gauge
 gauge               = 'length'
@@ -54,15 +55,12 @@ gauge               = 'length'
 align               = 'K'            # E-field direction (gamma-'K' or gamma-'M'), 
                                      # or angle (30 for 30 degrees, only works with velocity gauge) 
 E0                  = 1            # Pulse amplitude (MV/cm)
-B0                  = 0              # B-Field strength (T)
+B0                  = 0.0              # B-Field strength (T)
 w                   = 25.0           # Pulse frequency (THz)
 chirp               = 0.0            # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0           # Gaussian pulse width (femtoseconds)
 phase               = (0/5)*np.pi    # Carrier envelope phase (edited by cep-scan.py)
 
-# scaling of the dipole
-scale_dipole_eq_mot = 1
-scale_dipole_emiss  = 1
 
 # Time scales (all units in femtoseconds)
 ##########################################################################
@@ -91,8 +89,11 @@ test                = False  # Set to True to output travis testing parameters
 matrix_method       = False  # Set to True to use old matrix method for solving
 emission_wavep      = False  # additionally compute emission quasiclassically using wavepacket dynamics (
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
-store_all_timesteps = True
+store_all_timesteps = False
 fitted_pulse        = False
+KK_emission         = True
+normalize_emission  = False         
+normalize_f_valence = False
 print_J_P_I_files   = True  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 save_figures        = True
 show_figures        = False
