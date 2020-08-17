@@ -39,7 +39,7 @@ def run():
     os.chdir(dirname)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    chirplist = [-0.920]
+    chirplist = [-0.920, 0.000]
     for chirp in chirplist:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
@@ -48,7 +48,7 @@ def run():
             os.mkdir(dirname_chirp)
         os.chdir(dirname_chirp)
 
-        for phase in np.linspace(0, np.pi, 20):
+        for phase in np.linspace(-np.pi, np.pi, 201):
             params.phase = phase
             print("Current phase: ", params.phase)
             dirname_phase = 'phase_{:1.2f}'.format(params.phase)

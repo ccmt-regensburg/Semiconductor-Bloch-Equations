@@ -16,6 +16,11 @@ def run():
     R = 5.52658
     k_cut = 0.05
 
+    params.w = 30
+    if (params.w == 30):
+        params.t0 = -250
+        params.alpha = 45
+
     params.e_fermi = 0.2
     params.rel_dist_to_Gamma = 0.05
 

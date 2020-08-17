@@ -19,6 +19,7 @@ def main(sys, dipole, params):
     user_out = params.user_out
     save_file = params.save_file
     save_full = params.save_full
+    save_approx = params.save_approx
     dipole_off = params.dipole_off
     gauge = params.gauge
 
@@ -200,7 +201,7 @@ def main(sys, dipole, params):
     # Fourier transforms
     dt_out = t[1] - t[0]
     freq = fftshift(fftfreq(np.size(t), d=dt_out))
-    if (gauge == 'length'):
+    if (gauge == 'length' and save_approx == True):
         # Only calculate kira & koch emission if we are in length gauge
         # Calculate parallel and orthogonal components of observables
         # Polarization (interband)
@@ -232,10 +233,9 @@ def main(sys, dipole, params):
         Int_E_dir = (freq**2)*np.abs(Iw_E_dir)**2
         Int_ortho = (freq**2)*np.abs(Iw_ortho)**2
 
-        if (save_file):
-            I_approx_name = 'Iapprox_' + tail
-            np.save(I_approx_name, [t, I_E_dir, I_ortho,
-                    freq/w, Iw_E_dir, Iw_ortho, Int_E_dir, Int_ortho])
+        I_approx_name = 'Iapprox_' + tail
+        np.save(I_approx_name, [t, I_E_dir, I_ortho,
+                freq/w, Iw_E_dir, Iw_ortho, Int_E_dir, Int_ortho])
 
     ##############################################################
     # Always calculate exact emission formula

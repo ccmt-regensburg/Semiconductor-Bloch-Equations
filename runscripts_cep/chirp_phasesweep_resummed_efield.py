@@ -5,6 +5,7 @@ from params import params
 import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
+from hfsbe.utility import conversion_factors as co
 # Set BZ type independent parameters
 # Hamiltonian parameters
 from SBE import main as solver
@@ -19,21 +20,37 @@ def run():
     ksym = 0.0635012                  # k^2 coefficent dampening
     kasym = 0.113773                  # k^3 coeffcient dampening
 
+    params.w = 25
+    if (params.w == 30):
+        params.t0 = -250
+        params.alpha = 45
+
+    params.e_fermi = 0
+    twoelectron = False
+    if (twoelectron == True):
+        # Semiclassical calculation with two electrons at the 0.03 path
+        # Fermi energy to only occupy middle point of path
+        params.e_fermi = -0.004171*co.au_to_eV
+        params.temperature = 0
+        params.dipole_off = True
+        params.Nk_in_path = 1401
+
+
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
-    E = Elist[1]
-
+    E = Elist[3]
     params.E0 = E
-    params.e_fermi = 0
-    params.rel_dist_to_gamma = 0.05
 
-    dirname_E = 'E_{:.1f}'.format(params.E0)
-    if (not os.path.exists(dirname_E)):
-        os.mkdir(dirname_E)
-    os.chdir(dirname_E)
+    params.rel_dist_to_gamma = 0.03
+
+    # dirname_E = 'E_{:.1f}'.format(params.E0)
+    # if (not os.path.exists(dirname_E)):
+    #     os.mkdir(dirname_E)
+    # os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    chirplist = [-0.920, 0.00]
+    # chirplist = [-0.920, 0.00]
+    chirplist = [-2.000, -1.400, -0.920, 0.000]
     for chirp in chirplist:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
