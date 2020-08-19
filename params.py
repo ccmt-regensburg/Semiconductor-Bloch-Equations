@@ -4,7 +4,7 @@ import numpy as np
 # System parameters
 #########################################################################
 #a                   = 10.259       # Lattice spacing in atomic units (4.395 A)
-a                   = 8.308
+a                   = 10.683 
 # Galium Selenide  lattice spacing = 5.429 Angstrom = 10.259 a.u.
 # Galium Arsenic   lattice spacing = 5.653 angstrom = 10.683 a.u.
 # Bismuth Teluride lattice spacing = 4.395 angstrom = 8.308
@@ -39,9 +39,9 @@ Nk1                 = 10        # Number of kpoints in b1 direction
 Nk2                 = 2         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 10        # Number of kpoints in each of the two paths
+Nk_in_path          = 400        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.05        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 5*np.pi/a   # Length of path in BZ
+length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 num_paths           = 2
 
@@ -54,7 +54,7 @@ gauge               = 'length'
 ##########################################################################
 align               = 'K'            # E-field direction (gamma-'K' or gamma-'M'), 
                                      # or angle (30 for 30 degrees, only works with velocity gauge) 
-E0                  = 1            # Pulse amplitude (MV/cm)
+E0                  = 2.5           # Pulse amplitude (MV/cm)
 B0                  = 0.0              # B-Field strength (T)
 w                   = 25.0           # Pulse frequency (THz)
 chirp               = 0.0            # Pulse chirp ratio (chirp = c/w) (THz)
@@ -94,11 +94,11 @@ fitted_pulse        = False
 KK_emission         = True
 normalize_emission  = False         
 normalize_f_valence = False
-print_J_P_I_files   = True  # Set to True to get plotting of interband (P), intraband (J) contribution and emission
+print_J_P_I_files   = True   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 save_figures        = True
 show_figures        = False
 #structure_type      = 'wurtzite'
 structure_type      = 'zinc-blende'
-gamma               = 10  # Coupling intensity used for bandstruct, units: eV*Angström**3
-beta                = 1
-alpha_wz            = 1 
+gamma               = 10      # Coupling intensity used for bandstruct, units: eV*Angström**3
+beta                = -1
+alpha_wz            = 0.04 

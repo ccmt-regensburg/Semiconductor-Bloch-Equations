@@ -107,6 +107,7 @@ def main():
     if user_out:
         print("Solving for...")
         print("Brillouin zone: " + BZ_type)
+        print("Structure type: " + params.structure_type)
         print("Number of k-points              = " + str(Nk))
         if BZ_type == 'full':
             print("Driving field alignment         = " + align)
@@ -314,7 +315,7 @@ def main():
         np.savetxt("bandstruct.txt", data)
              
     if (not test and user_out):
-        real_fig, (axE,axA,axP,axPdot,axJ) = pl.subplots(5,1,figsize=(10,10))
+        real_fig, (axE,axA,axIdiag, axIoffd, axJ) = pl.subplots(5,1,figsize=(10,10))
         t_lims = (-10*alpha/fs_conv, 10*alpha/fs_conv)
         freq_lims = (0,25)
         axE.set_xlim(t_lims)
@@ -325,6 +326,7 @@ def main():
         axA.plot(t/fs_conv,A_field/E_conv/fs_conv)
         axA.set_xlabel(r'$t$ in fs')
         axA.set_ylabel(r'$A$-field in MV/cm$\cdot$fs')
+        """
         axP.set_xlim(t_lims)
         axP.plot(t/fs_conv,P_E_dir)
         axP.plot(t/fs_conv,P_ortho)
@@ -335,11 +337,28 @@ def main():
         axPdot.plot(t/fs_conv,diff(t,P_ortho))
         axPdot.set_xlabel(r'$t$ in fs')
         axPdot.set_ylabel(r'$\dot P$ in atomic units $\parallel \mathbf{E}_{in}$ (blue), $\bot \mathbf{E}_{in}$ (orange)')
+        """
+        axIdiag.set_xlim(t_lims)
+        axIdiag.plot(t/fs_conv, I_exact_diag_E_dir)
+        axIdiag2 = axIdiag.twinx()
+        axIdiag2.plot(t/fs_conv, I_exact_diag_ortho, color="orange")
+        align_yaxis(axIdiag, axIdiag2)
+        axIdiag.set_xlabel(r'$t$ in fs')
+        axIdiag.set_ylabel(r'$I^{\parallel}_{diag}$ in atomic units')
+        axIdiag2.set_ylabel(r'$I^{\perp}_{diag}$ in atomic units')
+        axIoffd.set_xlim(t_lims)
+        axIoffd.plot(t/fs_conv, I_exact_offd_E_dir)
+        axIoffd2 = axIoffd.twinx()
+        axIoffd2.plot(t/fs_conv, I_exact_offd_ortho, color="orange")
+        align_yaxis(axIoffd, axIoffd2)
+        axIoffd.set_xlabel(r'$t$ in fs')
+        axIoffd.set_ylabel(r'$I^{\parallel}_{offd}$ in atomic units')
+        axIoffd2.set_ylabel(r'$I^{\perp}_{offd}$ in atomic units')
         axJ.set_xlim(t_lims)
         axJ.plot(t/fs_conv,I_exact_E_dir)
         axJ2    = axJ.twinx()
         axJ2.plot(t/fs_conv,I_exact_ortho, color="orange")
-        #align_yaxis(axJ, axJ2)
+        align_yaxis(axJ, axJ2)
         axJ.set_xlabel(r'$t$ in fs')
         axJ.set_ylabel(r'$J_{\parallel}$ in atomic units')
         axJ2.set_ylabel(r'$J_{\perp}$ in atomic units')
@@ -543,7 +562,7 @@ def main():
                pax.set_xticklabels([""])
                pax.set_title('HH'+str(i_loop), va='top', pad=15)
 
-        if print_J_P_I_files:
+       # if print_J_P_I_files:
 
           # if i_loop < 10:
           #    polar_filename = 'polar_0'+str(i_loop)
@@ -569,12 +588,12 @@ def main():
            if freq[local_maximum]/w < 0:
               continue
 
-           if freq[local_maximum]/w < 10:
-              polar_filename = 'polar_0'+str('{:1.2f}').format(freq[local_maximum]/w)
-           else:
-              polar_filename = 'polar_'+str('{:2.2f}').format(freq[local_maximum]/w)
+         #  if freq[local_maximum]/w < 10:
+         #     polar_filename = 'polar_0'+str('{:1.2f}').format(freq[local_maximum]/w)
+         #  else:
+         #     polar_filename = 'polar_'+str('{:2.2f}').format(freq[local_maximum]/w)
 
-           np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,local_maximum])/np.amax(np.abs(Iw_r[:,local_maximum])) ]  )
+         #  np.savetxt (polar_filename, np.c_[ angles/np.pi*180, np.abs(Iw_r[:,local_maximum])/np.amax(np.abs(Iw_r[:,local_maximum])) ]  )
 
 
     if (not test and user_out):
@@ -592,7 +611,7 @@ def main():
         pl.plot(x_val,y_val_p,label=r'$\epsilon_{plus}$')
         pl.axhline(y=e_fermi/eV_conv)
         pl.xlabel(r'$k_x$ / ($1/a_0$)')
-        pl.ylabel(r'$\epsilon$')
+        pl.ylabel(r'$\epsilon$ in eV')
         pl.legend()
         pl.title("Bandstructure")
 
@@ -833,7 +852,7 @@ def mesh(params, E_dir):
     rel_dist_to_Gamma = params.rel_dist_to_Gamma      # relative distance (in units of 2pi/a) of both paths to Gamma
     a                 = params.a                                      # Lattice spacing
     length_path_in_BZ = params.length_path_in_BZ      #
-    num_paths         = params.Nk2
+    num_paths         = params.num_paths
 
     alpha_array = np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
     vec_k_path = E_dir*length_path_in_BZ
@@ -1050,9 +1069,10 @@ def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, p
            # INTERBAND POLARIZATION 
 
            # Evaluate the dipole moments in path
-           di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
-       
-           # Append the dot product d.E
+           # di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
+           di_x, di_y = epsilon.dipole(kx_in_path, ky_in_path)
+         
+         # Append the dot product d.E
            d_E_dir = di_x[0, 1, :]*E_dir[0] + di_y[0, 1, :]*E_dir[1]
            d_ortho = di_x[0, 1, :]*E_ort[0] + di_y[0, 1, :]*E_ort[1]
       
