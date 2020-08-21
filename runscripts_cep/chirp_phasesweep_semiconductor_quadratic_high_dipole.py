@@ -11,6 +11,13 @@ from SBE import main as solver
 
 
 def run():
+    # SBE Parameters
+    params.e_fermi = 0.2
+    params.rel_dist_to_Gamma = 0.01
+    params.w = 40
+    params.E0 = 5.0
+
+    # Hamiltonian Parameters
     A = 0.19732     # Fermi velocity
 
     # Gaps used in the dirac system
@@ -18,11 +25,6 @@ def run():
     mzlist = np.linspace(0, mz_max, 7)
     mz = mzlist[4]
     mz *= 0.3
-
-    params.e_fermi = 0.2
-    params.rel_dist_to_Gamma = 0.03
-
-    params.E0 = 5.0
 
     # Adjust bandwidth to the gap and dirac bandwidth
     At = 0.5*(A*3*np.pi/(2*params.a) - mz)
@@ -33,14 +35,14 @@ def run():
     mx = mz_max/10
     mx *= 5
 
-    dirname = 'mz_{:.7f}'.format(mz_adjust) + '_A_{:.7f}'.format(At)
-    if (not os.path.exists(dirname)):
-        os.mkdir(dirname)
-    os.chdir(dirname)
+    # dirname = 'mz_{:.7f}'.format(mz_adjust) + '_A_{:.7f}'.format(At)
+    # if (not os.path.exists(dirname)):
+    #     os.mkdir(dirname)
+    # os.chdir(dirname)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
     chirplist = [-0.920, 0.000]
-    for chirp in chirplist:
+    for chirp in chirplist[0:1]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
@@ -48,7 +50,8 @@ def run():
             os.mkdir(dirname_chirp)
         os.chdir(dirname_chirp)
 
-        for phase in np.linspace(-np.pi, np.pi, 201):
+        phaselist = np.linspace(0, np.pi, 201)
+        for phase in phaselist[150:]:
             params.phase = phase
             print("Current phase: ", params.phase)
             dirname_phase = 'phase_{:1.2f}'.format(params.phase)

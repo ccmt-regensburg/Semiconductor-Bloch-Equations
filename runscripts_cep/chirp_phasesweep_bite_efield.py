@@ -16,13 +16,13 @@ def run():
     R = 5.52658
     k_cut = 0.05
 
-    params.w = 30
+    params.w = 25
     if (params.w == 30):
         params.t0 = -250
         params.alpha = 45
 
     params.e_fermi = 0.2
-    params.rel_dist_to_Gamma = 0.05
+    params.rel_dist_to_Gamma = 0.01
 
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
@@ -32,14 +32,14 @@ def run():
 
     dirname_E = 'E_{:.1f}'.format(params.E0)
 
-    if (not os.path.exists(dirname_E)):
-        os.mkdir(dirname_E)
-    os.chdir(dirname_E)
+    # if (not os.path.exists(dirname_E)):
+    #     os.mkdir(dirname_E)
+    # os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
     chirplist = np.array([-0.920, 0.000])
     # [-0.920, -0.736, -0.552, -0.368, -0.184, 0.000, 0.184, 0.368, 0.552, 0.736, 0.920]
-    for chirp in chirplist[:]:
+    for chirp in chirplist[0:1]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
@@ -47,8 +47,8 @@ def run():
             os.mkdir(dirname_chirp)
         os.chdir(dirname_chirp)
 
-        phaselist = np.linspace(0, np.pi, 20)
-        phaselist = [phaselist[0]]
+        phaselist = np.linspace(0, np.pi, 201)
+        phaselist = phaselist[150:]
         for phase in phaselist:
             params.phase = phase
             print("Current phase: ", params.phase)

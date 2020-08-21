@@ -41,7 +41,7 @@ class params:
 
     # Time scales (all units in femtoseconds)
     ##########################################################################
-    T1    = 1E3    # Phenomenological diagonal damping time
+    T1    = 1000   # Phenomenological diagonal damping time
     T2    = 1      # Phenomenological polarization damping time
     t0    = -200   # Start time *pulse centered @ t=0, use t0 << 0
     # tf    = 200    # End time
@@ -55,4 +55,4 @@ class params:
     user_out      = True       # Set to True to get user plotting and progress output
     save_file     = True       # To save exact data
     save_full     = False      # Save full information
-    save_approx   = True
+    save_approx   = False

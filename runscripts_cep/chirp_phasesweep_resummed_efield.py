@@ -38,7 +38,7 @@ def run():
 
     E_max = 10
     Elist = np.linspace(2.5, E_max, 4)
-    E = Elist[3]
+    E = Elist[1]
     params.E0 = E
 
     params.rel_dist_to_gamma = 0.03
@@ -49,9 +49,9 @@ def run():
     # os.chdir(dirname_E)
 
     # chirplist = np.linspace(-0.920, 0.920, 11)
-    # chirplist = [-0.920, 0.00]
-    chirplist = [-2.000, -1.400, -0.920, 0.000]
-    for chirp in chirplist:
+    chirplist = [-0.920, 0.00]
+    # chirplist = [-2.000, -1.400]
+    for chirp in chirplist[0:1]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
@@ -60,7 +60,7 @@ def run():
         os.chdir(dirname_chirp)
 
         phaselist = np.linspace(0, np.pi, 20)
-        phaselist = [phaselist[0]]
+        # phaselist = [phaselist[0]]
         for phase in phaselist:
             params.phase = phase
             print("Current phase: ", params.phase)
