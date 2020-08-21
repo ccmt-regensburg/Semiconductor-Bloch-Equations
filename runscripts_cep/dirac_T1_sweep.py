@@ -24,8 +24,7 @@ if __name__ == "__main__":
     params.E0 = 5
     params.e_fermi = 0.2
 
-    params.alpha = 75
-    params.rel_dist_to_Gamma = 0.03
+    params.alpha = 25
 
     # Double time for broader pulses
     params.t0 *= 2
@@ -33,13 +32,14 @@ if __name__ == "__main__":
 
     distlist = [0.01, 0.03]
     T1list = [1000, 10]
+    chirplist = [-0.920, -0.460, -0.307]
+    phaselist = np.linspace(0, np.pi, 20)
 
     system, dipole = dirac()
 
     for dist in distlist:
-        chirplist = [-0.920, -0.460, -0.307]
-        phaselist = [0]
-        dirname_dist = 'dist_' + '{:.3f}'.format(dist)
+        params.rel_dist_to_Gamma = dist
+        dirname_dist = '{:.2f}'.format(dist) + '_dist'
         mkdir_chdir(dirname_dist)
 
         for T1 in T1list:
