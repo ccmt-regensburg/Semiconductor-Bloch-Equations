@@ -3,6 +3,8 @@ from matplotlib import ticker, cm, colors
 import numpy as np
 import os
 
+whitedarkjet_txt = np.loadtxt('/home/slacker/Seafile/C/colormaps/colormap_whitedarkjet.dat', delimiter=',')
+whitedarkjet = colors.ListedColormap(whitedarkjet_txt)
 
 def read_data(orderpath, dirpath, parampaths):
     """
@@ -175,9 +177,10 @@ def cep_plot(freqw, phases, data, suptitle=None, title=None, xlim=(0, 35),
     logspace = np.logspace(log_min, log_max, 100)
     cont = ax.contourf(F, P, data, levels=logspace,
                        locator=ticker.LogLocator(),
-                       cmap=cm.gist_ncar,
+                       cmap=whitedarkjet,
                        norm=colors.LogNorm(vmin=min, vmax=1e-0))
 
+    # plt.gca().invert_yaxis()
     min_exponent = int(np.log10(min))
     tickposition = np.logspace(min_exponent, 0, num=np.abs(min_exponent)+1)
 
@@ -188,6 +191,7 @@ def cep_plot(freqw, phases, data, suptitle=None, title=None, xlim=(0, 35),
                         + r'\si{[a.u.]}$')
 
     ax.set_xticks(np.arange(xlim[1] + 1))
+    # ax.set_yticklabels([r'pi', r'0'])
     ax.grid(True, axis='x', ls='--')
     ax.set_xlim(xlim)
     ax.set_xlabel(r'$\omega/\omega_0$')
@@ -224,7 +228,8 @@ def find_max_intens(freqw, data_dir, data_ortho):
     """
     size = np.size(freqw, axis=1)
     # Only take right half of results
-    data = data_dir[:, size//2:] + data_ortho[:, size//2:]
+    # data = data_dir[:, size//2:] + data_ortho[:, size//2:]
+    data = data_dir + data_ortho
     data_max = np.max(data, axis=1)
     max_average = np.average(data_max)
 
