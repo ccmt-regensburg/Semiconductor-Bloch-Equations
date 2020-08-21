@@ -6,15 +6,12 @@ import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
 
-def bite():
+def dirac():
     # Param file adjustments
     # System parameters
-    C2 = 5.39018
     A = 0.19732     # Fermi velocity
-    R = 5.52658
-    k_cut = 0.05
 
-    system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, kcut=k_cut, mz=0)
+    system = hfsbe.example.BiTe(C0=0, C2=0, A=A, R=0, mz=0)
     h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
 
@@ -22,8 +19,10 @@ def bite():
 
 if __name__ == "__main__":
     params.w = 25
-    params.alpha = 75
+    params.E0 = 5
     params.e_fermi = 0.2
+
+    params.alpha = 75
     params.rel_dist_to_Gamma = 0.03
 
     # Double time for broader pulses
@@ -32,7 +31,7 @@ if __name__ == "__main__":
 
     T1list = [1000, 10]
 
-    system, dipole = bite()
+    system, dipole = dirac()
 
     chirplist = [-0.920, -0.460, -0.307]
     phaselist = [0]
@@ -45,3 +44,5 @@ if __name__ == "__main__":
         os.chdir(dirname_T)
 
         hfsbe.utility.chirp_phasesweep(chirplist, phaselist, system, dipole, params)
+
+        os.chdir('..')
