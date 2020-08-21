@@ -16,7 +16,7 @@ def chirp_phasesweep():
     k_cut = 0.05
 
     chirplist = np.array([-0.920, -0.460, -0.307])
-    for chirp in chirplist[]:
+    for chirp in chirplist[:]:
         params.chirp = chirp
         print("Current chirp: ", params.chirp)
         dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
@@ -44,20 +44,20 @@ def chirp_phasesweep():
 
 if __name__ == "__main__":
     params.w = 25
-    params.alpha = 50
+    params.alpha = 75
     params.e_fermi = 0.2
-    params.rel_dist_to_Gamma = 0.01
+    params.rel_dist_to_Gamma = 0.03
 
     # Double time for broader pulses
     params.t0 *= 2
     params.Nt *= 2
 
-    T1list = [1000, 1]
+    T1list = [1000, 10]
 
     for T1 in T1list:
         params.T1 = T1
         params.T2 = 1
-        dirname_T = 'T1_' + str(T1) + '_T2_' + str(T2)
+        dirname_T = 'T1_' + str(params.T1) + '_T2_' + str(params.T2)
         if (not os.path.exists(dirname_T)):
             os.mkdir(dirname_T)
         os.chdir(dirname_T)
