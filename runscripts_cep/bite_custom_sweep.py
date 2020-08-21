@@ -5,9 +5,8 @@ from params import params
 import hfsbe.dipole
 import hfsbe.example
 import hfsbe.utility
-from hfsbe.solver import sbe_solver
 
-def chirp_phasesweep():
+def bite():
     # Param file adjustments
     # System parameters
     C2 = 5.39018
@@ -15,32 +14,11 @@ def chirp_phasesweep():
     R = 5.52658
     k_cut = 0.05
 
-    chirplist = np.array([-0.920, -0.460, -0.307])
-    for chirp in chirplist[:]:
-        params.chirp = chirp
-        print("Current chirp: ", params.chirp)
-        dirname_chirp = 'chirp_{:1.3f}'.format(params.chirp)
-        if (not os.path.exists(dirname_chirp)):
-            os.mkdir(dirname_chirp)
-        os.chdir(dirname_chirp)
+    system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, kcut=k_cut, mz=0)
+    h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
+    dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
 
-        phaselist = np.linspace(0, np.pi, 201)
-        for phase in phaselist[0:1]:
-            params.phase = phase
-            print("Current phase: ", params.phase)
-            dirname_phase = 'phase_{:1.2f}'.format(params.phase)
-            if (not os.path.exists(dirname_phase)):
-                os.mkdir(dirname_phase)
-            os.chdir(dirname_phase)
-
-            system = hfsbe.example.BiTe(C0=0, C2=C2, A=A, R=R, kcut=k_cut, mz=0)
-            h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
-            dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
-            sbe_solver(system, dipole, params)
-            os.chdir('..')
-
-        os.chdir('..')
-
+    return system, dipole
 
 if __name__ == "__main__":
     params.w = 25
@@ -54,6 +32,10 @@ if __name__ == "__main__":
 
     T1list = [1000, 10]
 
+    system, dipole = bite()
+
+    chirplist = [-0.920, -0.460, -0.307]
+    phaselist = [0]
     for T1 in T1list:
         params.T1 = T1
         params.T2 = 1
@@ -62,4 +44,4 @@ if __name__ == "__main__":
             os.mkdir(dirname_T)
         os.chdir(dirname_T)
 
-        chirp_phasesweep()
+        hfsbe.utility.chirp_phasesweep(chirplist, phaselist, system, dipole, params)
