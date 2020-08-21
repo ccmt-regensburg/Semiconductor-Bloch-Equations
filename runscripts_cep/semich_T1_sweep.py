@@ -4,10 +4,11 @@ from params import params
 
 import hfsbe.dipole
 import hfsbe.example
-import hfsbe.utility
+from hfsbe.solver.runloops import mkdir_chdir, chirp_phasesweep
+
 
 def semich():
-   # Hamiltonian Parameters
+    # Hamiltonian Parameters
     A = 0.19732     # Fermi velocity
 
     # Gaps used in the dirac system
@@ -30,6 +31,7 @@ def semich():
 
     return system, dipole
 
+
 if __name__ == "__main__":
     params.w = 40
     params.E0 = 5
@@ -46,17 +48,20 @@ if __name__ == "__main__":
     T1list = [1000, 10]
 
     system, dipole = semich()
+
     for dist in distlist:
         chirplist = [-0.920, -0.460, -0.307]
         phaselist = [0]
+        dirname_dist = 'dist_' + '{:.3f}'.format(dist)
+        mkdir_chdir(dirname_dist)
+
         for T1 in T1list:
             params.T1 = T1
             params.T2 = 1
             dirname_T = 'T1_' + str(params.T1) + '_T2_' + str(params.T2)
-            if (not os.path.exists(dirname_T)):
-                os.mkdir(dirname_T)
-            os.chdir(dirname_T)
+            mkdir_chdir(dirname_T)
 
-            hfsbe.utility.chirp_phasesweep(chirplist, phaselist, system, dipole, params)
+            chirp_phasesweep(chirplist, phaselist, system, dipole, params)
 
             os.chdir('..')
+        os.chdir('..')

@@ -4,7 +4,8 @@ from params import params
 
 import hfsbe.dipole
 import hfsbe.example
-import hfsbe.utility
+from hfsbe.solver.runloops import mkdir_chdir, chirp_phasesweep 
+
 
 def dft():
     C0 = -0.00647156                  # C0
@@ -17,9 +18,9 @@ def dft():
     system = hfsbe.example.BiTeResummed(C0=C0, c2=c2, A=A, r=r, ksym=ksym, kasym=kasym)
     h_sym, ef_sym, wf_sym, ediff_sym = system.eigensystem(gidx=1)
     dipole = hfsbe.dipole.SymbolicDipole(h_sym, ef_sym, wf_sym)
- 
 
     return system, dipole
+
 
 if __name__ == "__main__":
     params.w = 25
@@ -33,20 +34,24 @@ if __name__ == "__main__":
     params.t0 *= 2
     params.Nt *= 2
 
+    distlist = [0.01, 0.03]
     T1list = [1000, 10]
 
     system, dipole = dft()
 
-    chirplist = [-0.920, -0.460, -0.307]
-    phaselist = [0]
-    for T1 in T1list:
-        params.T1 = T1
-        params.T2 = 1
-        dirname_T = 'T1_' + str(params.T1) + '_T2_' + str(params.T2)
-        if (not os.path.exists(dirname_T)):
-            os.mkdir(dirname_T)
-        os.chdir(dirname_T)
+    for dist in distlist:
+        chirplist = [-0.920, -0.460, -0.307]
+        phaselist = [0]
+        dirname_dist = 'dist_' + '{:.3f}'.format(dist)
+        mkdir_chdir(dirname_dist)
 
-        hfsbe.utility.chirp_phasesweep(chirplist, phaselist, system, dipole, params)
+        for T1 in T1list:
+            params.T1 = T1
+            params.T2 = 1
+            dirname_T = 'T1_' + str(params.T1) + '_T2_' + str(params.T2)
+            mkdir_chdir(dirname_T)
 
+            chirp_phasesweep(chirplist, phaselist, system, dipole, params)
+
+            os.chdir('..')
         os.chdir('..')
