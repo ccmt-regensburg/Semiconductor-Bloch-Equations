@@ -1,4 +1,3 @@
-#!/bin/python
 import numpy as np
 from numpy.fft import fft, fftfreq, fftshift
 from numba import njit
