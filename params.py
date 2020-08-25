@@ -112,7 +112,7 @@ store_all_timesteps = False
 KK_emission         = False
 normalize_emission  = False         
 normalize_f_valence = False
-fitted_pulse        = False
+fitted_pulse        = True
 
 with_transient      = True
 with_nir            = True
