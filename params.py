@@ -54,8 +54,8 @@ gauge               = 'length'
 ##########################################################################
 align               = 'K'            # E-field direction (gamma-'K' or gamma-'M'), 
                                      # or angle (30 for 30 degrees, only works with velocity gauge) 
-E0                  = 2.5           # Pulse amplitude (MV/cm)
-B0                  = 0.0              # B-Field strength (T)
+E0                  = 0.1              # Pulse amplitude (MV/cm)
+B0                  = 0.0            # B-Field strength (T)
 w                   = 25.0           # Pulse frequency (THz)
 chirp               = 0.0            # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0           # Gaussian pulse width (femtoseconds)
@@ -77,8 +77,8 @@ E_conv = 0.0001944690381               #(1MV/cm = 1.944690381*10^-4 a.u.)
 B_conv = 4.25531E-6                    #(1T     = 4.25531*10^-6 a.u.)
 THz_conv = 0.000024188843266           #(1THz   = 2.4188843266*10^-5 a.u.)
 amp_conv = 150.97488474                #(1A     = 150.97488474)
-eV_conv = 0.03674932176                  #(1eV    = 0.036749322176 a.u.)
-angstr_conv = 1.8897261246            #(1 Angström = 1.8897261246 a.u.)
+eV_conv = 0.03674932176                #(1eV    = 0.036749322176 a.u.)
+angstr_conv = 1.8897261246             #(1 Angström = 1.8897261246 a.u.)
 
 # Flags for testing and features
 ##########################################################################
@@ -91,14 +91,14 @@ emission_wavep      = False  # additionally compute emission quasiclassically us
 Bcurv_in_B_dynamics = False  # decide when appying B-field whether Berry curvature is used for dynamics
 store_all_timesteps = False
 fitted_pulse        = False
-KK_emission         = True
+KK_emission         = True 
 normalize_emission  = False         
 normalize_f_valence = False
 print_J_P_I_files   = True   # Set to True to get plotting of interband (P), intraband (J) contribution and emission
 save_figures        = True
 show_figures        = False
-#structure_type      = 'wurtzite'
-structure_type      = 'zinc-blende'
-gamma               = 10      # Coupling intensity used for bandstruct, units: eV*Angström**3
+structure_type      = 'wurtzite'
+#structure_type      = 'zinc-blende'
+gamma               = 1     # Coupling intensity used for bandstruct, units: eV*Angström**3
 beta                = -1
-alpha_wz            = 0.04 
+alpha_wz            = 1 

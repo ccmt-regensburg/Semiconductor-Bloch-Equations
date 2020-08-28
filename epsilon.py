@@ -30,17 +30,18 @@ def initial_condition_spinorbit(y0,e_fermi,temperature,bandstruct,i_k,dynamics_t
         y0.extend([y0_e_minus,0.0,0.0,y0_e_plus,0.0,0.0,0.0,0.0])
 
 
-def epsilon(Nk_in_Path, paths, dk, E_dir):
+def epsilon(Nk_in_Path, path, dk, E_dir):
     beta = params.beta                                            #strength of H_diag
     gamma = params.gamma*params.angstr_conv**3           #strength of H_SO, units: eV 
-    length = -paths[0,0,0]
-    print(length)
+    length = -path[0,0]
 
     bandstruct = np.zeros(shape=(Nk_in_Path,3))
     bandstruct[:,0] = np.arange(-length, length+dk, dk)
    
     k_x     = (bandstruct[:,0])
-    k_y     = (paths[0,0,1])
+    k_y     = (path[0,1])
+    print(k_x[0])
+    print(k_y)
 
     if params.structure_type == "zinc-blende":
         bandstruct[:,1] = params.eV_conv*(beta*(np.cos(k_x/length*np.pi)+np.cos(k_y/length*np.pi)) - 0.5*gamma*np.sqrt((k_x**4*k_y**2+k_x**2*k_y**4)))           # e_minus or e_v
@@ -53,6 +54,37 @@ def epsilon(Nk_in_Path, paths, dk, E_dir):
 
     return bandstruct
 
+def epsilon_diff(Nk_in_Path, path, dk, E_dir):
+    beta = params.beta                                            #strength of H_diag
+    gamma = params.gamma*params.angstr_conv**3           #strength of H_SO, units: eV 
+    length = -path[0,0]
+
+    band_diff_x = np.zeros(shape=(Nk_in_Path,3))
+    band_diff_y = np.zeros(shape=(Nk_in_Path,3))
+    band_diff_x[:,0] = np.arange(-length, length+dk, dk)
+    band_diff_y[:,0] = np.arange(-length, length+dk, dk)
+   
+    k_x     = band_diff_x[:,0]
+    k_y     = path[0,1]
+
+    if params.structure_type == "zinc-blende":
+        band_diff_x[:,1] = params.eV_conv*(-beta*np.pi/length*np.sin(k_x/length*np.pi) - (gamma*k_y*(k_x**2+k_y**2/2))/(np.sqrt(k_x**2+k_y**2)))
+        band_diff_x[:,2] = params.eV_conv*(-beta*np.pi/length*np.sin(k_x/length*np.pi) + (gamma*k_y*(k_x**2+k_y**2/2))/(np.sqrt(k_x**2+k_y**2)))
+
+        band_diff_y[:,1] = params.eV_conv*(-beta*np.pi/length*np.sin(k_y/length*np.pi) - (gamma*k_x*(k_x**2/2+k_y**2))/(np.sqrt(k_x**2+k_y**2)))
+        band_diff_y[:,2] = params.eV_conv*(-beta*np.pi/length*np.sin(k_y/length*np.pi) + (gamma*k_x*(k_x**2/2+k_y**2))/(np.sqrt(k_x**2+k_y**2)))
+
+    if params.structure_type == "wurtzite":
+        alpha = params.alpha_wz*params.angstr_conv
+        band_diff_x[:,1] = params.eV_conv*(-beta*np.pi/length*np.sin(k_x/length*np.pi) - 1.5*k_x*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
+        band_diff_x[:,2] = params.eV_conv*(-beta*np.pi/length*np.sin(k_x/length*np.pi) + 1.5*k_x*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
+
+        band_diff_y[:,1] = params.eV_conv*(-beta*np.pi/length*np.sin(k_y/length*np.pi) - 1.5*k_y*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
+        band_diff_y[:,2] = params.eV_conv*(-beta*np.pi/length*np.sin(k_y/length*np.pi) + 1.5*k_y*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
+
+    return band_diff_x, band_diff_y
+
+
 
 def dipole(kx, ky):
     Nk_in_Path  =   params.Nk_in_path
@@ -63,3 +95,6 @@ def dipole(kx, ky):
     di_x    = np.concatenate((-d,d,d,-d)).reshape(2,2,Nk_in_Path)
     di_y    = np.zeros((2,2,Nk_in_Path), dtype=np.complex128)
     return di_x, di_y
+
+
+
