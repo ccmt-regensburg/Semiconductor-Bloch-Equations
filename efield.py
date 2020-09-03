@@ -37,6 +37,12 @@ nir_mu      = nOpt[2]
 nir_w       = nOpt[3]
 nir_phi     = nOpt[4]
 
+aT      = tOpt[0]
+sigmaT  = tOpt[1]
+muT     = tOpt[2]
+freqT   = tOpt[3]
+chirpT  = tOpt[4]
+
 with_transient  = params.with_transient
 with_nir        = params.with_nir
 
@@ -60,11 +66,11 @@ def driving_field(Amplitude, t):
     # Chirped Gaussian pulse
     if fitted_pulse:
         if with_transient and with_nir:
-            return transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4]) + nir(t, a, b, c, d, e)
+            return transient(t) + nir(t)
         elif with_transient:
-            return transient(t, tOpt[0], tOpt[1], tOpt[2], tOpt[3], tOpt[4])
+            return transient(t)
         elif with_nir:
-            return nir(t, a, b, c, d, e)
+            return nir(t)
         else:
             return 0
 
@@ -72,12 +78,20 @@ def driving_field(Amplitude, t):
         return Amplitude*np.exp(-t**2.0/(2.0*alpha)**2)*np.sin(2.0*np.pi*w*t*(1 + chirp*t) + phase)
 
 @njit
-def transient(x, aT, sigmaT, muT, freqT, chirpT):
+def transient(x):
     return aT*np.exp(-((x-muT)/sigmaT)**2/2)*np.cos(2*np.pi*(1+chirpT*x)*freqT*x)
 
 @njit
-def nir(x, aN, sigmaN, muN, freqN, phiN):
-    return aN*np.exp(-(x-muN)**2/sigmaN**2/2)*np.cos(2*np.pi*freqN*(x-muN)+phiN )
+def nir(x):
+    return a*np.exp(-(x-c)**2/b**2/2)*np.cos(2*np.pi*d*(x-c)+e )
+
+@njit
+def A_nir(x):
+    return -a/(2*np.pi*d)*np.exp(-(x-c)**2/b**2/2)*np.sin(2*np.pi*d*(x-c)+e )
+
+@njit
+def A_transient(x):
+    return aT/(2*np.pi*freqT)*np.exp(-((x-muT)/sigmaT)**2/2)*np.cos(2*np.pi*(1+chirpT*x)*freqT*x)
 
 def simple_transient(x):
     return 100*np.exp(-((x-tOpt[2])/tOpt[1])**2/2)*np.cos(2*np.pi*(1+tOpt[4]*x)*tOpt[3]*x)

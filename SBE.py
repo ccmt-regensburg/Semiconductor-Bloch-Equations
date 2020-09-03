@@ -362,6 +362,10 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         else:
             di_x, di_y = sys.dipole.evaluate(kx_in_path, ky_in_path)
 
+        if False:
+            di_x = (di_x + np.conjugate(di_x))/2
+            di_y = (di_y + np.conjugate(di_y))/2
+
         # Calculate the dot products E_dir.d_nm(k).
         # To be multiplied by E-field magnitude later.
         # A[0,1,:] means 0-1 offdiagonal element
@@ -379,6 +383,10 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         ec_in_path = ecv_in_path/2
 
         ec = bandstruct[1]
+        k_F_ind     = np.argmin(np.abs(ec-e_fermi) )
+        k_F         = np.sqrt(kx_in_path[k_F_ind]**2 + ky_in_path[k_F_ind]**2 )
+        print(params.r_n/params.A_n)
+        print(k_F/params.kasym_n)
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
@@ -475,13 +483,15 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
             P_ortho = np.zeros(n_time_steps)  
 
         # emission with exact formula
+        E_nir       = efield.nir(np.array(t) )
+        A_nir       = efield.A_nir(np.array(t) )
         if do_B_field:
            I_exact_E_dir, I_exact_ortho = emission_semicl_B_field(path, solution, E_dir, I_exact_E_dir, I_exact_ortho, path_num, normalize_f_valence) 
         else:
            I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, P_E_dir, P_ortho, J_E_dir, J_ortho = \
                                           emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, path_num, 
                                                          I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, 
-                                                         P_E_dir, P_ortho, J_E_dir, J_ortho, KK_emission) 
+                                                         P_E_dir, P_ortho, J_E_dir, J_ortho, KK_emission, E_nir, A_nir, ecv_in_path, w, k_F) 
         # emission with exact formula with semiclassical formula
 #        if do_emission_wavep:
 #           I_wavep_E_dir, I_wavep_ortho             = emission_wavep(paths, solution, wf_solution, E_dir, A_field, fermi_function) 
@@ -672,7 +682,7 @@ def Gaussian_envelope(t, alpha, mu):
 
 
 def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, path_num, I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, 
-                   P_E_dir, P_ortho, J_E_dir, J_ortho, KK_emission):
+                   P_E_dir, P_ortho, J_E_dir, J_ortho, KK_emission, E_nir, A_nir, ecv_in_path, w, k_F):
                                                                                                                            
     E_ort = np.array([E_dir[1], -E_dir[0]])                                                                                
                                                                                                                            
@@ -682,6 +692,9 @@ def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, p
         subtract_from_f_v = 1
     else:
         subtract_from_f_v = 0
+
+    di_x = sys.di_01xjit(kx=path[:,0], ky=path[:,1])
+    di_y = sys.di_01yjit(kx=path[:,0], ky=path[:,1])
 
     for i_time in range(n_time_steps):                                                                                     
                                                                                                                            
@@ -727,7 +740,13 @@ def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, p
             I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
             I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, 0, i_time, 3])
-            I_exact_offd_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
+
+            k_0         = efield.A_transient(100*params.fs_conv)
+            gamma       = 1/(params.T2*params.fs_conv)
+            k_abs       = np.sqrt((kx_in_path[i_k] - k_0)**2 + ky_in_path[i_k]**2)
+            besetzungs_diff     = np.heaviside(k_abs-k_F, 1/2)
+
+            I_exact_offd_ortho[i_time] += -besetzungs_diff*ecv_in_path[i_k]**2/( ((2*np.pi*w)**2 + gamma**2 - ecv_in_path[i_k]**2 )**2 + (2*gamma*ecv_in_path[i_k])**2 )*(((2*np.pi*w)**2 - gamma**2 - ecv_in_path[i_k]**2 )*E_nir[i_time]+(2*gamma*(2*np.pi*w)**2)*A_nir[i_time])*2*np.imag(di_x[i_k]*di_y[i_k] )
 
         if KK_emission:
 
@@ -998,6 +1017,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
             di_01y = sys.di_01yjit(kx=kx_shift_path, ky=ky_shift_path)
             di_11y = sys.di_11yjit(kx=kx_shift_path, ky=ky_shift_path)
 
+        if False:
+            di_01x = (di_01x + np.conjugate(di_01x))/2
+            di_01y = (di_01y + np.conjugate(di_01y))/2
+            
 
         # found that the dipole needs a complex conjugate
         dipole_in_path = E_dir[0]*di_01x + E_dir[1]*di_01y

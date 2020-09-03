@@ -67,6 +67,4 @@ def nir(x, aN, sigmaN, muN, freqN, phiN):
 def gaussSpec(x, A, sigma, mu):
     return A*np.exp(-(2*np.pi*(x-mu)/sigma)**2/2)
 
-opt_pulses()
-
 

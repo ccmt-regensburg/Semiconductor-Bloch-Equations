@@ -77,6 +77,8 @@ def construct_plots():
         Nk    = Nk1*Nk2                                   # Total number of k points, we have 2 paths
 
     T2              = params.T2*fs_conv
+    print(2*np.pi*w)
+    print(1/(T2) )
 
     ############ load the data from the files in the given path ###########
     old_directory   = os.getcwd()
@@ -87,7 +89,9 @@ def construct_plots():
     params.with_nir         = with_nir
     params.nir_mu           = nir_t0
     nir_t0                  *= fs_conv
-     
+    time_window     = 9*alpha
+
+
     if not os.path.exists(folder):
         ref_data    = False
         print("Failing to load: ", folder)
@@ -98,10 +102,13 @@ def construct_plots():
         os.chdir(folder)
         t_ref, A_field, I_exact_E_dir_ref, I_exact_ortho_ref, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
 
-        time_window     = 9*alpha
         t_ref           *= fs_conv
+
+        I_exact_E_dir_ref   = I_exact_diag_E_dir
+        I_exact_ortho_ref   = I_exact_diag_ortho
     
         ref_indices     = np.where(np.abs(t_ref-nir_t0) < time_window)[0]
+        
         I_exact_E_dir_ref   = I_exact_E_dir_ref[ref_indices]
         I_exact_ortho_ref   = I_exact_ortho_ref[ref_indices]
         t_ref               = t_ref[ref_indices]
@@ -123,6 +130,9 @@ def construct_plots():
     freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho  = np.transpose(np.loadtxt('frequency.txt') )
     f_c             = np.transpose(np.loadtxt("conduction_occupation.txt") )
 
+    I_exact_E_dir_  = I_exact_diag_E_dir
+    I_exact_ortho_  = I_exact_diag_ortho
+ 
     t       *= fs_conv
     freq    *= w
     w_min       = np.argmin(np.abs(freq/w - 0.5 ) )
@@ -130,13 +140,12 @@ def construct_plots():
     time_indices     = np.where(np.abs(np.array(t)-nir_t0) < time_window)[0]
     cut_time        = t[time_indices]
 
-    I_nir_E_dir     = I_exact_E_dir[time_indices] - 1*I_exact_E_dir_ref
-    I_nir_ortho     = I_exact_ortho[time_indices] - 1*I_exact_ortho_ref
+    if ref_data:
+        I_nir_E_dir     = I_exact_E_dir[time_indices] - 1*I_exact_E_dir_ref
+        I_nir_ortho     = I_exact_ortho[time_indices] - 1*I_exact_ortho_ref
+        E_nir_E_dir     = np.diff(I_nir_E_dir)
+        E_nir_ortho     = np.diff(I_nir_ortho)
 
-    E_nir_E_dir     = np.diff(I_nir_E_dir)
-    E_nir_ortho     = np.diff(I_nir_ortho)
-
-    print(np.sign(E_nir_E_dir)*np.sign(E_nir_ortho) )
 
     valence_calculated  = os.path.exists("valence_occupation.txt")
     if valence_calculated:
@@ -216,20 +225,24 @@ def construct_plots():
         axI.set_ylabel(r'$J_{\parallel}$ in at.u.')
 
         axJ.set_xlim(t_lims)
-        axJ.plot(cut_time/fs_conv, I_nir_E_dir)
         axJ2     = axJ.twinx()                
-        axJ2.plot(cut_time/fs_conv,I_nir_ortho, color="orange")
+        if ref_data:
+            axJ.plot(cut_time/fs_conv, I_nir_E_dir)
+            axJ2.plot(cut_time/fs_conv,I_nir_ortho, color="orange")
         axJ.set_xlabel(r'$t$ in fs')
         axJ2.set_ylabel(r'$J_{\perp}^{NIR}$ in at.u.')
         axJ.set_ylabel(r'$J_{\parallel}^{NIR}$ in at.u.')
 
         axP.set_xlim((-.1*alpha+nir_t0)/fs_conv, (.1*alpha+nir_t0)/fs_conv)
-        axP.plot(cut_time[1:]/fs_conv,np.sign(E_nir_E_dir*E_nir_ortho))
+        axP.set_xlim(t_lims)
+        #axP.plot(cut_time[1:]/fs_conv,np.sign(E_nir_E_dir*E_nir_ortho))
+        axP.plot(t/fs_conv,I_exact_diag_E_dir)
         axP2     = axP.twinx()                    
+        axP2.plot(t/fs_conv,I_exact_offd_ortho, color="orange")
         #axP2.plot(cut_time[1:]/fs_conv,E_nir_ortho, color="orange")
         axP.set_xlabel(r'$t$ in fs')
-        axP2.set_ylabel(r'$E_{\perp}^{NIR}$ in at.u.')
-        axP.set_ylabel(r'$E_{\parallel}^{NIR}$ in at.u.')
+        axP2.set_ylabel(r'$J_{\perp}^{offd}$ in at.u.')
+        axP.set_ylabel(r'$J_{\parallel}^{diag}$ in at.u.')
 
         #axJ.set_xlim(t_lims)
         #axJ.plot(t/fs_conv,I_exact_diag_E_dir)

@@ -49,7 +49,7 @@ Nk1                 = 1200        # Number of kpoints in b1 direction
 Nk2                 = 50         # Number of kpoints in b2 direction (number of paths)
 
 # 2line BZ parameters
-Nk_in_path          = 800        # Number of kpoints in each of the two paths
+Nk_in_path          = 400        # Number of kpoints in each of the two paths
 rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
 #rel_dist_to_Gamma   = 0.005        # relative distance (in units of 2pi/a) of both paths to Gamma
 length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ
@@ -57,8 +57,8 @@ angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 num_paths           = 2
 
 # Gauge
-#gauge               = 'length'
-gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
+gauge               = 'length'
+#gauge               = 'velocity'    # 'length': use length gauge with gradient_k present
                                   # 'velocity': use velocity gauge with absent gradient_k
 
 # Driving field parameters
@@ -86,7 +86,7 @@ T1    = 1e3  # Phenomenological damping time for diagonal occupations
 T2    = 1       # Phenomenological damping time for off-diagonal polarizations
 t0    = -5000 # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 5000  # End time
-dt    = 1  # Time step
+dt    = 1   # Time step
 
 # Unit conversion factors
 ##########################################################################
@@ -116,5 +116,5 @@ fitted_pulse        = True
 
 with_transient      = True
 with_nir            = True
-realistic_system    = False
-semicl_model        = True
+realistic_system    = True
+semicl_model        = False
