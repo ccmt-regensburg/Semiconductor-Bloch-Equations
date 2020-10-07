@@ -70,19 +70,24 @@ def epsilon_diff(Nk_in_Path, path, dk, E_dir):
     k_y     = path[0,1]
 
     if params.structure_type == "zinc-blende":
-        band_diff_x[:,1] = params.eV_conv*(-beta*a*np.sin(k_x*a) - (0.5*gamma*((2*k_x**2+k_y**2)*(k_x*k_y**2))/(sqrt(k_x**4*k_y**2+k_x**2*k_y**4)))
-        band_diff_x[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + (0.5*gamma*((2*k_x**2+k_y**2)*(k_x*k_y**2))/(np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4)))
+        band_diff_x[:,1] = params.eV_conv*(-beta*a*np.sin(k_x*a) - 0.5*gamma*(2*k_x**2+k_y**2)*(k_x*k_y**2)/np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4))
+
+        band_diff_x[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + 0.5*gamma*(2*k_x**2+k_y**2)*(k_x*k_y**2)/np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4))
         
-        band_diff_y[:,1] = params.eV_conv*(-beta*a*np.sin(k_y*a) - (0.5*gamma*((k_x**2+2*k_y**2)*(k_x**2*k_y))/(np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4)))
-        band_diff_y[:,2] = params.eV_conv*(-beta*a*np.sin(k_y*a) + (0.5*gamma*((k_x**2+2*k_y**2)*(k_x**2*k_y))/(np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4)))
+
+        band_diff_y[:,1] = params.eV_conv*(-beta*a*np.sin(k_y*a) - 0.5*gamma*(k_x**2+2*k_y**2)*(k_x**2*k_y)/np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4))
+
+        band_diff_y[:,2] = params.eV_conv*(-beta*a*np.sin(k_y*a) + 0.5*gamma*(k_x**2+2*k_y**2)*(k_x**2*k_y)/np.sqrt(k_x**4*k_y**2+k_x**2*k_y**4))
     if params.structure_type == "wurtzite":
         alpha = params.alpha_wz*params.angstr_conv
-        band_diff_x[:,1] = params.eV_conv*(-beta*a*np.sin(k_x*a) - 1.5*k_x*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
-        band_diff_x[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + 1.5*k_x*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
+       
+        band_diff_x[:,1] = params.eV_conv*(-beta*a*np.sin(k_x*a) - 0.5*(k_x*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_x*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
 
-        band_diff_y[:,1] = params.eV_conv*(-beta*a*np.sin(k_y*a) - 1.5*k_y*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
-        band_diff_y[:,2] = params.eV_conv*(-beta*a*np.sin(k_y*a) + 1.5*k_y*(gamma*k_x**2+gamma*k_y**2-1/3*alpha)/(np.sqrt(k_x**2+k_y**2)))
+        band_diff_x[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + 0.5*(k_x*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_x*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
 
+        
+        band_diff_y[:,1] = params.eV_conv*(-beta*a*np.sin(k_x*a) - 0.5*(k_y*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_y*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
+        band_diff_y[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + 0.5*(k_y*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_y*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
     return band_diff_x, band_diff_y
 
 

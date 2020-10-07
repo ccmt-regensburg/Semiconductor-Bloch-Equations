@@ -353,6 +353,7 @@ def main():
         axIoffd.set_xlim(t_lims)
         axIoffd.plot(t/fs_conv, I_exact_offd_E_dir)
         axIoffd2 = axIoffd.twinx()
+        axIoffd2.set_ylim([-1E-14,1E-14])
         axIoffd2.plot(t/fs_conv, I_exact_offd_ortho, color="orange")
         align_yaxis(axIoffd, axIoffd2)
         axIoffd.set_xlabel(r'$t$ in fs')
