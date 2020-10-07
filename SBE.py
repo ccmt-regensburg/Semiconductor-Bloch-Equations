@@ -314,6 +314,8 @@ def main():
         np.savetxt("frequency.txt", np.transpose(data ) )
         data    = bandstruct
         np.savetxt("bandstruct.txt", data)
+        data    = np.array([t/fs_conv, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_E_dir, I_exact_ortho]).real
+        np.savetxt("I_exact.txt", np.transpose(data))
              
     if (not test and user_out):
         real_fig, (axE,axA,axIdiag, axIoffd, axJ) = pl.subplots(5,1,figsize=(10,10))
@@ -342,7 +344,7 @@ def main():
         axIdiag.set_xlim(t_lims)
         axIdiag.plot(t/fs_conv, I_exact_diag_E_dir)
         axIdiag2 = axIdiag.twinx()
-        #axIdiag2.set_ylim([-1E-14,1E-14])
+        #axIdiag2.set_ylim([-1E-13,1E-13])
         axIdiag2.plot(t/fs_conv, I_exact_diag_ortho, color="orange")
         align_yaxis(axIdiag, axIdiag2)
         axIdiag.set_xlabel(r'$t$ in fs')
@@ -528,22 +530,23 @@ def main():
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         # Countour plots of occupations and gradients of occupations
         fig5 = pl.figure()
+        pl.rcParams.update({'font.size':30})
         X, Y = np.meshgrid(t/fs_conv,kp_array)
         pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.colorbar().set_label(r'$f_e(k)$')
         pl.xlim([-5*alpha/fs_conv,10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
+        pl.xlabel(r'$t\;/fs$')
+        pl.ylabel(r'$k_x\;/(1/a)$')
         pl.tight_layout()
 
 
         fig5v = pl.figure()
         X,Y = np.meshgrid(t/fs_conv, kp_array)
         pl.contourf(X,Y, np.real(solution[:,0,:,0]), 100)
-        pl.colorbar().set_label(r'$f_e(k)$ in path 0')
+        pl.colorbar().set_label(r'$f_e(k)$')
         pl.xlim([-5*alpha/fs_conv, 10*alpha/fs_conv])
-        pl.xlabel(r'$t\;(fs)$')
-        pl.ylabel(r'$k$')
+        pl.xlabel(r'$t\;/fs$')
+        pl.ylabel(r'$k_x\;/(1/a)$')
         pl.tight_layout()
 
 
@@ -563,7 +566,7 @@ def main():
            pax.plot(angles,np.abs(Iw_r[:,freq_index]))
            rmax = pax.get_rmax()
            pax.set_rmax(1.1*rmax)
-           pax.set_yticklabels([""])
+           #pax.set_yticklabels([""])
            if i_loop == 1:
                pax.set_rgrids([0.25*rmax,0.5*rmax,0.75*rmax,1.0*rmax],labels=None, angle=None, fmt=None)
                pax.set_title('HH'+str(i_loop), va='top', pad=30)
@@ -571,7 +574,7 @@ def main():
            else:
                pax.set_rgrids([0.0],labels=None, angle=None, fmt=None)
                pax.set_xticks(np.arange(0,2.0*np.pi,np.pi/2.0))
-               pax.set_xticklabels([""])
+               #pax.set_xticklabels([""])
                pax.set_title('HH'+str(i_loop), va='top', pad=15)
 
        # if print_J_P_I_files:
@@ -887,7 +890,6 @@ def mesh(params, E_dir):
 #    for path_index in [-1, 1]:
     for path_index in np.linspace(-num_paths+1,num_paths-1, num = num_paths):
 
-        print("path_index",path_index)
 
         # Container for a single path
         path = []
@@ -1121,8 +1123,6 @@ def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, p
               J_E_dir[i_time] += np.real(jc_E_dir[i_k]*solution[i_k, 0, i_time, 3] + jv_E_dir[i_k]*(solution[i_k, 0, i_time, 0] - subtract_from_f_v))
               J_ortho[i_time] += np.real(jc_ortho[i_k]*solution[i_k, 0, i_time, 3] + jv_ortho[i_k]*(solution[i_k, 0, i_time, 0] - subtract_from_f_v))
     
-    print(U_h_H_U_E_dir)
-    print(U_h_H_U_ortho)
     return I_E_dir, I_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho, P_E_dir, P_ortho, J_E_dir, J_ortho
 
 
