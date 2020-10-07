@@ -99,7 +99,8 @@ def dipole(kx, ky):
     #part0   = np.zeros(Nk_in_Path, dtype=np.complex128)
     #di_x    = np.concatenate((part0,part1,part1,part0)).reshape(2,2,Nk_in_Path)
     di_x    = np.concatenate((-d,d,d,-d)).reshape(2,2,Nk_in_Path)
-    di_y    = np.zeros((2,2,Nk_in_Path), dtype=np.complex128)
+    di_y    = np.concatenate((d,-d,-d,d)).reshape(2,2,Nk_in_Path)
+    di_y    = di_y.astype('complex128')
     return di_x, di_y
 
 

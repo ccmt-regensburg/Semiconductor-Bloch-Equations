@@ -32575,3 +32575,747 @@ path: 2
 90.00%
 95.00%
 /home/evb28117/Bachelorarbeit/generated_data/dipole-exact/zinc-blende/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-10.000_w-25.00_E-0.10_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:83: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/dipole-exact/wurtzite/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-0.010_w-25.00_E-0.10_alpha-0.04_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:83: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/dipole-exact/wurtzite/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-1.000_w-25.00_E-0.10_alpha-0.04_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:83: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/dipole-exact/wurtzite/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-10.000_w-25.00_E-0.10_alpha-0.04_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:83: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/dipole-exact/wurtzite/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-0.000_w-25.00_E-0.10_alpha-0.04_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:83: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/dipole-exact/wurtzite/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-0.100_w-25.00_E-0.10_alpha-0.04_a-25.00_ph-0.00_T-01.00
+/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:83: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+path: 2
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+ 5.00%
+10.00%
+15.00%
+20.00%
+25.00%
+30.00%
+35.00%
+40.00%
+45.00%
+50.00%
+55.00%
+60.00%
+65.00%
+70.00%
+75.00%
+80.00%
+85.00%
+90.00%
+95.00%
+/home/evb28117/Bachelorarbeit/generated_data/dipole-exact/wurtzite/length/Nk1-400_Nk2-2_T-0.03_efermi--1.8_gamma-0.001_w-25.00_E-0.10_alpha-0.04_a-25.00_ph-0.00_T-01.00
+capi_return is NULL
+Call-back cb_f_in_zvode__user__routines failed.
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1680, in <module>
+    main()
+  File "SBE.py", line 174, in main
+    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+  File "SBE.py", line 777, in time_evolution
+    solver.integrate(solver.t + dt)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 433, in integrate
+    self._y, self.t = mth(self.f, self.jac or (lambda: None),
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 1007, in run
+    y1, t, istate = self.runner(*args)
+  File "SBE.py", line 1309, in f
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 415, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 358, in error_rewrite
+    reraise(type(e), e, None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/utils.py", line 80, in reraise
+    raise value.with_traceback(tb)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+Cannot unify array(float64, 1d, C) and array(complex128, 1d, C) for 'A_in_path.2', defined at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+During: typing of assignment at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+capi_return is NULL
+Call-back cb_f_in_zvode__user__routines failed.
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1680, in <module>
+    main()
+  File "SBE.py", line 174, in main
+    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+  File "SBE.py", line 777, in time_evolution
+    solver.integrate(solver.t + dt)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 433, in integrate
+    self._y, self.t = mth(self.f, self.jac or (lambda: None),
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 1007, in run
+    y1, t, istate = self.runner(*args)
+  File "SBE.py", line 1309, in f
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 415, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 358, in error_rewrite
+    reraise(type(e), e, None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/utils.py", line 80, in reraise
+    raise value.with_traceback(tb)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+Cannot unify array(float64, 1d, C) and array(complex128, 1d, C) for 'A_in_path.2', defined at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+During: typing of assignment at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+capi_return is NULL
+Call-back cb_f_in_zvode__user__routines failed.
+Solving for...
+Brillouin zone: 2line
+Structure type: wurtzite
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1680, in <module>
+    main()
+  File "SBE.py", line 174, in main
+    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+  File "SBE.py", line 777, in time_evolution
+    solver.integrate(solver.t + dt)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 433, in integrate
+    self._y, self.t = mth(self.f, self.jac or (lambda: None),
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 1007, in run
+    y1, t, istate = self.runner(*args)
+  File "SBE.py", line 1309, in f
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 415, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 358, in error_rewrite
+    reraise(type(e), e, None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/utils.py", line 80, in reraise
+    raise value.with_traceback(tb)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+Cannot unify array(float64, 1d, C) and array(complex128, 1d, C) for 'Acc_in_path.2', defined at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+During: typing of assignment at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+capi_return is NULL
+Call-back cb_f_in_zvode__user__routines failed.
+Solving for...
+Brillouin zone: 2line
+Structure type: zinc-blende
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1680, in <module>
+    main()
+  File "SBE.py", line 174, in main
+    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+  File "SBE.py", line 777, in time_evolution
+    solver.integrate(solver.t + dt)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 433, in integrate
+    self._y, self.t = mth(self.f, self.jac or (lambda: None),
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 1007, in run
+    y1, t, istate = self.runner(*args)
+  File "SBE.py", line 1309, in f
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 415, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 358, in error_rewrite
+    reraise(type(e), e, None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/utils.py", line 80, in reraise
+    raise value.with_traceback(tb)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+Cannot unify array(float64, 1d, C) and array(complex128, 1d, C) for 'Acc_in_path.2', defined at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+During: typing of assignment at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+capi_return is NULL
+Call-back cb_f_in_zvode__user__routines failed.
+Solving for...
+Brillouin zone: 2line
+Structure type: zinc-blende
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1680, in <module>
+    main()
+  File "SBE.py", line 174, in main
+    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+  File "SBE.py", line 777, in time_evolution
+    solver.integrate(solver.t + dt)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 433, in integrate
+    self._y, self.t = mth(self.f, self.jac or (lambda: None),
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 1007, in run
+    y1, t, istate = self.runner(*args)
+  File "SBE.py", line 1309, in f
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 415, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 358, in error_rewrite
+    reraise(type(e), e, None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/utils.py", line 80, in reraise
+    raise value.with_traceback(tb)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+Cannot unify array(float64, 1d, C) and array(complex128, 1d, C) for 'dipole_in_path.2', defined at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+During: typing of assignment at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+capi_return is NULL
+Call-back cb_f_in_zvode__user__routines failed.
+Solving for...
+Brillouin zone: 2line
+Structure type: zinc-blende
+Number of k-points              = 800
+Driving field direction         = 0
+Driving amplitude (MV/cm)[a.u.] = (0.100000)[0.000019]
+Pulse Frequency (THz)[a.u.]     = (25.000000)[0.000605]
+Pulse Width (fs)[a.u.]          = (25.000000)[1033.534334]
+Chirp rate (THz)[a.u.]          = (0.000000)[0.000000]
+Damping time (fs)[a.u.]         = (1.000000)[41.341373]
+Total time (fs)[a.u.]           = (1999.981938)[82682]
+Time step (fs)[a.u.]            = (0.100000)[4.134137]
+do_B_field False
+Enter density matrix dynamics.
+path: 1
+0.2933388254194345
+0.0014703700522277418
+0.2940740104455484
+ 0.00%
+Traceback (most recent call last):
+  File "SBE.py", line 1680, in <module>
+    main()
+  File "SBE.py", line 174, in main
+    time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk, 
+  File "SBE.py", line 777, in time_evolution
+    solver.integrate(solver.t + dt)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 433, in integrate
+    self._y, self.t = mth(self.f, self.jac or (lambda: None),
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/scipy/integrate/_ode.py", line 1007, in run
+    y1, t, istate = self.runner(*args)
+  File "SBE.py", line 1309, in f
+    return fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 415, in _compile_for_args
+    error_rewrite(e, 'typing')
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/dispatcher.py", line 358, in error_rewrite
+    reraise(type(e), e, None)
+  File "/misc/data1/psi_devel/anaconda3/lib/python3.8/site-packages/numba/core/utils.py", line 80, in reraise
+    raise value.with_traceback(tb)
+numba.core.errors.TypingError: Failed in nopython mode pipeline (step: nopython frontend)
+Cannot unify array(float64, 1d, C) and array(complex128, 1d, C) for 'A_in_path.2', defined at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
+During: typing of assignment at SBE.py (1376)
+
+File "SBE.py", line 1376:
+def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B_field, 
+    <source elided>
+        # Energy term eband(i,k) the energy of band i at point k
+        ecv = ecv_in_path[k]
+        ^
+
