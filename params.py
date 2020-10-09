@@ -101,4 +101,4 @@ show_figures        = False
 structure_type      = 'zinc-blende'
 gamma               = 10     # Coupling intensity used for bandstruct, units: eV*Angström**3
 beta                = -1
-alpha_wz            = 0.04 
+alpha_wz            = 0

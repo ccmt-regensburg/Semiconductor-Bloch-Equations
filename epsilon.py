@@ -86,8 +86,8 @@ def epsilon_diff(Nk_in_Path, path, dk, E_dir):
         band_diff_x[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + 0.5*(k_x*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_x*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
 
         
-        band_diff_y[:,1] = params.eV_conv*(-beta*a*np.sin(k_x*a) - 0.5*(k_y*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_y*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
-        band_diff_y[:,2] = params.eV_conv*(-beta*a*np.sin(k_x*a) + 0.5*(k_y*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_y*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
+        band_diff_y[:,1] = params.eV_conv*(-beta*a*np.sin(k_y*a) - 0.5*(k_y*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_y*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
+        band_diff_y[:,2] = params.eV_conv*(-beta*a*np.sin(k_y*a) + 0.5*(k_y*(gamma*(k_x**2+k_y**2)-alpha)**2+(k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)*2*k_y*gamma)/np.sqrt((k_x**2+k_y**2)*(gamma*(k_x**2+k_y**2)-alpha)**2))
     return band_diff_x, band_diff_y
 
 
@@ -95,11 +95,12 @@ def epsilon_diff(Nk_in_Path, path, dk, E_dir):
 def dipole(kx, ky):
     Nk_in_Path  =   params.Nk_in_path
     d       = 0.5*ky/(kx**2+ky**2)
+    dy      = 0.5*kx/(kx**2+ky**2)
     #part1   = np.ones(Nk_in_Path, dtype=np.complex128)
     #part0   = np.zeros(Nk_in_Path, dtype=np.complex128)
     #di_x    = np.concatenate((part0,part1,part1,part0)).reshape(2,2,Nk_in_Path)
     di_x    = np.concatenate((-d,d,d,-d)).reshape(2,2,Nk_in_Path)
-    di_y    = np.concatenate((d,-d,-d,d)).reshape(2,2,Nk_in_Path)
+    di_y    = np.concatenate((dy,-dy,-dy,dy)).reshape(2,2,Nk_in_Path)
     di_y    = di_y.astype('complex128')
     return di_x, di_y
 

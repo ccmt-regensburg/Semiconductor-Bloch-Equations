@@ -314,7 +314,7 @@ def main():
         np.savetxt("frequency.txt", np.transpose(data ) )
         data    = bandstruct
         np.savetxt("bandstruct.txt", data)
-        data    = np.array([t/fs_conv, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_E_dir, I_exact_ortho]).real
+        data    = np.array([t/fs_conv, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_E_dir, I_exact_ortho, I_exact_offd_E_dir, I_exact_offd_ortho]).real
         np.savetxt("I_exact.txt", np.transpose(data))
              
     if (not test and user_out):
@@ -344,12 +344,12 @@ def main():
         axIdiag.set_xlim(t_lims)
         axIdiag.plot(t/fs_conv, I_exact_diag_E_dir)
         axIdiag2 = axIdiag.twinx()
-        #axIdiag2.set_ylim([-1E-13,1E-13])
+        axIdiag2.set_ylim([-1E-12,1E-12])
         axIdiag2.plot(t/fs_conv, I_exact_diag_ortho, color="orange")
         align_yaxis(axIdiag, axIdiag2)
         axIdiag.set_xlabel(r'$t$ in fs')
-        axIdiag.set_ylabel(r'$I^{\parallel}_{diag}$ in atomic units')
-        axIdiag2.set_ylabel(r'$I^{\perp}_{diag}$ in atomic units')
+        axIdiag.set_ylabel(r'$j^{\parallel}_{diag}$ in atomic units')
+        axIdiag2.set_ylabel(r'$j^{\perp}_{diag}$ in atomic units')
         axIoffd.set_xlim(t_lims)
         axIoffd.plot(t/fs_conv, I_exact_offd_E_dir)
         axIoffd2 = axIoffd.twinx()
@@ -357,16 +357,17 @@ def main():
         axIoffd2.plot(t/fs_conv, I_exact_offd_ortho, color="orange")
         align_yaxis(axIoffd, axIoffd2)
         axIoffd.set_xlabel(r'$t$ in fs')
-        axIoffd.set_ylabel(r'$I^{\parallel}_{offd}$ in atomic units')
-        axIoffd2.set_ylabel(r'$I^{\perp}_{offd}$ in atomic units')
+        axIoffd.set_ylabel(r'$j^{\parallel}_{offd}$ in atomic units')
+        axIoffd2.set_ylabel(r'$j^{\perp}_{offd}$ in atomic units')
         axJ.set_xlim(t_lims)
         axJ.plot(t/fs_conv,I_exact_E_dir)
         axJ2    = axJ.twinx()
+        axJ2.set_ylim([-1E-12,1E-12])
         axJ2.plot(t/fs_conv,I_exact_ortho, color="orange")
         align_yaxis(axJ, axJ2)
         axJ.set_xlabel(r'$t$ in fs')
-        axJ.set_ylabel(r'$J_{\parallel}$ in atomic units')
-        axJ2.set_ylabel(r'$J_{\perp}$ in atomic units')
+        axJ.set_ylabel(r'$j_{\parallel}$ in atomic units')
+        axJ2.set_ylabel(r'$j_{\perp}$ in atomic units')
 
 
        
@@ -531,7 +532,6 @@ def main():
         kp_array = length_path_in_BZ*np.linspace(-0.5 + (1/(2*Nk_in_path)), 0.5 - (1/(2*Nk_in_path)), num = Nk_in_path)
         # Countour plots of occupations and gradients of occupations
         fig5 = pl.figure()
-        pl.rcParams.update({'font.size':30})
         X, Y = np.meshgrid(t/fs_conv,kp_array)
         pl.contourf(X, Y, np.real(solution[:,0,:,3]), 100)
         pl.colorbar().set_label(r'$f_e(k)$')
