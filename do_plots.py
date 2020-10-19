@@ -7,6 +7,8 @@ import matplotlib.pyplot as pl
 from matplotlib import patches
 
 import data_directory
+import rotation_analytical
+import scipy.signal as signal
 
 def main():
 #    directory	= "../generated_data/" + params.gauge + "_" + str(params.Nk_in_path) + "/"
@@ -53,6 +55,8 @@ def construct_plots():
     phase           = efield.nir_phi
     
     with_nir        = params.with_nir
+    with_transient  = params.with_transient
+    realistic_system    = params.realistic_system
     nir_t0          = params.nir_mu
 
     if BZ_type == 'full':
@@ -77,8 +81,6 @@ def construct_plots():
         Nk    = Nk1*Nk2                                   # Total number of k points, we have 2 paths
 
     T2              = params.T2*fs_conv
-    print(2*np.pi*w)
-    print(1/(T2) )
 
     ############ load the data from the files in the given path ###########
     old_directory   = os.getcwd()
@@ -89,8 +91,7 @@ def construct_plots():
     params.with_nir         = with_nir
     params.nir_mu           = nir_t0
     nir_t0                  *= fs_conv
-    time_window     = 9*alpha
-
+    time_window             = 10*alpha
 
     if not os.path.exists(folder):
         ref_data    = False
@@ -98,7 +99,7 @@ def construct_plots():
         print("For this parameter setting is no reference data available yet.")
         print()
     else:
-        ref_data    = True
+        ref_data    = False
         os.chdir(folder)
         t_ref, A_field, I_exact_E_dir_ref, I_exact_ortho_ref, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
 
@@ -129,16 +130,17 @@ def construct_plots():
     t, A_field, I_exact_E_dir, I_exact_ortho, I_exact_diag_E_dir, I_exact_diag_ortho, I_exact_offd_E_dir, I_exact_offd_ortho        = np.transpose(np.loadtxt('time.txt') )
     freq, Int_exact_E_dir, Int_exact_ortho, Int_exact_diag_E_dir, Int_exact_diag_ortho, Int_exact_offd_E_dir, Int_exact_offd_ortho  = np.transpose(np.loadtxt('frequency.txt') )
     f_c             = np.transpose(np.loadtxt("conduction_occupation.txt") )
-
-    I_exact_E_dir_  = I_exact_diag_E_dir
-    I_exact_ortho_  = I_exact_diag_ortho
  
     t       *= fs_conv
+    dt      = t[1]-t[0]
     freq    *= w
-    w_min       = np.argmin(np.abs(freq/w - 0.5 ) )
+    w_min   = np.argmin(np.abs(freq/w - 0.5 ) )
 
-    time_indices     = np.where(np.abs(np.array(t)-nir_t0) < time_window)[0]
-    cut_time        = t[time_indices]
+    time_indices        = np.where(np.abs(np.array(t)-nir_t0) < time_window)[0]
+    cut_time            = t[time_indices]
+
+    I_exact_E_dir  = I_exact_E_dir[time_indices]
+    I_exact_ortho  = I_exact_ortho[time_indices]
 
     if ref_data:
         I_nir_E_dir     = I_exact_E_dir[time_indices] - 1*I_exact_E_dir_ref
@@ -217,9 +219,9 @@ def construct_plots():
         axA.set_ylabel(r'$A$-field in MV/cm$\cdot$fs')
 
         axI.set_xlim(t_lims)
-        axI.plot(t/fs_conv,I_exact_E_dir)
+        axI.plot(cut_time/fs_conv,I_exact_E_dir)
         axI2     = axI.twinx()
-        axI2.plot(t/fs_conv,I_exact_ortho, color="orange")
+        axI2.plot(cut_time/fs_conv,I_exact_ortho, color="orange")
         axI.set_xlabel(r'$t$ in fs')
         axI2.set_ylabel(r'$J_{\perp}$ in at.u.')
         axI.set_ylabel(r'$J_{\parallel}$ in at.u.')
@@ -229,20 +231,27 @@ def construct_plots():
         if ref_data:
             axJ.plot(cut_time/fs_conv, I_nir_E_dir)
             axJ2.plot(cut_time/fs_conv,I_nir_ortho, color="orange")
+        axJ.plot(t/fs_conv, I_exact_diag_E_dir, color='blue')
+        axJ.plot(t/fs_conv, rotation_analytical.I_exact_diag_E_dir(t), color="green")
+        axJ2.plot(t/fs_conv,I_exact_diag_ortho, color="orange")
         axJ.set_xlabel(r'$t$ in fs')
-        axJ2.set_ylabel(r'$J_{\perp}^{NIR}$ in at.u.')
-        axJ.set_ylabel(r'$J_{\parallel}^{NIR}$ in at.u.')
+        axJ.set_ylabel(r'$J_{\parallel}^{diag}$ in at.u.')
+        axJ2.set_ylabel(r'$J_{\perp}^{diag}$ in at.u.')
 
-        axP.set_xlim((-.1*alpha+nir_t0)/fs_conv, (.1*alpha+nir_t0)/fs_conv)
         axP.set_xlim(t_lims)
         #axP.plot(cut_time[1:]/fs_conv,np.sign(E_nir_E_dir*E_nir_ortho))
-        axP.plot(t/fs_conv,I_exact_diag_E_dir)
-        axP2     = axP.twinx()                    
-        axP2.plot(t/fs_conv,I_exact_offd_ortho, color="orange")
-        #axP2.plot(cut_time[1:]/fs_conv,E_nir_ortho, color="orange")
+        #axP2     = axP.twinx()                    
+        #axP.plot(t/fs_conv,I_exact_offd_E_dir, color='blue')
+        #axP.plot(t/fs_conv,rotation_analytical.I_exact_offd_E_dir(t) , color="green")
+        axP.plot(t/fs_conv,I_exact_ortho, color="black", label="numerical")
+        axP.plot(t/fs_conv,I_exact_offd_ortho, color="orange", label="numerical offd")
+        axP.plot(t/fs_conv,rotation_analytical.I_exact_offd_ortho(t), color="red", label="analytical offd")
+        #axP2.plot(cut_time/fs_conv,I_analyt_offd_ortho, color="green")
         axP.set_xlabel(r'$t$ in fs')
-        axP2.set_ylabel(r'$J_{\perp}^{offd}$ in at.u.')
-        axP.set_ylabel(r'$J_{\parallel}^{diag}$ in at.u.')
+        #axP.set_ylabel(r'$J_{\parallel}^{offd}$ in at.u.')
+        axP.set_ylabel(r'$J_{\perp}^{offd}$ in at.u.')
+        axP.legend()
+
 
         #axJ.set_xlim(t_lims)
         #axJ.plot(t/fs_conv,I_exact_diag_E_dir)
@@ -256,9 +265,9 @@ def construct_plots():
         #axP.set_xlabel(r'$t$ in fs')
         #axP.set_ylabel(r'$J_{offdiag}$ in at.u.')
 
-        pl.savefig("EAJ.pdf", dpi=300)
+        #pl.savefig("EAJ.pdf", dpi=300)
         pl.show()
-        return 0
+        return
 
 ##########################
 
@@ -340,7 +349,7 @@ def construct_plots():
         # High-harmonic emission polar plots
         polar_fig = pl.figure(figsize=(10, 10))
         i_loop = 1
-        i_max = 20
+        i_max = 0
         while i_loop <= i_max:
             freq_indices = np.argwhere(np.logical_and(freq/w > float(i_loop)-0.1, freq/w < float(i_loop)+0.1))
             freq_index   = freq_indices[int(np.size(freq_indices)/2)]

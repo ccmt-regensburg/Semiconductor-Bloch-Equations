@@ -29,9 +29,9 @@ def main():
     a = params.a                                      # Lattice spacing
     e_fermi = params.e_fermi*eV_conv                  # Fermi energy for initial conditions
     temperature = params.temperature*eV_conv          # Temperature for initial conditions
-    T       = 3*eV_conv
+    T       = 1*eV_conv
     
-    kF      = np.arccos(1-e_fermi/T)/a
+    kF      = np.arccos(1-e_fermi/(2*T))/a
 
     # Driving field parameters
     E0    = params.E0*E_conv                          # Driving pulse field amplitude
@@ -53,7 +53,7 @@ def main():
     tf = int(params.tf*fs_conv)                       # Final time
     phi = np.pi*0.5
     
-    nir_values  = True
+    nir_values  = False
     if nir_values:
         nOpt        = np.loadtxt("fitting_data/nir_parameters.txt")
         E0      = nOpt[0]
@@ -61,24 +61,25 @@ def main():
         w       = nOpt[3]
 
     alpha   *= 1
-    w       *= 1/4
+    w       *= 1
     E0      *= 1
     kF      *= 1
-    c       = 1.0e-1*w
-    c       = -1/(4*np.pi*(w*alpha)**2)*w
-    gamma   = 4*np.pi*c/w*(w*alpha)**2
+    c       = 0.0e-1*w
+    gamma   = gamma2
 
     print(w*alpha)
-    print(gamma)
    
     real_fig, (axB,axA,axC,axI) = pl.subplots(4,1,figsize=(10,10))
 
     kx_array = np.linspace(-np.pi/a, np.pi/a, 1000)
     axB.plot(kx_array, conduction_band(kx_array, T, a) )
+    np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/cosine_conduction.dat", np.transpose([kx_array/(np.pi/a), conduction_band(kx_array, T, a)/(T)] ) )
     #axB2    = axB.twinx()
 
     kx_array = np.linspace(-kF, kF, 1000)
     axB.plot(kx_array, np.ones(kx_array.size)*e_fermi)
+    np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/cosine_fermi-contour.dat", np.transpose([kx_array/(np.pi/a), np.ones(kx_array.size)*e_fermi/(T)] ) )
+    print(e_fermi/T)
 
     max_x   = 17
     dt = 1/(max_x*2*w)
@@ -122,6 +123,7 @@ def main():
     pl.show()
     pl.clf()
     pl.close()
+    return
 
     fig, ((axA,axN), (axW,axP)) = pl.subplots(2,2,figsize=(10,10))
 
@@ -180,13 +182,13 @@ def main():
 
 
 def conduction_band(kx, T, a):
-    return -T*(np.cos(a*kx) -1)
+    return -2*T*(np.cos(a*kx) -1)
 
 def current_analyt_A(t, T, kF, a, E0, w, alpha, phi, c):
-    return -T/np.pi*np.sin(a*kF)*np.sin(a*A_field(t, E0, w, alpha, phi, c) )
+    return -2*T/np.pi*np.sin(a*kF)*np.sin(a*A_field(t, E0, w, alpha, phi, c) )
 
 def current_exact_A(t, T, kF, a, E0, w, alpha, phi, c):
-    return -T/np.pi*np.sin(a*kF)*np.sin(a*A_field_exact(t, E0, w, alpha, phi, c) )
+    return -2*T/np.pi*np.sin(a*kF)*np.sin(a*A_field_exact(t, E0, w, alpha, phi, c) )
 
 def A_field(t, E0, w, alpha, phi, c):
     return E0/(2*np.pi*w)*np.exp(-(t/(2*alpha) )**2)*np.sin(2*np.pi*(1+c*t)*w*t + phi)

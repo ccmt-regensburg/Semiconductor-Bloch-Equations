@@ -3,12 +3,12 @@
 numbers=(100 300 1000 3000 10000)
 numbers=(400)
 gauges=("length")
-transient=0				#Posible values: -1 no transient, {0, 1, 2} different forms of transients
+transient=2				#Posible values: -1 no transient, {0, 1, 2} different forms of transients
 realistic=1
 order=0					#Possible orders: 0 simulation, 1 plotten, 2 calculation of polarization rotation	
 
-tra_fac=.001
-nir_fac=.001
+tra_fac=.05
+nir_fac=.05
 
 mu_min=-900
 mu_max=900
@@ -16,8 +16,8 @@ mu_max=900
 mu_step=25
 index=1
 
-number_of_cores=8
-run_time=$((7*60))
+number_of_cores=6
+run_time=$((50*60))
 
 for gauge in "${gauges[@]}"
 do

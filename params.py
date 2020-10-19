@@ -50,11 +50,12 @@ Nk2                 = 50         # Number of kpoints in b2 direction (number of 
 
 # 2line BZ parameters
 Nk_in_path          = 400        # Number of kpoints in each of the two paths
-rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
-#rel_dist_to_Gamma   = 0.005        # relative distance (in units of 2pi/a) of both paths to Gamma
-length_path_in_BZ   = 3*np.pi/a   # Length of path in BZ
+length_path_in_BZ   = 2*np.pi/a   # Length of path in BZ
 angle_inc_E_field   = 0           # incoming angle of the E-field in degree
 num_paths           = 2
+num_paths           = 10
+rel_dist_to_Gamma   = 0.03        # relative distance (in units of 2pi/a) of both paths to Gamma
+rel_dist_to_Gamma   = 0.1*2/num_paths        # relative distance (in units of 2pi/a) of both paths to Gamma
 
 # Gauge
 gauge               = 'length'
@@ -72,9 +73,9 @@ chirp               = 0.0          # Pulse chirp ratio (chirp = c/w) (THz)
 alpha               = 25.0         # Gaussian pulse width (femtoseconds)
 phase               = (0/5)*np.pi  # Carrier envelope phase (edited by cep-scan.py)
 
-transient_number    = 0             # Parameter {0, 1, 2} to distinguish between 3 different transients provided by Josef
-tra_fac             = 1/100
-nir_fac             = 1/100
+transient_number    = 2             # Parameter {0, 1, 2} to distinguish between 3 different transients provided by Josef
+tra_fac             = 1/20
+nir_fac             = 1/20
 
 # Nir Pulse
 ##########################################################################
@@ -83,7 +84,7 @@ nir_mu              = 100          # Time delay of the nir-pulse with respect to
 # Time scales (all units in femtoseconds)
 ##########################################################################
 T1    = 1e3  # Phenomenological damping time for diagonal occupations
-T2    = 1       # Phenomenological damping time for off-diagonal polarizations
+T2    = 1e2       # Phenomenological damping time for off-diagonal polarizations
 t0    = -5000 # Start time *pulse centered @ t=0, use t0 << 0
 tf    = 5000  # End time
 dt    = 1   # Time step

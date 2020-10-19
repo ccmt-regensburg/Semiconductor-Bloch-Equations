@@ -61,24 +61,29 @@ def main():
         w       = nOpt[3]
 
     alpha   *= 1
-    w       *= 1
-    E0      *= 1
+    w       *= 2
+    E0      *= 2
     kF      *= 1
-    c       = 1.0e-1*w
+    c       = 5.0e-2*w
 
+    eta     = kF*2*np.pi*w/E0
    
     real_fig, (axB,axA,axC,axI) = pl.subplots(4,1,figsize=(10,10))
 
     kx_array = np.linspace(-np.pi/a, np.pi/a, 1000)
     axB.plot(kx_array, conduction_band(kx_array, ky, A) )
+    axB.plot(kx_array, valence_band(kx_array, ky, A) )
+    #np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/dirac_conduction.dat", np.transpose([kx_array/(np.pi/a), conduction_band(kx_array, ky, A)/(A*np.pi/a)] ) )
+    #np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/dirac_valence.dat", np.transpose([kx_array/(np.pi/a), valence_band(kx_array, ky, A)/(A*np.pi/a)] ) )
 
     kx_array = np.linspace(-kF, kF, 1000)
     axB.plot(kx_array, np.ones(kx_array.size)*e_fermi)
+    #np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/dirac_fermi-contour.dat", np.transpose([kx_array/(np.pi/a), np.ones(kx_array.size)*e_fermi/(A*np.pi/a)] ) )
 
-    max_x   = 25
-    dt = 1/(max_x*2*w)
+    max_x   = 16
+    dt = 1/(2*max_x*2*w)
 
-    number      = 15
+    number      = 16
     t           = np.arange(-number*alpha, number*alpha, dt)
     int_current = integrated_current_exact_A(t, A, kF, E0, w, alpha, phi, c)
 
@@ -113,28 +118,31 @@ def main():
     axC.plot(t/fs_conv, appr_int_current(t, A, kF, E0, w, alpha, phi, c), label="Numerically integrated analytical current")
     #axC.plot(t, signum_steps(t, E0, w, alpha, ky, kF, A, phi, c) )
 
-    dt_out      = t[1]-t[0]
-    freq        = np.fft.fftshift(np.fft.fftfreq(np.size(t), d=dt_out))
+    freq            = np.fft.fftfreq(np.size(t), d=dt)
+    freq_indices    = np.where((freq/w > 0) & (freq/w <= max_x) )[0]
+    freq            = freq[freq_indices]
+    x               = freq/w
 
-    Int_E_dir   = np.abs(freq*np.fft.fftshift(np.fft.fft(current(t, ky, A, kF, E0, w, alpha, phi, c) ) ) )**2
-    Int_E_dir   = np.abs(freq*np.fft.fftshift(np.fft.fft(int_current ) ) )**2
+    #Int_E_dir   = np.abs(freq*np.fft.fft(int_current ) )**2
+    Int_E_dir   = np.abs(2*np.pi*freq*np.fft.fft(current(t, ky, A, kF, E0, w, alpha, phi, c)*dt/np.sqrt(2*np.pi) )[freq_indices] )**2/3
 
     freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
     freq_index_base_freq    = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
     normalisation           = Int_E_dir[freq_index_base_freq]
+    normalisation           = (A*E0/(2*np.pi*w))**2
+    normalisation           = (e_fermi)**2
     axI.plot(freq/w, Int_E_dir/normalisation, label="numerical result of the emission")
+    #np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/dirac_emission_numerical.dat", np.transpose([freq/w, Int_E_dir/normalisation] ) )
 
-    freq        = freq[int(len(freq)/2 )+1:]
-    x           = freq/w
 
     freq_indices_near_base_freq = np.argwhere(np.logical_and(freq/w > 0.9, freq/w < 1.1))
     freq_index_base_freq    = int((freq_indices_near_base_freq[0] + freq_indices_near_base_freq[-1])/2)
-    analyt_Int_E_dir        = np.abs(freq*analytical_fourier(freq, E0, w, alpha, ky, kF, A, phi, c) )**2
-    normalisation_an        = analyt_Int_E_dir[freq_index_base_freq]
-    axI.plot(freq/w, analyt_Int_E_dir/normalisation_an, label="Analytical fourier transformation")
+    analyt_Int_E_dir        = np.abs(analytical_fourier(freq, E0, w, alpha, ky, kF, A, phi, c) )**2/3
+    axI.plot(freq/w, analyt_Int_E_dir/normalisation, label="Analytical fourier transformation")
+    #np.savetxt("/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/dirac_emission_analytical.dat", np.transpose([freq/w, analyt_Int_E_dir/normalisation] ) )
 
     decay       = (w/freq)**2
-    axI.plot(freq/w, decay, label="Assumed decay of the emission")
+    #axI.plot(freq/w, decay, label="Assumed decay of the emission")
 
     sbe_numerics    = False
     if sbe_numerics:
@@ -153,51 +161,78 @@ def main():
     pl.xticks(np.arange(1, max_x, 2) )
     pl.grid(True)
     pl.xlim((.1, max_x) )
-    #pl.ylim((1e-12, 1e-6) )
+    pl.ylim((1e-4, 1e2) )
     pl.yscale("log")
-    pl.show()
+    #pl.show()
     pl.clf()
     pl.close()
 
-    freq_indices        = np.where(np.abs(freq/w ) > 0)[0]
-    freq                = freq[freq_indices]
+    print(x)
     angles              = np.linspace(0, np.pi, 1*t.size)
 
     fig, ((axA,axN), (axW,axP)) = pl.subplots(2,2,figsize=(10,10))
 
-    emission_cep_a      = np.array([np.abs(freq*analytical_fourier(freq, E0, w, alpha, ky, kF, A, phi, c) )**2 for phi in angles])
-    emission_cep_n      = np.array([np.abs(freq*np.fft.fft(integrated_current_exact_A(t, A, kF, E0, w, alpha, phi, c) )[:freq.size] )**2 for phi in angles])
-    emission_cep_a      = emission_cep_a[:,freq_indices]
-    emission_cep_n      = emission_cep_n[:,freq_indices]
+#    emission_cep_a      = np.array([np.abs(freq*analytical_fourier(freq, E0, w, alpha, ky, kF, A, phi, c) )**2 for phi in angles])
+#    emission_cep_a      = emission_cep_a[:,freq_indices]
+    emission_cep_n      = np.array([np.abs(freq*np.fft.fft(integrated_current_exact_A(t, A, kF, E0, w, alpha, phi, c) )[freq_indices] )**2 for phi in angles])
 
-    X, Y = np.meshgrid(freq/w, angles)
+    X, Y        = np.meshgrid(freq/w, angles)
+    data        = np.concatenate((X[:,:,np.newaxis], Y[:,:,np.newaxis], np.log10(emission_cep_n[:,:,np.newaxis]) ), axis=2).reshape((-1, 3))
+    prependix   = '/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/'
+    if not os.path.exists(prependix):
+        prependix   = '/home/maximilian/Documents/uniclone/masterthesis/thesis/bericht/document/chapters/data/'
 
-    imA = axA.contourf(X, Y, np.log10(emission_cep_a), levels=50)
+    np.savetxt(prependix + "cep_emission_surface.dat", data, fmt=('% 1.2f', '% 1.2f', '%1.2e') )
+
+#    imA = axA.contourf(X, Y, np.log10(emission_cep_a), levels=50)
     imN = axN.contourf(X, Y, np.log10(emission_cep_n), levels=50)
 
-    axW.plot(x, 2*c/(2*np.pi*w)*x*np.pi, color="k")
-    paths   = trace_cep(freq, emission_cep_a, angles, w)
-    plot_winding(freq/w, paths, angles, axA, axW, label="Analytical CEP-tracing", color="b")
+    axW.plot(x, c/(np.pi*w)*x*np.pi, color="k")
+#    paths   = trace_cep(freq, emission_cep_a, angles, w)
+#    plot_winding(freq/w, paths, angles, axA, axW, label="Analytical CEP-tracing", color="b")
+#
+#    paths   = trace_max(freq, emission_cep_a, angles, w)
+#    occurences  = np.unique(paths[:,-1], return_counts=True, return_index=True)
+#    paths       = paths[occurences[1][occurences[2]==1] ]
+#    plot_winding(freq/w, paths, angles, axA, axW, label="Analytical Maxima-tracing", color="r")
 
-    paths   = trace_max(freq, emission_cep_a, angles, w)
-    occurences  = np.unique(paths[:,-1], return_counts=True, return_index=True)
-    paths       = paths[occurences[1][occurences[2]==1] ]
-    plot_winding(freq/w, paths, angles, axA, axW, label="Analytical Maxima-tracing", color="r")
-
-    paths   = trace_cep(freq, emission_cep_n, angles, w)
-    plot_winding(freq/w, paths, angles, axN, axW, label="Numerical CEP-tracing", color="b")
+    #paths   = trace_cep(freq, emission_cep_n, angles, w)
+    #plot_winding(freq/w, paths, angles, axN, axW, label="Numerical CEP-tracing", color="b")
 
     paths   = trace_max(freq, emission_cep_n, angles, w)
     occurences  = np.unique(paths[:,-1], return_counts=True, return_index=True)
     paths       = paths[occurences[1][occurences[2]==1] ]
     plot_winding(freq/w, paths, angles, axN, axW, label="Numerical Maxima-tracing", color="gray")
 
-    for l in range(1, max_x+1):
-        peaks           = l*(1-c/w*angles/np.pi)
-        axA.plot(peaks, angles, color="k")
-        axN.plot(peaks, angles, color="k")
+    if os.path.exists(prependix + "cep_emission_numerical.dat"):
+        os.remove(prependix + "cep_emission_numerical.dat")
+    with open(prependix + "cep_emission_numerical.dat", 'a') as f:
+        for path in paths:
+            np.savetxt(f, np.transpose([path, angles, np.ones(angles.size)]) )
+            f.write("\n")
 
-    fig.colorbar(imA, ax=axA)
+    if os.path.exists(prependix + "cep_emission_analytical.dat"):
+        os.remove(prependix + "cep_emission_analytical.dat")
+    with open(prependix + "cep_emission_analytical.dat", 'a') as f:
+        for h in range(1, max_x+1):
+            k   = 1
+            l   = 0
+            peaks           = h/(k-l)*(1+((k+l)*c/w/2-c/w*angles/np.pi) )
+            np.savetxt(f, np.transpose([peaks, angles, np.ones(angles.size)]) )
+            f.write("\n")
+            axN.plot(peaks, angles, color='black')
+            k   = 0
+            l   = -1
+            peaks           = h/(k-l)*(1+((k+l)*c/w/2-c/w*angles/np.pi) )
+            np.savetxt(f, np.transpose([peaks, angles, np.ones(angles.size)]) )
+            f.write("\n")
+            axN.plot(peaks, angles, color='black')
+
+    np.savetxt(prependix + "winding_number_numerical.dat", np.transpose([paths[:,0], winding_number(x, paths) ] ) )
+    peaks_analyt    = np.array([h*(1+c/w/2) for h in range(1, max_x)] )
+    np.savetxt(prependix + "winding_number_analytical.dat", np.transpose([peaks_analyt, c/w*peaks_analyt] ) )
+
+#    fig.colorbar(imA, ax=axA)
     fig.colorbar(imN, ax=axN)
 
     axA.set_xlabel(r'$\frac{w}{w_0}$')
@@ -222,7 +257,6 @@ def main():
     axN.legend()
     axW.legend()
 
-    paths   = trace_cep(freq, emission_cep_n, angles, w)
 
     axA.set_xticks(np.arange(1, freq[-1]/w, 1))
     axN.set_xticks(np.arange(1, freq[-1]/w, 1))
@@ -249,7 +283,7 @@ def phase_plot_data(t, x, A, kF, E0, w, alpha, phi, c_max, angles, c_number=10):
         #emission_cep    = np.array([np.abs(w*x*analytical_fourier(w*x, E0, w, alpha, ky, kF, A, phi, c) )**2 for phi in angles])
         emission_cep    = np.array([np.abs(x*w*np.fft.fft(integrated_current_exact_A(t, A, kF, E0, w, alpha, phi, c) )[:x.size] )**2 for phi in angles])
         paths           = trace_cep(x, emission_cep, angles, 1)
-        winding         = winding_number(x, paths)
+        winding         = winding_number_interp(x, paths)
         result.append(winding)
 
     return chirps/w, result
@@ -262,11 +296,14 @@ def plot_winding(x, paths, angles, axA, axW, label="", color="k"):
             axA.plot(path, angles, color=color)
 
     winding = winding_number(x, paths)
-    axW.plot(x, winding, label=label )
+    axW.plot(paths[:,0], winding, label=label )
     return
 
 def winding_number(x, paths):
-    winding = paths[:,0] - paths[:,-1]
+    return paths[:,0] - paths[:,-1]
+
+def winding_number_interp(x, paths):
+    winding         = paths[:,0] - paths[:,-1]
     winding_tilde   = np.insert(winding, 0, 0)
     path_tilde      = np.insert(paths[:,0], 0, 0)
 
@@ -274,8 +311,8 @@ def winding_number(x, paths):
     path_tilde      = np.append(path_tilde, last_point)
     winding_tilde   = np.append(winding_tilde, winding_tilde[-1])
 
-    f       = interp1d(path_tilde, winding_tilde, kind="linear" )
-    winding = f(x)
+    f               = interp1d(path_tilde, winding_tilde, kind="linear" )
+    winding         = f(x)
     return winding
 
 def trace_max(freq, Int, angles, w):
@@ -355,14 +392,14 @@ def integrated_current(t, A, kF, E0, w, alpha, phi, c):
 def integrated_current_exact_A(t, A, kF, E0, w, alpha, phi, c):
     paths               = np.linspace(-kF, kF, 100)
     dky                 = paths[1] - paths[0]
-    integrated_current  = np.array([current_exact(t, ky, A, kF, E0, w, alpha, phi, c) for ky in paths] )
+    integrated_current  = np.array([current_exact_A(t, ky, A, kF, E0, w, alpha, phi, c) for ky in paths] )
     integrated_current  = np.sum(integrated_current, axis=0)*dky/(2*np.pi)
     return integrated_current
 
 def current(t, ky, A, kF, E0, w, alpha, phi, c):
-    return -A/(2*np.pi) * (np.sqrt(-ky**2 + (kxMax(ky, kF) - A_field(t, E0, w, alpha, phi, c))**2 ) - np.sqrt(-ky**2 + (kxMax(ky, kF) + A_field(t, E0, w, alpha, phi, c))**2 ) )
+    return -A/(2*np.pi) * (np.sqrt(+ky**2 + (kxMax(ky, kF) - A_field(t, E0, w, alpha, phi, c))**2 ) - np.sqrt(+ky**2 + (kxMax(ky, kF) + A_field(t, E0, w, alpha, phi, c))**2 ) )
 
-def current_exact(t, ky, A, kF, E0, w, alpha, phi, c):
+def current_exact_A(t, ky, A, kF, E0, w, alpha, phi, c):
     return -A/(2*np.pi) * (np.sqrt(ky**2 + (kxMax(ky, kF) - A_field_exact(t, E0, w, alpha, phi, c))**2 ) - np.sqrt(ky**2 + (kxMax(ky, kF) + A_field_exact(t, E0, w, alpha, phi, c))**2 ) )
 
 def A_field_exact(t, E0, w, alpha, phi, c):
@@ -370,19 +407,22 @@ def A_field_exact(t, E0, w, alpha, phi, c):
     return result*(0+1*np.exp(-(t/(4*alpha))**2) )
 
 def A_field(t, E0, w, alpha, phi, c):
-    return E0/(2*np.pi*w)*np.exp(-(t/(2*alpha) )**2)*np.sin(2*np.pi*(1+c*t)*w*t + phi)
+    return E0/(2*np.pi*w)*np.exp(-(t/(alpha) )**2/2)*np.sin(2*np.pi*(1+c*t)*w*t + phi)
 
 def A_field_tau(t, tau, E0, w, alpha, phi, c):
-    return E0/(2*np.pi*w*(1+2*c*tau))*np.exp(-(t/(2*alpha) )**2)*np.sin(2*np.pi*(1+c*t)*w*t + phi)
+    return E0/(2*np.pi*w*(1+2*c*tau))*np.exp(-(t/(alpha) )**2/2)*np.sin(2*np.pi*(1+c*t)*w*t + phi)
 
 def E_field(t, E0, w, alpha, phi, c):
-    return E0*np.exp(-(t/(2*alpha) )**2)*np.cos(2*np.pi*(1+c*t)*w*t + phi)
+    return E0*np.exp(-(t/(alpha) )**2/2)*np.cos(2*np.pi*(1+c*t)*w*t + phi)
 
 def kxMax(ky, kF):
     return np.sqrt(kF**2 - ky**2)
 
 def conduction_band(kx, ky, A):
     return A*np.sqrt(kx**2+ky**2)
+
+def valence_band(kx, ky, A):
+    return -A*np.sqrt(kx**2+ky**2)
 
 def signum_steps(t, E0, w, alpha, ky, kF, A, phi, c):
     kMax        = kxMax(ky, kF)
@@ -396,26 +436,26 @@ def analytical_fourier(freq, E0, w, alpha, ky, kF, A, phi, c):
     kMax        = kxMax(ky, kF)
     Amp         = E0/(2*np.pi*w)
     t_critical  = alpha*np.sqrt(2*np.log(Amp/kMax) )
-    max_ind     = int(2*t_critical*w + phi/np.pi )-0
-    min_ind     = int(-2*t_critical*w + phi/np.pi )+0
+    max_ind     = int(2*t_critical*w + phi/np.pi )
+    min_ind     = int(-2*t_critical*w + phi/np.pi )
     better_result   = 1j*np.zeros(freq.size)
     for k in range(min_ind, max_ind+1):
         better_result   += newHilfsfct(freq, E0, w, alpha, kMax, A, phi, c, k) 
 
-    return np.sqrt(2/np.pi)*A/np.pi*E0*better_result/freq*w*4*np.pi
-    return np.sqrt(2/np.pi)*kMax*A/np.pi*E0*better_result/freq**2
-
-def hilfsfct(freq, E0, w, alpha, kMax, A, phi, k):
-    tk          = (k*np.pi - phi)/(2*np.pi*w)
-    deltaT      = 1/(2*np.pi*w)*(2*np.pi*w)*kMax/E0*np.exp(tk**2/(2*alpha**2) )
-    return (-1)**k*np.exp(-tk**2/(2*alpha**2) )*np.exp(-1j*2*np.pi*freq*tk)*np.sin(freq*2*np.pi*deltaT)
+    return A*E0/np.pi*better_result
 
 def newHilfsfct(freq, E0, w, alpha, kMax, A, phi, c, k):
     tkOld       = (k*np.pi - phi)/(2*np.pi*w)
     tk          = (-1+np.sqrt(1+4*c*tkOld) )/(2*c)
-    deltaT      = kMax/E0*np.exp(tk**2/(2*alpha**2) )
     wk          = w*(1+c*tk)
-    return (+1)**k*np.exp(-tk**2/(2*alpha**2)*1 )*np.exp(1j*2*np.pi*freq*tk)*(np.exp(-1j*(tk*wk*2*np.pi+phi) )*np.sin((freq-wk)*2*np.pi*deltaT)/(freq-(1+1e-9j)*wk) + np.exp(1j*(tk*wk*2*np.pi+phi) )*np.sin((freq+wk)*2*np.pi*deltaT)/(freq+(1+1e-9j)*wk))/(2*np.pi)
+    Amp         = E0/(2*np.pi*w)
+    deltaT      = np.arcsin(kMax/Amp*np.exp(tk**2/(alpha**2)/2 ) )/(2*np.pi*wk)
+    return (-1)**k*np.exp(-tk**2/(alpha**2)/2 )*np.exp(1j*2*np.pi*freq*tk)*(np.sin((freq-wk)*2*np.pi*deltaT)/(freq-(1+1e-9j)*wk)/(2*np.pi) + np.sin((freq+wk)*2*np.pi*deltaT)/(freq+(1+1e-9j)*wk)/(2*np.pi))
+
+def hilfsfct(freq, E0, w, alpha, kMax, A, phi, k):
+    tk          = (k*np.pi - phi)/(2*np.pi*w)
+    deltaT      = kMax/E0*np.exp(tk**2/(2*alpha**2) )
+    return (-1)**k*np.exp(-tk**2/(2*alpha**2) )*np.exp(-1j*2*np.pi*freq*tk)*np.sin(freq*2*np.pi*deltaT)
 
 def cep_plot():
     return 0

@@ -5,6 +5,8 @@ from scipy import optimize
 import params
 import matplotlib.pyplot as pl
 
+import os
+
 def opt_pulses():
     #Prepare pyplot axes
     fs_conv         = params.fs_conv
@@ -26,8 +28,6 @@ def opt_pulses():
     thzPulse[:,1]   *= factor_field*E_conv                                     #Recalculation of V/m into MV/cm
     initThz         = [1e-4, 1000*fs_conv, 0, 1*THz_conv, 0]
     tOpt, tCov      = optimize.curve_fit(transient, thzPulse[:,0], thzPulse[:,1], p0=initThz)
-    print(tOpt[0]/E_conv)
-    print(tOpt[-2]/THz_conv)
 
     #Load experimental frequency spectrum
     pulseFreq       = np.loadtxt("fitting_data/NIR_spectrum.dat")
@@ -37,12 +37,12 @@ def opt_pulses():
     initNir         = [peak[1], 100*THz_conv, peak[0]]
     fOpt, fCov      = optimize.curve_fit(gaussSpec, pulseFreq[:,0], np.abs(pulseFreq[:,1]), p0=initNir )
 
+
     nOpt            = list(fOpt[:] )
     nOpt[0]         = fOpt[0]*fOpt[1]
     nOpt[1]         = 1/nOpt[1]
     nOpt.append(nOpt[2])
     nOpt[2]         = 0
-    print(nOpt[3]/THz_conv)
     nOpt.append(0)
     np.savetxt("fitting_data/transient_" + str(transient_number) + "_parameters.txt", tOpt, header="amplitude, sigma, mu, frequency, chirp" )
     np.savetxt("fitting_data/nir_parameters.txt", nOpt, header="amplitude, sigma, mu, frequency, phi" )
@@ -52,7 +52,22 @@ def opt_pulses():
     pl.xlabel("Time in at.u.")
     pl.ylabel("Electrical field in at.u.")
     pl.grid(True)
-    pl.show()
+    #pl.show()
+
+    print(nOpt[0]/E_conv)
+    print(nOpt[1]/fs_conv)
+    print(nOpt[3]/THz_conv)
+
+    prependix   = '/home/nim60855/Documents/masterthesis/thesis/bericht/document/chapters/data/'
+    if not os.path.exists(prependix):
+        prependix   = '/home/maximilian/Documents/uniclone/masterthesis/thesis/bericht/document/chapters/data/'
+    np.savetxt(prependix + "driving-field_transient_fitted.dat", np.transpose([thzPulse[:,0]/fs_conv, transient(thzPulse[:,0], *tOpt)/E_conv ]  ) )
+    np.savetxt(prependix + "driving-field_transient_data.dat", np.transpose([thzPulse[:,0]/fs_conv, thzPulse[:,1]/E_conv ] ) )
+
+    np.savetxt(prependix + "driving-field_nir_data.dat", np.transpose([pulseFreq[:,0]/THz_conv, pulseFreq[:,1]/E_conv]  ) )
+    np.savetxt(prependix + "driving-field_nir_fitted.dat", np.transpose([pulseFreq[:,0]/THz_conv, gaussSpec(pulseFreq[:,0], *fOpt)/E_conv ]  ) )
+    nirTime     = np.linspace(-100, 100, 5000)*fs_conv
+    np.savetxt(prependix + "driving-field_nir_time.dat", np.transpose([nirTime/fs_conv, nir(nirTime, *nOpt)/E_conv ]  ) )
 
     return [tOpt, nOpt]
 
@@ -68,3 +83,5 @@ def gaussSpec(x, A, sigma, mu):
     return A*np.exp(-(2*np.pi*(x-mu)/sigma)**2/2)
 
 
+if __name__ == "__main__":
+    opt_pulses()

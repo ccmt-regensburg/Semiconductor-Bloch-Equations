@@ -91,14 +91,18 @@ def A_nir(x):
 
 @njit
 def A_transient(x):
-    return aT/(2*np.pi*freqT)*np.exp(-((x-muT)/sigmaT)**2/2)*np.cos(2*np.pi*(1+chirpT*x)*freqT*x)
+    return -aT/(2*np.pi*freqT)*np.exp(-((x-muT)/sigmaT)**2/2)*np.sin(2*np.pi*(1+chirpT*x)*freqT*x)
 
-def simple_transient(x):
-    return 100*np.exp(-((x-tOpt[2])/tOpt[1])**2/2)*np.cos(2*np.pi*(1+tOpt[4]*x)*tOpt[3]*x)
+@njit
+def A_transient_exact():
+    dt  = 20*sigmaT/10000
+    t   = np.arange(-10*sigmaT, 10*sigmaT, dt)
+    return t, -np.cumsum(transient(t))*dt
 
-def simple_A_field(t):
-    return tOpt[0]/(2*np.pi*tOpt[3])*np.exp(-((t-tOpt[2])/tOpt[1])**2/2)*np.sin(2*np.pi*(1+tOpt[4]*t)*tOpt[3]*t)
-
-    return np.real(2*(2+erf((t-1j*tOpt[1]**2*tOpt[3]*2*np.pi)/(np.sqrt(2)*tOpt[1]))+erf((t+1j*tOpt[1]**2*tOpt[3]*2*np.pi)/(np.sqrt(2)*tOpt[1])) ) )
-
+@njit
+def A_transient_t0(t0):
+    dt  = 20*sigmaT/10000
+    t   = np.arange(-10*sigmaT, t0, dt)
+    result  = -np.trapz(transient(t), dx=dt)
+    return result
 

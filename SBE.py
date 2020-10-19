@@ -204,6 +204,22 @@ def main():
     I_E_dir, I_ortho = diff(t,P_E_dir)*Gaussian_envelope(t,alpha,nir_t0) + J_E_dir*Gaussian_envelope(t,alpha,nir_t0), \
                    diff(t,P_ortho)*Gaussian_envelope(t,alpha,nir_t0) + J_ortho*Gaussian_envelope(t,alpha,nir_t0)
 
+    if BZ_type == '2line':
+        # include k-point weights
+        kpoint_weight       = 2*rel_dist_to_Gamma*length_path_in_BZ/(Nk_in_path-1)/(2*np.pi)**2
+        P_E_dir             = P_E_dir*kpoint_weight
+        P_ortho             = P_ortho*kpoint_weight
+        J_E_dir             = J_E_dir*kpoint_weight
+        J_ortho             = J_ortho*kpoint_weight
+        I_E_dir             = I_E_dir*kpoint_weight
+        I_ortho             = I_ortho*kpoint_weight
+        I_exact_E_dir       = I_exact_E_dir*kpoint_weight
+        I_exact_ortho       = I_exact_ortho*kpoint_weight
+        I_exact_diag_E_dir  = I_exact_diag_E_dir*kpoint_weight
+        I_exact_diag_ortho  = I_exact_diag_ortho*kpoint_weight
+        I_exact_offd_E_dir  = I_exact_offd_E_dir*kpoint_weight
+        I_exact_offd_ortho  = I_exact_offd_ortho*kpoint_weight
+
     Ir = []
     angles = np.linspace(0,2.0*np.pi,360)
     for angle in angles:
@@ -231,22 +247,6 @@ def main():
        Iw_wavep_ortho = np.fft.fftshift(np.fft.fft(I_wavep_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
        Iw_wavep_check_E_dir = np.fft.fftshift(np.fft.fft(I_wavep_check_E_dir*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
        Iw_wavep_check_ortho = np.fft.fftshift(np.fft.fft(I_wavep_check_ortho*Gaussian_envelope(t,alpha,nir_t0), norm='ortho'))
-
-    if BZ_type == '2line':
-        # include k-point weights
-        kpoint_weight = 2*rel_dist_to_Gamma*length_path_in_BZ/(Nk_in_path-1)
-        Pw_E_dir            = Pw_E_dir*kpoint_weight
-        Pw_ortho            = Pw_ortho*kpoint_weight
-        Jw_E_dir            = Jw_E_dir*kpoint_weight
-        Jw_ortho            = Jw_ortho*kpoint_weight
-        Iw_E_dir            = Iw_E_dir*kpoint_weight
-        Iw_ortho            = Iw_ortho*kpoint_weight
-        Iw_exact_E_dir      = Iw_exact_E_dir*kpoint_weight
-        Iw_exact_ortho      = Iw_exact_ortho*kpoint_weight
-        Iw_exact_diag_E_dir = Iw_exact_diag_E_dir*kpoint_weight
-        Iw_exact_diag_ortho = Iw_exact_diag_ortho*kpoint_weight
-        Iw_exact_offd_E_dir = Iw_exact_offd_E_dir*kpoint_weight
-        Iw_exact_offd_ortho = Iw_exact_offd_ortho*kpoint_weight
 
     # Emission intensity (exact formula)
     Int_exact_E_dir      = np.abs((freq**2)*Iw_exact_E_dir**2.0)
@@ -343,7 +343,7 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
     ###########################################################################
     # Iterate through each path in the Brillouin zone
     path_num = 1
-    for path in paths:
+    for i_path, path in enumerate(paths):
         if user_out:
             print('path: ' + str(path_num))
 
@@ -385,8 +385,6 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         ec = bandstruct[1]
         k_F_ind     = np.argmin(np.abs(ec-e_fermi) )
         k_F         = np.sqrt(kx_in_path[k_F_ind]**2 + ky_in_path[k_F_ind]**2 )
-        print(params.r_n/params.A_n)
-        print(k_F/params.kasym_n)
 
         # Initialize the values of of each k point vector
         # (rho_nn(k), rho_nm(k), rho_mn(k), rho_mm(k))
@@ -464,8 +462,9 @@ def time_evolution(t0, tf, dt, paths, user_out, E_dir, e_fermi, temperature, dk,
         if Nk_in_path > 100:
             factor  = int(Nk_in_path/100)
 
-        f_v     = solution[::factor,0,:,0]
-        f_c     = solution[::factor,0,:,3]         #Occupation of the conduction band
+        if i_path == len(paths)/2:
+            f_v     = solution[::factor,0,:,0]
+            f_c     = solution[::factor,0,:,3]         #Occupation of the conduction band
 
         if path_num == 1:                                                                                                      
             n_time_steps = np.size(solution[0,0,:,0]) 
@@ -740,13 +739,14 @@ def emission_exact(path, solution, E_dir, A_field, gauge, normalize_f_valence, p
             I_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
             I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[0,0])*(np.real(solution[i_k, 0, i_time, 0]) - subtract_from_f_v)
             I_exact_diag_ortho[i_time] += np.real(U_h_H_U_ortho[1,1])*np.real(solution[i_k, 0, i_time, 3])
+            I_exact_offd_ortho[i_time] += 2*np.real(U_h_H_U_ortho[0,1]*solution[i_k, 0, i_time, 2])
 
-            k_0         = efield.A_transient(100*params.fs_conv)
-            gamma       = 1/(params.T2*params.fs_conv)
-            k_abs       = np.sqrt((kx_in_path[i_k] - k_0)**2 + ky_in_path[i_k]**2)
-            besetzungs_diff     = np.heaviside(k_abs-k_F, 1/2)
-
-            I_exact_offd_ortho[i_time] += -besetzungs_diff*ecv_in_path[i_k]**2/( ((2*np.pi*w)**2 + gamma**2 - ecv_in_path[i_k]**2 )**2 + (2*gamma*ecv_in_path[i_k])**2 )*(((2*np.pi*w)**2 - gamma**2 - ecv_in_path[i_k]**2 )*E_nir[i_time]+(2*gamma*(2*np.pi*w)**2)*A_nir[i_time])*2*np.imag(di_x[i_k]*di_y[i_k] )
+#            k_0         = -efield.A_transient(params.nir_mu*params.fs_conv)
+#            gamma       = 1/(params.T2*params.fs_conv)
+#            k_abs       = np.sqrt((kx_in_path[i_k] + k_0)**2 + ky_in_path[i_k]**2)
+#            besetzungs_diff     = np.heaviside(k_abs-k_F, 1/2)
+#
+#            I_exact_offd_ortho[i_time] += -besetzungs_diff*ecv_in_path[i_k]**2/( ((2*np.pi*w)**2 + gamma**2 - ecv_in_path[i_k]**2 )**2 + (2*gamma*ecv_in_path[i_k])**2 )*(((2*np.pi*w)**2 - gamma**2 - ecv_in_path[i_k]**2 )*E_nir[i_time]+(2*gamma*(2*np.pi*w)**2)*A_nir[i_time])*2*np.imag(di_x[i_k]*di_y[i_k] )
 
         if KK_emission:
 
@@ -1070,10 +1070,10 @@ def fnumba(t, y, kpath, dk, gamma1, gamma2, E0, B0, w, chirp, alpha, phase, do_B
            # Update each component of the solution vector
            # i = f_v, i+1 = p_vc, i+2 = p_cv, i+3 = f_c
            # wr -> d_vc, wr_c -> d_vc
-           x[i] = 2*(wr*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
-           x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr_c*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
+           x[i] = 2*(wr_c*y[i+1]).imag + D*(y[m] - y[n]) - gamma1*(y[i]-y0_np[i])
+           x[i+1] = (1j*ecv - gamma2 + 1j*wr_d_diag)*y[i+1] - 1j*wr*(y[i]-y[i+3]) + D*(y[m+1] - y[n+1])
            x[i+2] = x[i+1].conjugate()
-           x[i+3] = -2*(wr*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
+           x[i+3] = -2*(wr_c*y[i+1]).imag + D*(y[m+3] - y[n+3]) - gamma1*(y[i+3]-y0_np[i+3])
            x[i+4] = 0
            x[i+5] = 0
            x[i+6] = 0
